@@ -8,6 +8,9 @@ Route::get('/', function () { return view('welcome'); });
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', [PermohonanController::class, 'index'])->name('dashboard');
+    Route::get('/admin/tugas', [PermohonanController::class, 'tugasAdmin'])->name('admin.tugas');
+    Route::get('/spsi/tugas', [PermohonanController::class, 'tugasSpsi'])->name('spsi.tugas');
+    Route::get('/keuangan/tugas', [PermohonanController::class, 'tugasKeuangan'])->name('keuangan.tugas');
     Route::get('/permohonan/buat', [PermohonanController::class, 'create'])->name('permohonan.create');
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');
 
