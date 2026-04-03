@@ -32,6 +32,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::post('/notifikasi/baca-semua', [PermohonanController::class, 'bacaSemuaNotif'])->name('notif.baca_semua');
     Route::delete('/notifikasi/hapus-terbaca', [PermohonanController::class, 'hapusNotifTerbaca'])->name('notif.hapus_terbaca');
+
+    Route::post('/notifikasi/{id}/baca', [PermohonanController::class, 'bacaSatuNotif'])->name('notif.baca_satu');
 });
 
 require __DIR__.'/auth.php';

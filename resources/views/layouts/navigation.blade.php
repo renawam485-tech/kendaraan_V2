@@ -12,23 +12,34 @@
 
             <div class="hidden sm:flex sm:items-center sm:ms-6 gap-4">
                 @auth
-                <div x-data="{ hoverOpen: false }" @mouseenter="hoverOpen = true" @mouseleave="hoverOpen = false" class="relative mt-1 mr-4 flex items-center cursor-pointer">
-                    <button @click="$dispatch('open-notif-panel')" class="relative text-gray-500 hover:text-purple-600 focus:outline-none transition">
+                <div x-data="{ hoverOpen: false, unreadCount: {{ auth()->user()->unreadNotifications->count() }} }" 
+                     @increase-badge.window="unreadCount++"
+                     @decrease-badge.window="if(unreadCount > 0) unreadCount--"
+                     @clear-badge.window="unreadCount = 0"
+                     @mouseenter="hoverOpen = true" @mouseleave="hoverOpen = false"
+                     class="relative mt-1 mr-4 flex items-center cursor-pointer">
+
+                    <button @click="$dispatch('open-notif-panel')"
+                        class="relative text-gray-500 hover:text-purple-600 focus:outline-none transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                         </svg>
-                        @if(auth()->user()->unreadNotifications->count() > 0)
-                            <span class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">
-                                {{ auth()->user()->unreadNotifications->count() }}
-                            </span>
-                        @endif
+                        
+                        <template x-if="unreadCount > 0">
+                            <span x-text="unreadCount" class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold"></span>
+                        </template>
                     </button>
-                    <div x-show="hoverOpen" x-transition style="display: none;" class="absolute top-8 right-0 w-72 bg-white shadow-lg rounded-md border z-50">
-                        <div class="px-4 py-2 bg-purple-50 text-xs font-bold text-purple-700">3 Notifikasi Terbaru</div>
+
+                    <div x-show="hoverOpen" x-transition style="display: none;"
+                        class="absolute top-8 right-0 w-72 bg-white shadow-lg rounded-md border border-gray-100 overflow-hidden z-50">
+                        <div class="px-4 py-2 bg-purple-50 text-xs font-bold text-purple-700 border-b">3 Notifikasi Terbaru</div>
                         @forelse(auth()->user()->notifications->take(3) as $notif)
-                            <div class="px-4 py-3 border-b text-xs">{{ $notif->data['pesan'] }}</div>
+                            <div class="px-4 py-3 border-b text-sm {{ $notif->read_at ? 'bg-white' : 'bg-gray-50' }}">
+                                <p class="font-semibold text-gray-800 text-xs">{{ $notif->data['status'] ?? 'Info' }}</p>
+                                <p class="text-gray-600 text-xs truncate">{{ $notif->data['pesan'] }}</p>
+                            </div>
                         @empty
-                            <div class="px-4 py-3 text-xs text-gray-500">Belum ada.</div>
+                            <div class="px-4 py-3 text-xs text-gray-500">Belum ada notifikasi</div>
                         @endforelse
                     </div>
                 </div>

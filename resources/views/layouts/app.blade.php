@@ -19,31 +19,127 @@
     @auth
     <div x-data="{ 
             open: false, 
-            bacaSemua() { fetch('{{ route('notif.baca_semua') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(() => window.location.reload()); },
-            hapusTerbaca() { fetch('{{ route('notif.hapus_terbaca') }}', { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } }).then(() => window.location.reload()); }
-         }" @open-notif-panel.window="open = true">
-         <div x-show="open" class="fixed inset-0 bg-black bg-opacity-30 z-40" @click="open = false"></div>
-         <div class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform" :class="open ? 'translate-x-0' : 'translate-x-full'">
-              <div class="p-4 border-b flex justify-between items-center bg-gray-50">
-                  <h3 class="font-bold">Notifikasi ({{ auth()->user()->unreadNotifications->count() }})</h3>
-                  <button @click="open = false" class="text-gray-400 text-2xl font-bold">&times;</button>
+            view: 'list', // 'list' atau 'detail'
+            activeTitle: '', activeMessage: '', activeTime: '', activeUrl: '',
+            unreadCount: {{ auth()->user()->unreadNotifications->count() }},
+
+            bacaSemua() {
+                fetch('{{ route('notif.baca_semua') }}', { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
+                .then(() => {
+                    window.dispatchEvent(new CustomEvent('clear-badge'));
+                    document.querySelectorAll('.unread-item').forEach(el => {
+                        el.classList.remove('bg-purple-50', 'unread-item');
+                        el.classList.add('opacity-60', 'bg-white', 'read-item');
+                        let dot = el.querySelector('.unread-dot'); if(dot) dot.remove();
+                    });
+                });
+            },
+            hapusTerbaca() {
+                fetch('{{ route('notif.hapus_terbaca') }}', { method: 'DELETE', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } })
+                .then(() => document.querySelectorAll('.read-item').forEach(el => el.remove()));
+            },
+            openDetail(el) {
+                // Ambil data dari atribut HTML item yang diklik
+                this.activeTitle = el.dataset.title;
+                this.activeMessage = el.dataset.message;
+                this.activeTime = el.dataset.time;
+                this.activeUrl = el.dataset.url;
+                this.view = 'detail'; // Pindah layar ke detail
+
+                // Tandai sudah dibaca secara visual & di server
+                if (el.classList.contains('unread-item')) {
+                    el.classList.remove('bg-purple-50', 'unread-item');
+                    el.classList.add('opacity-60', 'bg-white', 'read-item');
+                    let dot = el.querySelector('.unread-dot'); if(dot) dot.remove();
+                    
+                    window.dispatchEvent(new CustomEvent('decrease-badge')); // Kurangi angka lonceng
+
+                    fetch(`/notifikasi/${el.dataset.id}/baca`, { 
+                        method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                    });
+                }
+            }
+         }" 
+         @open-notif-panel.window="open = true; view = 'list'"
+         @increase-badge.window="unreadCount++"
+         @decrease-badge.window="if(unreadCount > 0) unreadCount--"
+         @clear-badge.window="unreadCount = 0">
+         
+         <div x-show="open" style="display: none;" class="fixed inset-0 bg-black bg-opacity-30 z-40 transition-opacity" @click="open = false"></div>
+         
+         <div class="fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 transform transition-transform duration-300 flex flex-col"
+              :class="open ? 'translate-x-0' : 'translate-x-full'">
+              
+              <div x-show="view === 'list'" class="p-4 border-b flex justify-between items-center bg-gray-50">
+                  <h3 class="font-bold text-lg text-gray-800 flex items-center gap-2">Notifikasi 
+                      <template x-if="unreadCount > 0"><span class="bg-red-500 text-white text-xs px-2 py-1 rounded-full" x-text="unreadCount"></span></template>
+                  </h3>
+                  <button @click="open = false" class="text-gray-400 hover:text-red-500 text-2xl font-bold">&times;</button>
               </div>
-              <div class="flex border-b text-xs">
-                  <button @click="bacaSemua()" class="flex-1 py-3 text-blue-600 font-bold border-r transition">✓ Baca Semua</button>
-                  <button @click="hapusTerbaca()" class="flex-1 py-3 text-red-600 font-bold transition">🗑 Hapus Terbaca</button>
+
+              <div x-show="view === 'detail'" style="display: none;" class="p-4 border-b flex items-center bg-white shadow-sm z-10">
+                  <button @click="view = 'list'" class="text-blue-600 font-bold text-sm flex items-center hover:text-blue-800 transition">
+                      <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg> Kembali
+                  </button>
               </div>
-              <div class="flex-1 overflow-y-auto">
+
+              <div x-show="view === 'list'" class="flex-1 overflow-y-auto flex flex-col">
+                  <div class="flex border-b text-xs flex-shrink-0">
+                      <button @click="bacaSemua()" class="flex-1 py-3 text-blue-600 hover:bg-blue-50 font-bold border-r transition">Baca Semua</button>
+                      <button @click="hapusTerbaca()" class="flex-1 py-3 text-red-600 hover:bg-red-50 font-bold transition">Hapus Terbaca</button>
+                  </div>
                   @forelse(auth()->user()->notifications as $notif)
-                     <div class="p-4 border-b {{ $notif->read_at ? 'opacity-50' : 'bg-purple-50' }}">
-                         <div class="font-bold text-xs">{{ $notif->data['status'] ?? 'Info' }}</div>
-                         <div class="text-sm">{{ $notif->data['pesan'] }}</div>
-                     </div>
+                     @php 
+                        $detailUrl = route('dashboard'); 
+                        if(isset($notif->data['permohonan_id'])) {
+                             $id = $notif->data['permohonan_id'];
+                             $role = auth()->user()->role;
+                             $status = $notif->data['status'] ?? '';
+                             if ($role === 'pengguna') $detailUrl = route('permohonan.show', $id);
+                             elseif ($role === 'kepala_admin') {
+                                 if ($status === 'Menunggu Validasi Admin') $detailUrl = route('permohonan.validasi_admin', $id);
+                                 elseif ($status === 'Menunggu Finalisasi') $detailUrl = route('permohonan.finalisasi_admin', $id);
+                             } elseif ($role === 'spsi' && $status === 'Menunggu Proses SPSI') $detailUrl = route('permohonan.proses_spsi', $id);
+                             elseif ($role === 'keuangan' && $status === 'Menunggu Proses Keuangan') $detailUrl = route('permohonan.proses_keuangan', $id);
+                        }
+                     @endphp
+                     
+                     <a href="#" 
+                        @click.prevent="openDetail($el)"
+                        data-id="{{ $notif->id }}"
+                        data-title="{{ $notif->data['status'] ?? 'Info Sistem' }}"
+                        data-message="{{ $notif->data['pesan'] }}"
+                        data-time="{{ $notif->created_at->diffForHumans() }}"
+                        data-url="{{ $detailUrl }}"
+                        class="block p-4 border-b hover:bg-gray-100 transition {{ $notif->read_at ? 'opacity-60 bg-white read-item' : 'bg-purple-50 unread-item' }}">
+                         
+                         <div class="font-bold text-xs {{ $notif->read_at ? 'text-gray-600' : 'text-purple-700' }}">{{ $notif->data['status'] ?? 'Info Sistem' }}</div>
+                         <div class="text-sm text-gray-800 mt-1 leading-snug line-clamp-2">{{ $notif->data['pesan'] }}</div>
+                         <div class="text-[10px] text-gray-500 mt-2 flex justify-between">
+                             <span>{{ $notif->created_at->diffForHumans() }}</span>
+                             @if(!$notif->read_at) <span class="w-2 h-2 bg-red-500 rounded-full unread-dot"></span> @endif
+                         </div>
+                     </a>
                   @empty
-                     <div class="p-8 text-center text-gray-400 text-sm">Kosong.</div>
+                     <div class="p-8 text-center text-gray-400"><p class="text-sm">Tidak ada notifikasi.</p></div>
                   @endforelse
+              </div>
+
+              <div x-show="view === 'detail'" style="display: none;" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-x-4" x-transition:enter-end="opacity-100 translate-x-0" class="flex-1 bg-gray-50 overflow-y-auto p-6">
+                  <h4 class="font-black text-xl text-gray-800" x-text="activeTitle"></h4>
+                  <p class="text-xs text-gray-400 mt-1 mb-6 flex items-center">
+                      <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> <span x-text="activeTime"></span>
+                  </p>
+                  
+                  <div class="bg-white border border-gray-200 p-5 rounded-lg shadow-sm text-gray-700 text-sm leading-relaxed mb-8" x-text="activeMessage"></div>
+
+                  <a :href="activeUrl" class="block w-full text-center bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded-lg shadow transition">
+                      Aksi / Lihat Dokumen
+                  </a>
               </div>
          </div>
     </div>
+    @endauth
 
     <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
     <audio id="notif-sound" src="{{ asset('sounds/notif.mp3') }}" preload="auto"></audio>
@@ -52,23 +148,41 @@
         window.showCompactToast = function(title, message) {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            toast.className = 'bg-white border shadow-xl rounded-lg p-3 w-80 transform transition-all translate-x-[120%]';
-            toast.innerHTML = `<strong>${title}</strong><p class="text-xs">${message}</p>`;
+            toast.className = 'bg-white border border-gray-200 shadow-xl rounded-lg p-3 w-80 transform transition-all duration-500 translate-x-[120%] flex items-start gap-3 relative';
+            toast.innerHTML = `
+                <div class="flex-shrink-0 mt-1 text-purple-600 bg-purple-100 p-1.5 rounded-full">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+                <div class="flex-1 pr-4">
+                    <p class="font-bold text-sm text-gray-800">${title}</p>
+                    <p class="text-xs text-gray-600 mt-1 leading-tight">${message}</p>
+                </div>
+                <button onclick="this.parentElement.remove()" class="absolute top-2 right-2 text-gray-400 hover:text-gray-700">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            `;
             container.appendChild(toast);
-            document.getElementById('notif-sound').play().catch(() => {});
+            const audio = document.getElementById('notif-sound'); if(audio) { audio.currentTime = 0; audio.play().catch(()=>{}); }
             setTimeout(() => toast.classList.remove('translate-x-[120%]'), 50);
-            setTimeout(() => { toast.classList.add('translate-x-[120%]'); setTimeout(() => toast.remove(), 500); }, 5000);
+            setTimeout(() => { toast.classList.add('translate-x-[120%]'); setTimeout(() => toast.remove(), 500); }, 7000);
         };
 
         document.addEventListener('DOMContentLoaded', function () {
-            if (window.Echo) {
-                window.Echo.private('App.Models.User.' + {{ auth()->id() }})
+            const userId = {{ auth()->check() ? auth()->id() : 'null' }};
+            if (userId !== null && window.Echo) {
+                window.Echo.private('App.Models.User.' + userId)
                     .notification((notification) => {
-                        window.showCompactToast(notification.status || 'Info', notification.pesan);
+                        const title = notification.status || (notification.data && notification.data.status) || 'Notifikasi Baru';
+                        const message = notification.pesan || (notification.data && notification.data.pesan) || 'Silakan cek pembaruan terbaru.';
+                        
+                        // 1. Munculkan Toast Real-Time
+                        window.showCompactToast(title, message);
+                        
+                        // 2. Beri sinyal ke sistem untuk Nambah Angka Lonceng Secara Real-Time tanpa Refresh!
+                        window.dispatchEvent(new CustomEvent('increase-badge'));
                     });
             }
         });
     </script>
-    @endauth
 </body>
 </html>

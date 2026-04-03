@@ -147,4 +147,16 @@ $user->notify(new StatusPermohonanNotification($permohonan, 'Pengajuan berhasil 
         
         return response()->json(['success' => true]);
     }
+
+    public function bacaSatuNotif($id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $notif = $user->notifications()->find($id);
+        
+        if ($notif && !$notif->read_at) {
+            $notif->markAsRead();
+        }
+        return response()->json(['success' => true]);
+    }
 }
