@@ -1,70 +1,80 @@
 <x-app-layout>
     <div class="py-10 bg-gray-50 min-h-screen">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6">
-                <div class="p-8 border-b border-gray-200">
-                    <h2 class="text-2xl font-bold text-gray-800 mb-4">Validasi Permohonan Kendaraan</h2>
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
+                <div class="p-8">
+                    <h2 class="text-2xl font-bold text-gray-800 mb-6 border-b border-gray-100 pb-4">Validasi Permohonan Kendaraan</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-md">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                         <div>
-                            <p class="text-sm text-gray-500">Nama PIC:</p>
-                            <p class="font-semibold">{{ $permohonan->nama_pic }} ({{ $permohonan->kontak_pic }})</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama PIC</p>
+                            <p class="font-bold text-gray-900 text-lg">{{ $permohonan->nama_pic }} <span class="text-sm font-normal text-gray-600">({{ $permohonan->kontak_pic }})</span></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Kebutuhan Kendaraan:</p>
-                            <p class="font-semibold text-purple-700">{{ $permohonan->kendaraan_dibutuhkan }} ({{ $permohonan->jumlah_penumpang }} Penumpang)</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Kebutuhan Kendaraan</p>
+                            <p class="font-bold text-gray-900 text-lg">{{ $permohonan->kendaraan_dibutuhkan }} <span class="text-sm font-normal text-gray-600">({{ $permohonan->jumlah_penumpang }} Orang)</span></p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Rute:</p>
-                            <p class="font-semibold">{{ $permohonan->titik_jemput }} ➔ {{ $permohonan->tujuan }}</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Rute Perjalanan</p>
+                            <p class="font-medium text-gray-800">{{ $permohonan->titik_jemput }} <span class="text-gray-400 mx-1">➔</span> {{ $permohonan->tujuan }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Jadwal:</p>
-                            <p class="font-semibold">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y H:i') }} - {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M Y H:i') }}</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Jadwal Perjalanan</p>
+                            <p class="font-medium text-gray-800">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y, H:i') }} <span class="text-gray-400 mx-1">-</span> {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M Y, H:i') }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Anggaran Diminta:</p>
-                            <p class="font-bold text-orange-600">Rp {{ number_format($permohonan->anggaran_diajukan, 0, ',', '.') }}</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Anggaran Diminta</p>
+                            <p class="font-bold text-gray-900">Rp {{ number_format($permohonan->anggaran_diajukan, 0, ',', '.') }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Surat Penugasan:</p>
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Surat Penugasan</p>
                             @if($permohonan->file_surat_penugasan)
-                                <a href="{{ asset('storage/' . $permohonan->file_surat_penugasan) }}" target="_blank" class="text-blue-600 font-bold hover:underline">Lihat Dokumen</a>
+                                <a href="{{ asset('storage/' . $permohonan->file_surat_penugasan) }}" target="_blank" class="text-green-600 font-bold hover:text-green-700 hover:underline flex items-center gap-1 mt-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                    Lihat Dokumen
+                                </a>
                             @else
-                                <span class="text-red-500">Tidak ada dokumen</span>
+                                <span class="text-gray-400 italic">Tidak ada dokumen</span>
                             @endif
                         </div>
-                        <div class="col-span-2 border-t pt-2">
-                            <p class="text-sm text-gray-500">Catatan Khusus dari Pemohon:</p>
-                            <p class="font-semibold italic bg-yellow-50 p-2 rounded">{{ $permohonan->catatan_pemohon ?? 'Tidak ada catatan.' }}</p>
+                        
+                        <div class="col-span-1 md:col-span-2 mt-2">
+                            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Catatan Khusus dari Pemohon</p>
+                            <div class="bg-gray-50 border border-gray-200 p-4 rounded-md">
+                                @if($permohonan->catatan_pemohon)
+                                    <p class="font-medium text-gray-800">{{ $permohonan->catatan_pemohon }}</p>
+                                @else
+                                    <p class="text-gray-500 italic">Status: Default (Pemohon tidak meninggalkan catatan khusus)</p>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
-                    <form action="{{ route('permohonan.validasi_admin_proses', $permohonan->id) }}" method="POST">
+                    <form action="{{ route('permohonan.validasi_admin_proses', $permohonan->id) }}" method="POST" class="border-t border-gray-100 pt-6">
                         @csrf
                         @method('PUT')
 
-                        <div class="mb-6 p-5 border border-blue-200 bg-blue-50 rounded-lg">
-                            <label class="block font-bold text-blue-900 mb-2">Kategori Kegiatan (Filter Dana) <span class="text-red-500">*</span></label>
-                            <select name="kategori_kegiatan" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 font-semibold text-gray-800">
+                        <div class="mb-6">
+                            <label class="block font-bold text-gray-800 mb-2">Kategori Kegiatan (Filter Dana) <span class="text-red-500">*</span></label>
+                            <select name="kategori_kegiatan" required class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 font-medium text-gray-800 transition">
                                 <option value="">-- Tentukan Status Kegiatan --</option>
-                                <option value="Dinas SITH">Dinas SITH (Ditanggung SITH)</option>
+                                <option value="Dinas SITH">Dinas SITH (Ditanggung Instansi)</option>
                                 <option value="Non SITH">Non-Dinas / Mandiri (Anggaran otomatis di-nol-kan)</option>
                             </select>
-                            <p class="text-xs text-blue-700 mt-2">Pilih <strong>Non-Dinas / Mandiri</strong> jika ini adalah acara himpunan/pribadi. Sistem akan me-reset anggaran menjadi Rp 0 dan mem-bypass bagian Keuangan.</p>
+                            <p class="text-xs text-gray-500 mt-2">Pilih <strong>Non-Dinas</strong> jika ini adalah acara pribadi. Sistem akan mem-bypass Keuangan.</p>
                         </div>
 
-                        <div class="mb-6">
-                            <label class="block font-medium text-gray-700 mb-2">Rekomendasi / Catatan Admin</label>
-                            <textarea name="rekomendasi_admin" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500" placeholder="Misal: Sediakan bensin penuh, tujuan jauh..."></textarea>
+                        <div class="mb-8">
+                            <label class="block font-bold text-gray-800 mb-2">Instruksi Admin (Untuk SPSI)</label>
+                            <textarea name="rekomendasi_admin" rows="3" class="w-full border-gray-300 rounded-md shadow-sm focus:ring-green-500 focus:border-green-500 transition" placeholder="Tambahkan instruksi untuk penyiapan armada..."></textarea>
                         </div>
 
                         <div class="flex items-center gap-4">
-                            <button type="submit" name="status_permohonan" value="Menunggu Proses SPSI" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow">
-                                Setujui & Teruskan ke SPSI
+                            <button type="submit" name="status_permohonan" value="Menunggu Proses SPSI" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-6 rounded-md shadow-sm transition">
+                                Setujui & Teruskan (SPSI)
                             </button>
-                            <button type="submit" name="status_permohonan" value="Ditolak" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded shadow" onclick="return confirm('Yakin ingin menolak permohonan ini?')">
-                                Tolak Permohonan
+                            <button type="submit" name="status_permohonan" value="Ditolak" class="bg-white border border-red-300 text-red-600 hover:bg-red-50 font-bold py-2.5 px-6 rounded-md transition" onclick="return confirm('Yakin ingin MENOLAK permohonan ini?')">
+                                Tolak Pengajuan
                             </button>
                         </div>
                     </form>

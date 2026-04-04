@@ -44,14 +44,16 @@ return new class extends Migration
 
             // --- STATUS TRACKING ---
             $table->enum('status_permohonan', [
-                'Menunggu Validasi Admin',
-                'Menunggu Proses SPSI',
-                'Menunggu Proses Keuangan',
-                'Menunggu Finalisasi',
-                'Disetujui',
-                'Ditolak',
-                'Selesai'
-            ])->default('Menunggu Validasi Admin');
+    'Menunggu Validasi Admin', 
+    'Menunggu Proses SPSI', 
+    'Menunggu Proses Keuangan', 
+    'Menunggu Finalisasi', 
+    'Disetujui', 
+    'Ditolak', 
+    'Selesai',
+    'Menunggu Pengembalian Dana',       // <--- Tambahan Baru
+    'Menunggu Verifikasi Pengembalian'  // <--- Tambahan Baru
+])->default('Menunggu Validasi Admin');
 
             $table->timestamps();
         });

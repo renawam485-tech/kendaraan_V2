@@ -25,7 +25,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/permohonan/buat', [PermohonanController::class, 'create'])->name('permohonan.create');
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');
     Route::put('/permohonan/{id}/selesai', [PermohonanController::class, 'selesaikanSewa'])->name('permohonan.selesai');
-
+    Route::put('/permohonan/{id}/submit-pengembalian', [PermohonanController::class, 'submitPengembalian'])->name('permohonan.submit_pengembalian');
+    Route::put('/permohonan/{id}/verifikasi-pengembalian', [PermohonanController::class, 'verifikasiPengembalian'])->name('permohonan.verifikasi_pengembalian');
 
     // =========================================================
     // 2. GRUP KEAMANAN: KEPALA ADMINISTRASI
