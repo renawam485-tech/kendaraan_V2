@@ -59,7 +59,7 @@
                         </div>
                         <div class="grid grid-cols-3 gap-2 border-b border-gray-50 pb-3">
                             <div class="col-span-1 text-sm font-semibold text-gray-500">Kategori</div>
-                            <div class="col-span-2 text-sm text-gray-900">{{ $permohonan->kategori_kegiatan ?? 'Belum ditentukan Admin' }}</div>
+                            <div class="col-span-2 text-sm font-bold text-purple-600">{{ $permohonan->kategori_kegiatan ?? 'Belum ditentukan Admin' }}</div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 border-b border-gray-50 pb-3">
                             <div class="col-span-1 text-sm font-semibold text-gray-500">Tujuan</div>
@@ -68,6 +68,10 @@
                         <div class="grid grid-cols-3 gap-2 border-b border-gray-50 pb-3">
                             <div class="col-span-1 text-sm font-semibold text-gray-500">Penumpang</div>
                             <div class="col-span-2 text-sm text-gray-900">{{ $permohonan->jumlah_penumpang }} Orang</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 border-b border-gray-50 pb-3">
+                            <div class="col-span-1 text-sm font-semibold text-gray-500">Catatan PIC</div>
+                            <div class="col-span-2 text-sm text-gray-900 italic">{{ $permohonan->catatan_pemohon ?? '-' }}</div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 border-b border-gray-50 pb-3">
                             <div class="col-span-1 text-sm font-semibold text-gray-500">Waktu Jalan</div>
@@ -113,7 +117,7 @@
                             @else
                                 <div class="text-center py-4">
                                     <p class="text-sm text-gray-500 italic mb-2">Menunggu alokasi dari bagian armada.</p>
-                                    <p class="text-xs text-gray-400">Permintaan awal: {{ $permohonan->kendaraan_dibutuhkan }}</p>
+                                    <p class="text-xs text-gray-400">Permintaan awal: <strong>{{ $permohonan->kendaraan_dibutuhkan }}</strong></p>
                                 </div>
                             @endif
                         </div>
@@ -127,13 +131,13 @@
                         <div class="p-6">
                             <div class="space-y-3">
                                 <div class="flex justify-between border-b pb-2">
-                                    <span class="text-sm text-gray-500">Anggaran Diajukan Pemohon</span>
+                                    <span class="text-sm text-gray-500">Anggaran Diajukan</span>
                                     <span class="text-sm font-semibold text-gray-900">Rp {{ number_format((float) preg_replace('/[^0-9.]/', '', $permohonan->anggaran_diajukan ?? 0), 0, ',', '.') }}</span>
                                 </div>
                                 
                                 @if($permohonan->estimasi_biaya_operasional)
                                     <div class="flex justify-between border-b pb-2">
-                                        <span class="text-sm text-gray-500">Estimasi Kebutuhan (SPSI)</span>
+                                        <span class="text-sm text-gray-500">Estimasi SPSI</span>
                                         <span class="text-sm font-semibold text-orange-600">Rp {{ number_format((float) preg_replace('/[^0-9.]/', '', $permohonan->estimasi_biaya_operasional), 0, ',', '.') }}</span>
                                     </div>
                                 @endif
@@ -148,7 +152,11 @@
                                     </div>
                                 @else
                                     <div class="mt-4 text-center">
-                                        <p class="text-sm text-gray-500 italic">Anggaran belum disetujui / dalam proses penilaian.</p>
+                                        @if($permohonan->anggaran_diajukan == 0 && str_contains(strtolower($permohonan->kategori_kegiatan), 'non'))
+                                            <p class="text-sm text-gray-500 italic">Bypass Keuangan (Dana Pribadi / Non-Dinas).</p>
+                                        @else
+                                            <p class="text-sm text-gray-500 italic">Anggaran belum disetujui / dalam proses penilaian.</p>
+                                        @endif
                                     </div>
                                 @endif
                             </div>
@@ -156,7 +164,9 @@
                     </div>
 
                 </div>
-            </div> <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm">
+            </div> 
+            
+            <div class="mt-8 flex flex-col sm:flex-row justify-between items-center gap-4 bg-gray-50 p-4 sm:p-6 rounded-lg border border-gray-200 shadow-sm">
                 <a href="{{ url()->previous() == url()->current() ? route('dashboard') : url()->previous() }}" class="w-full sm:w-auto text-center bg-gray-500 hover:bg-gray-600 text-white font-bold py-3 sm:py-2 px-6 rounded-md transition shadow-sm">
                     &larr; Kembali
                 </a>
