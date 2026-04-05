@@ -7,7 +7,7 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
             <div class="mb-4 flex justify-end px-4 sm:px-0">
                 <a href="{{ route('permohonan.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-6 rounded-lg shadow-md transition transform hover:scale-105">
                     + Buat Pengajuan Baru
@@ -17,25 +17,39 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                 <div class="p-6 text-gray-900">
                     <h3 class="font-bold text-lg mb-6 border-b pb-2">Riwayat Pengajuan Saya</h3>
-                    
+
+                    {{-- MOBILE VIEW --}}
                     <div class="block md:hidden space-y-4">
                         @forelse($permohonans as $p)
-                            <div class="border rounded-lg p-4 shadow-sm {{ $p->status_permohonan === 'Disetujui' ? 'border-green-400 bg-green-50' : 'border-gray-200' }}">
+                            @php
+                                // FIX BUG 10: warna badge per status
+                                $badgeClass = match($p->status_permohonan) {
+                                    'Disetujui'                      => 'bg-blue-200 text-blue-800',
+                                    'Selesai'                        => 'bg-green-200 text-green-800',
+                                    'Ditolak'                        => 'bg-red-200 text-red-800',
+                                    'Menunggu Pengembalian Dana'     => 'bg-orange-200 text-orange-800',
+                                    'Menunggu Verifikasi Pengembalian' => 'bg-yellow-200 text-yellow-800',
+                                    default                          => 'bg-gray-200 text-gray-800',
+                                };
+                                $borderClass = in_array($p->status_permohonan, ['Disetujui', 'Selesai']) ? 'border-green-400 bg-green-50' : 'border-gray-200';
+                            @endphp
+                            <div class="border rounded-lg p-4 shadow-sm {{ $borderClass }}">
                                 <div class="flex justify-between items-start mb-2">
                                     <span class="font-bold text-sm text-gray-800">{{ $p->tujuan }}</span>
-                                    <span class="text-[10px] font-bold px-2 py-1 rounded-full {{ $p->status_permohonan === 'Disetujui' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800' }}">
+                                    <span class="text-[10px] font-bold px-2 py-1 rounded-full {{ $badgeClass }}">
                                         {{ $p->status_permohonan }}
                                     </span>
                                 </div>
                                 <div class="text-xs text-gray-600 mb-4">
                                     Berangkat: {{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y H:i') }}
                                 </div>
-                                
+
                                 <div class="flex gap-2">
                                     <a href="{{ route('permohonan.show', $p->id) }}" class="flex-1 text-center bg-indigo-50 text-indigo-700 border border-indigo-200 font-bold py-2 rounded-md text-sm hover:bg-indigo-100">
                                         Detail
                                     </a>
-                                    @if($p->status_permohonan === 'Disetujui')
+                                    {{-- FIX BUG 9: cetak juga tersedia untuk semua status post-approval --}}
+                                    @if(in_array($p->status_permohonan, ['Disetujui', 'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai']))
                                         <a href="{{ route('permohonan.cetak', $p->id) }}" target="_blank" class="flex-1 text-center bg-green-600 text-white hover:bg-green-700 font-bold py-2 rounded-md text-sm shadow-sm">
                                             🖨️ Cetak SPJ
                                         </a>
@@ -47,6 +61,7 @@
                         @endforelse
                     </div>
 
+                    {{-- DESKTOP VIEW --}}
                     <div class="hidden md:block overflow-x-auto">
                         <table class="w-full text-sm text-left">
                             <thead class="bg-gray-50 text-gray-700 uppercase">
@@ -59,19 +74,32 @@
                             </thead>
                             <tbody>
                                 @forelse($permohonans as $p)
-                                    <tr class="border-b hover:bg-gray-50 {{ $p->status_permohonan === 'Disetujui' ? 'bg-green-50/30' : '' }}">
+                                    @php
+                                        // FIX BUG 10: warna badge per status (desktop)
+                                        $badgeClass = match($p->status_permohonan) {
+                                            'Disetujui'                        => 'bg-blue-200 text-blue-800',
+                                            'Selesai'                          => 'bg-green-200 text-green-800',
+                                            'Ditolak'                          => 'bg-red-200 text-red-800',
+                                            'Menunggu Pengembalian Dana'       => 'bg-orange-200 text-orange-800',
+                                            'Menunggu Verifikasi Pengembalian' => 'bg-yellow-200 text-yellow-800',
+                                            default                            => 'bg-gray-200 text-gray-800',
+                                        };
+                                        $rowClass = in_array($p->status_permohonan, ['Disetujui', 'Selesai']) ? 'bg-green-50/30' : '';
+                                    @endphp
+                                    <tr class="border-b hover:bg-gray-50 {{ $rowClass }}">
                                         <td class="px-6 py-4 font-bold text-gray-800">{{ $p->tujuan }}</td>
                                         <td class="px-6 py-4">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y H:i') }}</td>
                                         <td class="px-6 py-4">
-                                            <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $p->status_permohonan === 'Disetujui' ? 'bg-green-200 text-green-800' : 'bg-gray-200 text-gray-800' }}">
+                                            <span class="px-2 py-1 rounded-full text-xs font-semibold {{ $badgeClass }}">
                                                 {{ $p->status_permohonan }}
                                             </span>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <div class="flex justify-center items-center gap-3">
                                                 <a href="{{ route('permohonan.show', $p->id) }}" class="text-indigo-600 font-bold hover:underline">Lihat Detail</a>
-                                                
-                                                @if($p->status_permohonan === 'Disetujui')
+
+                                                {{-- FIX BUG 9: cetak tersedia untuk semua status post-approval --}}
+                                                @if(in_array($p->status_permohonan, ['Disetujui', 'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai']))
                                                     <span class="text-gray-300">|</span>
                                                     <a href="{{ route('permohonan.cetak', $p->id) }}" target="_blank" class="text-green-600 font-bold hover:underline flex items-center gap-1 hover:text-green-800">
                                                         🖨️ Cetak Surat Jalan

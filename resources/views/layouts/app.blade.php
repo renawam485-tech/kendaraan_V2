@@ -113,18 +113,34 @@
                                 $id = $notif->data['permohonan_id'];
                                 $role = auth()->user()->role;
                                 $status = $notif->data['status'] ?? '';
+                                // FIX BUG 12: routing notifikasi diperluas per role & status
                                 if ($role === 'pengguna') {
+                                    // Pengguna selalu diarahkan ke halaman detail permohonan
                                     $detailUrl = route('permohonan.show', $id);
                                 } elseif ($role === 'kepala_admin') {
                                     if ($status === 'Menunggu Validasi Admin') {
                                         $detailUrl = route('permohonan.validasi_admin', $id);
                                     } elseif ($status === 'Menunggu Finalisasi') {
                                         $detailUrl = route('permohonan.finalisasi_admin', $id);
+                                    } else {
+                                        // Status lain (misal notif dari keuangan/spsi) → lihat detail
+                                        $detailUrl = route('permohonan.show', $id);
                                     }
-                                } elseif ($role === 'spsi' && $status === 'Menunggu Proses SPSI') {
-                                    $detailUrl = route('permohonan.proses_spsi', $id);
-                                } elseif ($role === 'keuangan' && $status === 'Menunggu Proses Keuangan') {
-                                    $detailUrl = route('permohonan.proses_keuangan', $id);
+                                } elseif ($role === 'spsi') {
+                                    if ($status === 'Menunggu Proses SPSI') {
+                                        $detailUrl = route('permohonan.proses_spsi', $id);
+                                    } else {
+                                        $detailUrl = route('permohonan.show', $id);
+                                    }
+                                } elseif ($role === 'keuangan') {
+                                    if ($status === 'Menunggu Proses Keuangan') {
+                                        $detailUrl = route('permohonan.proses_keuangan', $id);
+                                    } elseif ($status === 'Menunggu Verifikasi Pengembalian') {
+                                        // FIX: keuangan diarahkan ke detail untuk verifikasi pengembalian
+                                        $detailUrl = route('permohonan.show', $id);
+                                    } else {
+                                        $detailUrl = route('permohonan.show', $id);
+                                    }
                                 }
                             }
                         @endphp

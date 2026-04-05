@@ -8,25 +8,37 @@
 
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            
+
+            {{-- STATUS HEADER --}}
+            @php
+                // FIX BUG 11: warna badge status yang informatif per kondisi
+                $statusClass = match($permohonan->status_permohonan) {
+                    'Selesai'                          => 'border-green-500 text-green-700 bg-green-50',
+                    'Disetujui'                        => 'border-blue-500 text-blue-700 bg-blue-50',
+                    'Ditolak'                          => 'border-red-500 text-red-700 bg-red-50',
+                    'Menunggu Pengembalian Dana'        => 'border-orange-500 text-orange-700 bg-orange-50',
+                    'Menunggu Verifikasi Pengembalian'  => 'border-yellow-500 text-yellow-700 bg-yellow-50',
+                    default                            => 'border-gray-800 text-gray-800 bg-gray-50',
+                };
+            @endphp
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 border border-gray-200">
                 <div class="p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <h3 class="text-lg font-bold text-gray-900">Status Dokumen</h3>
                         <p class="text-xs text-gray-500 mt-1">Terakhir update: {{ $permohonan->updated_at->diffForHumans() }}</p>
                     </div>
-                    <div class="px-6 py-2 rounded-full border-2 font-bold text-sm text-center uppercase tracking-widest
-                        {{ $permohonan->status_permohonan === 'Selesai' ? 'border-green-500 text-green-700 bg-green-50' : 'border-gray-800 text-gray-800 bg-gray-50' }}">
+                    <div class="px-6 py-2 rounded-full border-2 font-bold text-sm text-center uppercase tracking-widest {{ $statusClass }}">
                         {{ $permohonan->status_permohonan }}
                     </div>
                 </div>
             </div>
 
+            {{-- BANNER: Menunggu Pengembalian Dana --}}
             @if($permohonan->status_permohonan === 'Menunggu Pengembalian Dana')
                 <div class="bg-red-50 border-l-4 border-red-500 p-6 mb-6 rounded-r-lg shadow-sm">
                     <h3 class="text-red-800 font-bold text-lg mb-2">⚠️ Sisa Dana Wajib Dikembalikan</h3>
-                    <p class="text-sm text-red-700 mb-4">Terdapat sisa anggaran Dinas SITH sebesar <strong class="text-lg">Rp {{ number_format($permohonan->rab_disetujui - $permohonan->biaya_aktual, 0, ',', '.') }}</strong>. Mohon segera transfer sisa dana tersebut ke rekening SITH dan unggah bukti transfer Anda di bawah ini agar tiket dapat ditutup (Selesai).</p>
-                    
+                    <p class="text-sm text-red-700 mb-4">Terdapat sisa anggaran Dinas SITH sebesar <strong class="text-lg">Rp {{ number_format($permohonan->rab_disetujui - $permohonan->biaya_aktual, 0, ',', '.') }}</strong>. Mohon segera transfer sisa dana tersebut ke rekening SITH dan unggah bukti transfer di bawah ini.</p>
+
                     @if(Auth::user()->role === 'pengguna')
                     <form action="{{ route('permohonan.submit_pengembalian', $permohonan->id) }}" method="POST" enctype="multipart/form-data" class="flex flex-col md:flex-row items-center gap-4">
                         @csrf @method('PUT')
@@ -37,6 +49,7 @@
                 </div>
             @endif
 
+            {{-- BANNER: Menunggu Verifikasi Pengembalian (untuk keuangan) --}}
             @if($permohonan->status_permohonan === 'Menunggu Verifikasi Pengembalian' && Auth::user()->role === 'keuangan')
                 <div class="bg-blue-50 border border-blue-200 p-6 mb-6 rounded-lg shadow-sm flex justify-between items-center">
                     <div>
@@ -50,6 +63,7 @@
                 </div>
             @endif
 
+            {{-- DETAIL GRID --}}
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="bg-white rounded-lg border border-gray-200 p-6 shadow-sm">
                     <h4 class="font-bold text-gray-800 mb-4 border-b border-gray-100 pb-2">Informasi Kegiatan</h4>
@@ -57,7 +71,10 @@
                         <li><span class="font-semibold w-1/3 inline-block">Nama PIC:</span> {{ $permohonan->nama_pic }}</li>
                         <li><span class="font-semibold w-1/3 inline-block">Kategori:</span> {{ $permohonan->kategori_kegiatan }}</li>
                         <li><span class="font-semibold w-1/3 inline-block">Tujuan:</span> {{ $permohonan->tujuan }}</li>
-                        <li><span class="font-semibold w-1/3 inline-block top-0">Jadwal:</span> {{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M y H:i') }} - {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M y H:i') }}</li>
+                        <li><span class="font-semibold w-1/3 inline-block top-0">Jadwal:</span>
+                            {{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M y H:i') }}
+                            - {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M y H:i') }}
+                        </li>
                     </ul>
                 </div>
 
@@ -81,6 +98,7 @@
                 </div>
             </div>
 
+            {{-- FORM LPJ: hanya untuk pengguna saat Disetujui --}}
             @if($permohonan->status_permohonan === 'Disetujui' && Auth::user()->role === 'pengguna')
                 <div class="mt-8 bg-white border border-gray-200 p-6 rounded-lg shadow-sm">
                     <h3 class="text-lg font-bold text-gray-900 mb-4">Selesaikan Perjalanan & Form LPJ</h3>
@@ -100,7 +118,9 @@
                         @else
                             <p class="text-sm text-gray-600 mb-4">Karena kegiatan Non-Dinas, Anda tidak perlu mengisi laporan pengeluaran keuangan kampus.</p>
                         @endif
-                        <button type="submit" onclick="return confirm('Yakin ingin menutup tiket perjalanan ini?')" class="bg-gray-800 hover:bg-black text-white font-bold py-2.5 px-6 rounded transition">Tutup & Selesaikan Perjalanan</button>
+                        <button type="submit" onclick="return confirm('Yakin ingin menutup tiket perjalanan ini?')" class="bg-gray-800 hover:bg-black text-white font-bold py-2.5 px-6 rounded transition">
+                            Tutup & Selesaikan Perjalanan
+                        </button>
                     </form>
                 </div>
             @endif

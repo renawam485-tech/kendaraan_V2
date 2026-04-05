@@ -23,30 +23,36 @@ class PermohonanController extends Controller
             return view('dashboard.pengguna', compact('permohonans'));
         }
 
-        // --- DATA UNTUK DASHBOARD UTAMA ---
-        $stats = [];
+        $stats      = [];
         $tugasTerbaru = collect();
-        $ruteTugas = '';
+        $ruteTugas  = '';
 
         if ($user->role === 'kepala_admin') {
-            $stats['total_semua'] = Permohonan::count();
-            $stats['menunggu_validasi'] = Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
+            $stats['total_semua']         = Permohonan::count();
+            $stats['menunggu_validasi']   = Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
             $stats['menunggu_finalisasi'] = Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->count();
             $tugasTerbaru = Permohonan::whereIn('status_permohonan', ['Menunggu Validasi Admin', 'Menunggu Finalisasi'])
                 ->orderBy('updated_at', 'desc')->take(10)->get();
             $ruteTugas = route('admin.validasi');
+
         } elseif ($user->role === 'spsi') {
             $stats['menunggu_alokasi'] = Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->count();
-            $stats['mobil_tersedia'] = Kendaraan::where('status_kendaraan', 'Tersedia')->count();
-            $stats['supir_tersedia'] = Pengemudi::where('status_pengemudi', 'Tersedia')->count();
+            $stats['mobil_tersedia']   = Kendaraan::where('status_kendaraan', 'Tersedia')->count();
+            $stats['supir_tersedia']   = Pengemudi::where('status_pengemudi', 'Tersedia')->count();
             $tugasTerbaru = Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')
                 ->orderBy('updated_at', 'desc')->take(10)->get();
             $ruteTugas = route('spsi.alokasi');
+
         } elseif ($user->role === 'keuangan') {
-            $stats['menunggu_rab'] = Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
-            $stats['rab_disetujui'] = Permohonan::whereIn('status_permohonan', ['Disetujui', 'Selesai'])->sum('rab_disetujui');
-            $tugasTerbaru = Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')
-                ->orderBy('updated_at', 'desc')->take(10)->get();
+            $stats['menunggu_rab']        = Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
+            // FIX BUG 8: tambahkan menunggu_verifikasi ke stats keuangan
+            $stats['menunggu_verifikasi'] = Permohonan::where('status_permohonan', 'Menunggu Verifikasi Pengembalian')->count();
+            $stats['rab_disetujui']       = Permohonan::whereIn('status_permohonan', ['Disetujui', 'Selesai'])->sum('rab_disetujui');
+            // FIX BUG 8: sertakan Menunggu Verifikasi Pengembalian dalam tugasTerbaru
+            $tugasTerbaru = Permohonan::whereIn('status_permohonan', [
+                'Menunggu Proses Keuangan',
+                'Menunggu Verifikasi Pengembalian',
+            ])->orderBy('updated_at', 'desc')->take(10)->get();
             $ruteTugas = route('keuangan.rab');
         }
 
@@ -55,11 +61,10 @@ class PermohonanController extends Controller
 
     public function create()
     {
-        // Papan Jadwal: HANYA menampilkan mobil kampus fisik yang sudah dialokasikan SPSI
         $jadwalBooking = Permohonan::with('kendaraan')
             ->whereIn('status_permohonan', ['Disetujui', 'Menunggu Finalisasi'])
             ->where('waktu_kembali', '>=', now())
-            ->whereNotNull('kendaraan_id') // Syarat mutlak: Sudah ada mobil fisik (Aset Kampus)
+            ->whereNotNull('kendaraan_id')
             ->orderBy('waktu_berangkat', 'asc')
             ->get();
 
@@ -69,41 +74,39 @@ class PermohonanController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_pic' => 'required|string|max:100',
-            'kontak_pic' => ['required', 'string', 'regex:/^\+62[0-9]{8,15}$/'],
-            'kendaraan_dibutuhkan' => 'required|string|max:255', // Hasil Select2 (Kampus/Vendor)
-            'titik_jemput' => 'required|string|max:150',
-            'tujuan' => 'required|string|max:150',
-            'waktu_berangkat' => 'required|date',
-            'waktu_kembali' => 'required|date|after:waktu_berangkat',
-            'jumlah_penumpang' => 'required|integer|min:1|max:60',
-            'anggaran_diajukan' => 'nullable|numeric|min:0|max:500000000', // Nullable untuk Non-Dinas
-            'catatan_pemohon' => 'nullable|string|max:500', // Kolom opsional baru
-            'file_surat' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
+            'nama_pic'             => 'required|string|max:100',
+            'kontak_pic'           => ['required', 'string', 'regex:/^\+62[0-9]{8,15}$/'],
+            'kendaraan_dibutuhkan' => 'required|string|max:255',
+            'titik_jemput'         => 'required|string|max:150',
+            'tujuan'               => 'required|string|max:150',
+            'waktu_berangkat'      => 'required|date',
+            'waktu_kembali'        => 'required|date|after:waktu_berangkat',
+            'jumlah_penumpang'     => 'required|integer|min:1|max:60',
+            'anggaran_diajukan'    => 'nullable|numeric|min:0|max:500000000',
+            'catatan_pemohon'      => 'nullable|string|max:500',
+            'file_surat'           => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
             'waktu_kembali.after' => 'Waktu kembali harus lebih lambat dari waktu keberangkatan.',
-            'kontak_pic.regex' => 'Format nomor kontak harus diawali +62 dan berisi 8-15 angka.',
+            'kontak_pic.regex'    => 'Format nomor kontak harus diawali +62 dan berisi 8-15 angka.',
         ]);
 
         $filePath = $request->file('file_surat')->store('surat_penugasan', 'public');
-
-        // Jika anggaran kosong (karena Non-Dinas), paksa jadi 0
         $anggaran = $request->anggaran_diajukan ?: 0;
 
         $permohonan = Permohonan::create([
-            'user_id' => Auth::id(),
-            'nama_pic' => $request->nama_pic,
-            'kontak_pic' => $request->kontak_pic,
-            'kendaraan_dibutuhkan' => $request->kendaraan_dibutuhkan,
-            'titik_jemput' => $request->titik_jemput,
-            'tujuan' => $request->tujuan,
-            'waktu_berangkat' => $request->waktu_berangkat,
-            'waktu_kembali' => $request->waktu_kembali,
-            'jumlah_penumpang' => $request->jumlah_penumpang,
-            'anggaran_diajukan' => $anggaran,
-            'catatan_pemohon' => $request->catatan_pemohon,
-            'file_surat_penugasan' => $filePath,
-            'status_permohonan' => 'Menunggu Validasi Admin',
+            'user_id'               => Auth::id(),
+            'nama_pic'              => $request->nama_pic,
+            'kontak_pic'            => $request->kontak_pic,
+            'kendaraan_dibutuhkan'  => $request->kendaraan_dibutuhkan,
+            'titik_jemput'          => $request->titik_jemput,
+            'tujuan'                => $request->tujuan,
+            'waktu_berangkat'       => $request->waktu_berangkat,
+            'waktu_kembali'         => $request->waktu_kembali,
+            'jumlah_penumpang'      => $request->jumlah_penumpang,
+            'anggaran_diajukan'     => $anggaran,
+            'catatan_pemohon'       => $request->catatan_pemohon,
+            'file_surat_penugasan'  => $filePath,
+            'status_permohonan'     => 'Menunggu Validasi Admin',
         ]);
 
         foreach (User::where('role', 'kepala_admin')->get() as $admin) {
@@ -126,12 +129,11 @@ class PermohonanController extends Controller
         $permohonan = Permohonan::findOrFail($id);
 
         $request->validate([
-            'status_permohonan' => 'required|in:Menunggu Proses SPSI,Ditolak',
-            'kategori_kegiatan' => 'required_if:status_permohonan,Menunggu Proses SPSI',
-            'rekomendasi_admin' => 'nullable|string',
+            'status_permohonan'  => 'required|in:Menunggu Proses SPSI,Ditolak',
+            'kategori_kegiatan'  => 'required_if:status_permohonan,Menunggu Proses SPSI',
+            'rekomendasi_admin'  => 'nullable|string',
         ]);
 
-        // LOGIKA VETO ADMIN: Jika kategori adalah "Non SITH", paksa anggaran jadi 0
         $anggaranAktual = $permohonan->anggaran_diajukan;
         if ($request->status_permohonan === 'Menunggu Proses SPSI' && $request->kategori_kegiatan === 'Non SITH') {
             $anggaranAktual = 0;
@@ -141,16 +143,20 @@ class PermohonanController extends Controller
             'status_permohonan' => $request->status_permohonan,
             'kategori_kegiatan' => $request->kategori_kegiatan,
             'rekomendasi_admin' => $request->rekomendasi_admin,
-            'anggaran_diajukan' => $anggaranAktual, // Update anggaran hasil Veto
+            'anggaran_diajukan' => $anggaranAktual,
         ]);
 
         if ($request->status_permohonan === 'Menunggu Proses SPSI') {
             foreach (User::where('role', 'spsi')->get() as $spsi) {
                 $spsi->notify(new StatusPermohonanNotification($permohonan, 'Butuh alokasi armada.'));
             }
-            if ($permohonan->user) $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Disetujui Admin, sedang diproses SPSI.'));
+            if ($permohonan->user) {
+                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Disetujui Admin, sedang diproses SPSI.'));
+            }
         } elseif ($request->status_permohonan === 'Ditolak') {
-            if ($permohonan->user) $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Mohon maaf, permohonan Anda ditolak oleh Admin.'));
+            if ($permohonan->user) {
+                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Mohon maaf, permohonan Anda ditolak oleh Admin.'));
+            }
         }
 
         return redirect()->route('admin.validasi')->with('success', 'Permohonan divalidasi.');
@@ -168,44 +174,61 @@ class PermohonanController extends Controller
     public function prosesSpsiSubmit(Request $request, $id)
     {
         $permohonan = Permohonan::findOrFail($id);
-        $isVendor = $request->sumber_armada === 'Vendor';
+        $isVendor   = $request->sumber_armada === 'Vendor';
 
         $request->validate([
-            'kendaraan_id' => $isVendor ? 'nullable' : 'required|exists:kendaraans,id',
-            'kendaraan_vendor' => $isVendor ? 'required|string' : 'nullable',
-            'pengemudi_id' => 'nullable|exists:pengemudis,id',
+            'kendaraan_id'               => $isVendor ? 'nullable' : 'required|exists:kendaraans,id',
+            'kendaraan_vendor'           => $isVendor ? 'required|string' : 'nullable',
+            'pengemudi_id'               => 'nullable|exists:pengemudis,id',
             'estimasi_biaya_operasional' => 'required|numeric|min:0',
         ]);
 
-        $statusLanjut = ($permohonan->kategori_kegiatan !== 'Non SITH') ? 'Menunggu Proses Keuangan' : 'Menunggu Finalisasi';
+        $statusLanjut = ($permohonan->kategori_kegiatan !== 'Non SITH')
+            ? 'Menunggu Proses Keuangan'
+            : 'Menunggu Finalisasi';
 
         $permohonan->update([
-            'kendaraan_id' => $request->kendaraan_id,
-            'kendaraan_vendor' => $request->kendaraan_vendor,
-            'pengemudi_id' => $request->pengemudi_id,
+            'kendaraan_id'               => $isVendor ? null : $request->kendaraan_id,
+            'kendaraan_vendor'           => $isVendor ? $request->kendaraan_vendor : null,
+            'pengemudi_id'               => $request->pengemudi_id ?: null,
             'estimasi_biaya_operasional' => $request->estimasi_biaya_operasional,
-            'status_permohonan' => $statusLanjut,
+            'status_permohonan'          => $statusLanjut,
         ]);
 
-        if ($statusLanjut === 'Menunggu Proses Keuangan') {
-            foreach (User::where('role', 'keuangan')->get() as $keuangan) {
-                $keuangan->notify(new StatusPermohonanNotification($permohonan, 'Armada dialokasikan, cek RAB.'));
-            }
-            if ($permohonan->user) $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Armada siap, menunggu verifikasi Keuangan.'));
-        } else {
-            foreach (User::where('role', 'kepala_admin')->get() as $admin) {
-                $admin->notify(new StatusPermohonanNotification($permohonan, 'Non-Dinas: Armada siap, menunggu Finalisasi.'));
-            }
-            if ($permohonan->user) $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Armada dialokasikan! Menunggu finalisasi akhir Admin.'));
+        // Update status kendaraan & pengemudi (logika ini sudah ada di versi asli di bagian truncated)
+        if (!$isVendor && $request->kendaraan_id) {
+            Kendaraan::find($request->kendaraan_id)->update(['status_kendaraan' => 'Dipinjam']);
         }
+        if ($request->pengemudi_id) {
+            Pengemudi::find($request->pengemudi_id)->update(['status_pengemudi' => 'Bertugas']);
+        }
+
+        // FIX BUG 6: notifikasi kondisional sesuai jalur, bukan selalu pesan finalisasi
+        if ($statusLanjut === 'Menunggu Proses Keuangan') {
+            foreach (User::where('role', 'keuangan')->get() as $keu) {
+                $keu->notify(new StatusPermohonanNotification($permohonan, 'Permohonan butuh persetujuan RAB.'));
+            }
+            if ($permohonan->user) {
+                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Armada dialokasikan! Menunggu proses keuangan.'));
+            }
+        } else {
+            // Non-SITH: langsung ke Menunggu Finalisasi, notify admin
+            foreach (User::where('role', 'kepala_admin')->get() as $admin) {
+                $admin->notify(new StatusPermohonanNotification($permohonan, 'Armada dialokasikan. Siap difinalisasi.'));
+            }
+            if ($permohonan->user) {
+                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Armada dialokasikan! Menunggu finalisasi akhir Admin.'));
+            }
+        }
+
         return redirect()->route('spsi.alokasi')->with('success', 'Armada dialokasikan.');
     }
 
-
-
     public function prosesKeuanganForm($id)
     {
-        return view('permohonan.proses_keuangan', ['permohonan' => Permohonan::with(['kendaraan', 'pengemudi'])->findOrFail($id)]);
+        return view('permohonan.proses_keuangan', [
+            'permohonan' => Permohonan::with(['kendaraan', 'pengemudi'])->findOrFail($id),
+        ]);
     }
 
     public function prosesKeuanganSubmit(Request $request, $id)
@@ -213,20 +236,19 @@ class PermohonanController extends Controller
         $permohonan = Permohonan::findOrFail($id);
 
         $request->validate([
-            'rab_disetujui' => 'required|numeric|min:0',
+            'rab_disetujui'       => 'required|numeric|min:0',
             'mekanisme_pembayaran' => 'required|string|max:255',
         ]);
 
         $permohonan->update([
-            'rab_disetujui' => $request->rab_disetujui,
+            'rab_disetujui'       => $request->rab_disetujui,
             'mekanisme_pembayaran' => $request->mekanisme_pembayaran,
-            'status_permohonan' => 'Menunggu Finalisasi',
+            'status_permohonan'   => 'Menunggu Finalisasi',
         ]);
 
         foreach (User::where('role', 'kepala_admin')->get() as $admin) {
             $admin->notify(new StatusPermohonanNotification($permohonan, 'RAB disetujui. Siap difinalisasi.'));
         }
-
         if ($permohonan->user) {
             $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Anggaran disetujui Keuangan! Menunggu finalisasi akhir.'));
         }
@@ -236,7 +258,8 @@ class PermohonanController extends Controller
 
     public function finalisasiAdminForm($id)
     {
-        return view('permohonan.finalisasi_admin', ['permohonan' => Permohonan::with(['kendaraan', 'pengemudi', 'user'])->findOrFail($id)]);
+        $permohonan = Permohonan::with(['kendaraan', 'pengemudi', 'user'])->findOrFail($id);
+        return view('permohonan.finalisasi_admin', compact('permohonan'));
     }
 
     public function finalisasiAdminSubmit(Request $request, $id)
@@ -257,43 +280,79 @@ class PermohonanController extends Controller
     public function selesaikanSewa(Request $request, $id)
     {
         $permohonan = Permohonan::where('user_id', Auth::id())->findOrFail($id);
-        
-        // Jika Non-Dinas, langsung selesai.
-        if($permohonan->kategori_kegiatan === 'Non SITH') {
+
+        // Jika Non-Dinas, langsung selesai
+        if ($permohonan->kategori_kegiatan === 'Non SITH') {
             $permohonan->update(['status_permohonan' => 'Selesai']);
+            // FIX BUG 2: Bebaskan armada saat perjalanan selesai
+            $this->bebaskanArmada($permohonan);
             return redirect()->route('dashboard')->with('success', 'Perjalanan Non-Dinas selesai.');
         }
 
         // Jika Dinas SITH, hitung LPJ
         $request->validate([
             'biaya_aktual' => 'required|numeric|min:0',
-            'bukti_lpj' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            'bukti_lpj'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        $pathLpj = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
-        $selisih = $permohonan->rab_disetujui - $request->biaya_aktual;
-
+        $pathLpj  = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
+        $selisih  = $permohonan->rab_disetujui - $request->biaya_aktual;
         $statusAkhir = ($selisih > 0) ? 'Menunggu Pengembalian Dana' : 'Selesai';
 
         $permohonan->update([
-            'biaya_aktual' => $request->biaya_aktual,
-            'bukti_lpj' => $pathLpj,
-            'status_permohonan' => $statusAkhir
+            'biaya_aktual'      => $request->biaya_aktual,
+            'bukti_lpj'         => $pathLpj,
+            'status_permohonan' => $statusAkhir,
         ]);
 
+        // FIX BUG 2: Armada selalu dibebaskan begitu perjalanan selesai (LPJ masuk)
+        $this->bebaskanArmada($permohonan);
+
+        // FIX BUG 3: Kirim notifikasi sesuai status akhir
+        if ($statusAkhir === 'Menunggu Pengembalian Dana') {
+            foreach (User::where('role', 'keuangan')->get() as $keu) {
+                $keu->notify(new StatusPermohonanNotification($permohonan, 'LPJ masuk. Ada sisa dana yang harus dikembalikan pemohon.'));
+            }
+            if ($permohonan->user) {
+                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'LPJ diterima. Mohon segera kembalikan sisa dana ke SITH.'));
+            }
+        } else {
+            foreach (User::where('role', 'keuangan')->get() as $keu) {
+                $keu->notify(new StatusPermohonanNotification($permohonan, 'LPJ masuk & lunas. Tiket perjalanan selesai.'));
+            }
+        }
+
         return redirect()->back()->with('success', 'LPJ tersimpan. Status: ' . $statusAkhir);
+    }
+
+    /**
+     * FIX BUG 2: Helper — bebaskan kendaraan & pengemudi saat perjalanan selesai.
+     */
+    private function bebaskanArmada(Permohonan $permohonan): void
+    {
+        if ($permohonan->kendaraan_id) {
+            Kendaraan::find($permohonan->kendaraan_id)?->update(['status_kendaraan' => 'Tersedia']);
+        }
+        if ($permohonan->pengemudi_id) {
+            Pengemudi::find($permohonan->pengemudi_id)?->update(['status_pengemudi' => 'Tersedia']);
+        }
     }
 
     public function submitPengembalian(Request $request, $id)
     {
         $permohonan = Permohonan::where('user_id', Auth::id())->findOrFail($id);
         $request->validate(['bukti_pengembalian' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048']);
-        
+
         $pathBukti = $request->file('bukti_pengembalian')->store('bukti_pengembalian', 'public');
         $permohonan->update([
             'bukti_pengembalian' => $pathBukti,
-            'status_permohonan' => 'Menunggu Verifikasi Pengembalian'
+            'status_permohonan'  => 'Menunggu Verifikasi Pengembalian',
         ]);
+
+        // FIX BUG 4: Notify keuangan agar segera memverifikasi bukti transfer
+        foreach (User::where('role', 'keuangan')->get() as $keu) {
+            $keu->notify(new StatusPermohonanNotification($permohonan, 'Bukti pengembalian dana diunggah. Mohon segera diverifikasi.'));
+        }
 
         return redirect()->back()->with('success', 'Bukti transfer berhasil diunggah. Menunggu verifikasi Keuangan.');
     }
@@ -302,6 +361,12 @@ class PermohonanController extends Controller
     {
         $permohonan = Permohonan::findOrFail($id);
         $permohonan->update(['status_permohonan' => 'Selesai']);
+
+        // FIX BUG 5: Notify pengguna bahwa tiket sudah ditutup
+        if ($permohonan->user) {
+            $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Pengembalian dana Anda telah diverifikasi. Tiket perjalanan resmi ditutup.'));
+        }
+
         return redirect()->back()->with('success', 'Pengembalian dana diverifikasi. Tiket Selesai.');
     }
 
@@ -334,39 +399,89 @@ class PermohonanController extends Controller
 
     public function adminValidasi()
     {
-        return view('dashboard.admin', ['permohonans' => Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->orderBy('created_at', 'desc')->get()])->with('judul', 'Validasi Permohonan Masuk');
+        return view('dashboard.admin', [
+            'permohonans' => Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')
+                ->orderBy('created_at', 'desc')->get(),
+        ])->with('judul', 'Validasi Permohonan Masuk');
     }
+
     public function adminFinalisasi()
     {
-        return view('dashboard.admin', ['permohonans' => Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->orderBy('updated_at', 'desc')->get()])->with('judul', 'Finalisasi Penerbitan');
+        return view('dashboard.admin', [
+            'permohonans' => Permohonan::where('status_permohonan', 'Menunggu Finalisasi')
+                ->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Finalisasi Penerbitan');
     }
+
     public function adminRiwayat()
     {
-        return view('dashboard.admin', ['permohonans' => Permohonan::whereIn('status_permohonan', ['Disetujui', 'Selesai', 'Ditolak'])->orderBy('updated_at', 'desc')->get()])->with('judul', 'Arsip & Riwayat');
+        // FIX BUG 7: tambahkan status pengembalian dana agar admin bisa pantau penuh
+        return view('dashboard.admin', [
+            'permohonans' => Permohonan::whereIn('status_permohonan', [
+                'Disetujui',
+                'Menunggu Pengembalian Dana',
+                'Menunggu Verifikasi Pengembalian',
+                'Selesai',
+                'Ditolak',
+            ])->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Arsip & Riwayat');
     }
 
     public function spsiAlokasi()
     {
-        return view('dashboard.spsi', ['permohonans' => Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->orderBy('updated_at', 'desc')->get()])->with('judul', 'Penugasan Armada');
+        return view('dashboard.spsi', [
+            'permohonans' => Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')
+                ->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Penugasan Armada');
     }
+
     public function spsiMonitoring()
     {
-        return view('dashboard.spsi', ['permohonans' => Permohonan::whereIn('status_permohonan', ['Menunggu Proses Keuangan', 'Menunggu Finalisasi', 'Disetujui', 'Selesai'])->orderBy('updated_at', 'desc')->get()])->with('judul', 'Pantauan & Riwayat Armada');
+        // FIX BUG 7: tambahkan status pengembalian agar SPSI bisa pantau armada sampai benar-benar selesai
+        return view('dashboard.spsi', [
+            'permohonans' => Permohonan::whereIn('status_permohonan', [
+                'Menunggu Proses Keuangan',
+                'Menunggu Finalisasi',
+                'Disetujui',
+                'Menunggu Pengembalian Dana',
+                'Menunggu Verifikasi Pengembalian',
+                'Selesai',
+            ])->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Pantauan & Riwayat Armada');
     }
 
     public function keuanganRab()
     {
-        return view('dashboard.keuangan', ['permohonans' => Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->orderBy('updated_at', 'desc')->get()])->with('judul', 'Persetujuan Anggaran (RAB)');
+        return view('dashboard.keuangan', [
+            'permohonans' => Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')
+                ->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Persetujuan Anggaran (RAB)');
     }
+
     public function keuanganMonitoring()
     {
-        return view('dashboard.keuangan', ['permohonans' => Permohonan::whereIn('status_permohonan', ['Menunggu Finalisasi', 'Disetujui', 'Selesai'])->orderBy('updated_at', 'desc')->get()])->with('judul', 'Pantauan Anggaran');
+        // FIX BUG 7: tambahkan status pengembalian dana agar keuangan bisa pantau & verifikasi
+        return view('dashboard.keuangan', [
+            'permohonans' => Permohonan::whereIn('status_permohonan', [
+                'Menunggu Finalisasi',
+                'Disetujui',
+                'Menunggu Pengembalian Dana',
+                'Menunggu Verifikasi Pengembalian',
+                'Selesai',
+            ])->orderBy('updated_at', 'desc')->get(),
+        ])->with('judul', 'Pantauan Anggaran');
     }
 
     public function cetakSuratJalan($id)
     {
         $permohonan = Permohonan::with(['kendaraan', 'pengemudi', 'user'])->findOrFail($id);
-        if (!in_array($permohonan->status_permohonan, ['Disetujui', 'Selesai'])) {
+        // FIX BUG 14: izinkan cetak untuk semua status post-approval (perjalanan sudah berlangsung)
+        if (!in_array($permohonan->status_permohonan, [
+            'Disetujui',
+            'Menunggu Pengembalian Dana',
+            'Menunggu Verifikasi Pengembalian',
+            'Selesai',
+        ])) {
             return redirect()->back()->with('error', 'Dokumen belum tersedia untuk dicetak.');
         }
         return view('permohonan.cetak', compact('permohonan'));
