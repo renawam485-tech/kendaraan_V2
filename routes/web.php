@@ -5,6 +5,7 @@ use App\Http\Controllers\LaporanController;
 use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\KendaraanVendorController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -72,11 +73,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         // CRUD Kendaraan
         Route::get('/kendaraan', [SuperAdminController::class, 'kendaraanIndex'])->name('kendaraan.index');
+        Route::resource('/superadmin/kendaraan-vendor', KendaraanVendorController::class)->names('superadmin.kendaraan_vendor');
         Route::get('/kendaraan/tambah', [SuperAdminController::class, 'kendaraanCreate'])->name('kendaraan.create');
         Route::post('/kendaraan', [SuperAdminController::class, 'kendaraanStore'])->name('kendaraan.store');
         Route::get('/kendaraan/{id}/edit', [SuperAdminController::class, 'kendaraanEdit'])->name('kendaraan.edit');
         Route::put('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanUpdate'])->name('kendaraan.update');
         Route::delete('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanDestroy'])->name('kendaraan.destroy');
+        // CRUD Kendaraan Vendor (Master Data Baru)
+        Route::resource('kendaraan_vendor', KendaraanVendorController::class);
 
         // CRUD Pengemudi
         Route::get('/pengemudi', [SuperAdminController::class, 'pengemudiIndex'])->name('pengemudi.index');

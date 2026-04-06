@@ -32,4 +32,9 @@ class Permohonan extends Model
     {
         return $this->belongsTo(Pengemudi::class);
     }
+
+    public function kendaraanVendor()
+    {
+        return $this->belongsTo(KendaraanVendor::class, 'kendaraan_vendor_id');
+    }
 }

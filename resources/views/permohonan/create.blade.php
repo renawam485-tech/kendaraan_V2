@@ -102,23 +102,16 @@
                                 <h4 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Kebutuhan Armada & Anggaran</h4>
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div class="md:col-span-2">
-                                        <label for="kendaraan_dibutuhkan" class="block text-sm font-semibold text-gray-700 mb-1">Kebutuhan Kendaraan <span class="text-red-500">*</span></label>
-                                        <select id="kendaraan_dibutuhkan" name="kendaraan_dibutuhkan" class="select2-mobil w-full transition" required>
-                                            <option value="">-- Pilih Tipe & Kapasitas Kendaraan --</option>
-                                            @php
-                                                $kendaraanList = [
-                                                    "Toyota Kijang Innova Reborn|7-8 kursi", "Toyota Kijang Innova Zenix|7 kursi", "Toyota Avanza|7 kursi", "Daihatsu Xenia|7 kursi", "Honda Brio|5 kursi", "Daihatsu Sigra|7 kursi", "Toyota Calya|7 kursi", "Toyota Agya|5 kursi", "Daihatsu Ayla|5 kursi", "Mitsubishi Xpander|7 kursi", "Mitsubishi Xpander Cross|7 kursi", "Toyota Rush|7-8 kursi", "Daihatsu Terios|7-8 kursi", "Suzuki Ertiga|7 kursi", "Suzuki XL7|7 kursi", "Honda BR-V|7 kursi", "Honda WR-V|5 kursi", "Honda HR-V|5 kursi", "Toyota Fortuner|7 kursi", "Mitsubishi Pajero Sport|7 kursi", "Suzuki Carry (Pickup)|2 kursi", "Suzuki Carry (Minibus)|9 kursi", "Daihatsu Gran Max (Pickup)|2 kursi", "Daihatsu Gran Max (Minibus)|9 kursi", "Mitsubishi L300|2-10 kursi", "Isuzu Traga|2 kursi", "Toyota HiAce Commuter|12-16 kursi", "Toyota HiAce Premio|12-16 kursi", "Toyota HiAce Luxury|12-14 kursi", "Isuzu Elf|Hingga 20 kursi", "Hyundai Stargazer|7 kursi", "Nissan Livina|7 kursi", "Nissan Serena|7-8 kursi", "Wuling Confero|7-8 kursi", "Suzuki APV|7-8 kursi", "Daihatsu Luxio|7-8 kursi", "Toyota Vios|5 kursi", "Honda City|5 kursi", "Toyota Yaris|5 kursi", "Honda Jazz|5 kursi", "Suzuki Swift|5 kursi", "Suzuki Ignis|5 kursi", "Suzuki S-Presso|5 kursi", "Daihatsu Sirion|5 kursi", "Toyota Corolla Altis|5 kursi", "Mazda 2|5 kursi", "Mazda 3|5 kursi", "Mazda CX-5|5 kursi", "Mazda CX-8|7 kursi", "Mitsubishi Outlander|5-7 kursi", "Nissan Terra|7 kursi", "Nissan Juke|5 kursi", "Nissan X-Trail|5-7 kursi", "Nissan Grand Livina|7 kursi", "Suzuki Jimny|4 kursi", "Toyota Camry|5 kursi", "Honda Accord|5 kursi", "Hyundai Creta|5 kursi", "Hyundai Santa Fe|5-7 kursi", "Kia Carnival|7-11 kursi", "Kia Seltos|5 kursi", "Kia Sonet|5 kursi", "Renault Kwid|5 kursi", "Renault Triber|7 kursi", "Chery Tiggo 7 Pro|5 kursi", "Chery Tiggo 8 Pro|7 kursi", "MG ZS|5 kursi", "MG 5 GT|5 kursi", "DFSK Glory 580|7 kursi", "DFSK Super Cab|2 kursi", "Geely Coolray|5 kursi", "Geely EX2|5 kursi", "Toyota Alphard|7 kursi", "Toyota Vellfire|7 kursi", "Mercedes-Benz V-Class|7-10 kursi", "Mercedes-Benz Sprinter|12-18 kursi", "Hyundai Staria|7-9 kursi", "Hyundai H-1 / Grand Starex|9-12 kursi", "Nissan Elgrand|8 kursi", "BMW Seri 3|5 kursi", "BMW X1|5 kursi", "BMW X5|5-7 kursi", "Mercedes-Benz C-Class|5 kursi", "Mercedes-Benz GLC|5 kursi", "Audi A4|5 kursi", "Audi Q5|5 kursi", "Volkswagen Tiguan|5 kursi", "Volkswagen Polo|5 kursi", "Toyota Kijang Super|7-8 kursi", "Toyota Kijang Kapsul|7-8 kursi", "Toyota Kijang LGX|7-8 kursi", "Suzuki Katana|5 kursi", "Honda Civic Ferio|5 kursi", "Honda Civic Estilo|5 kursi", "Toyota Corolla DX|5 kursi", "Toyota Soluna|5 kursi", "Mitsubishi Colt T120SS|2 kursi", "Isuzu Traga (Generasi awal)|2 kursi", "Daihatsu Rocky|5 kursi", "Suzuki Fronx|5 kursi", "Toyota Raize|5 kursi", "Toyota Veloz|7 kursi", "Wuling Almaz|5-7 kursi", "Wuling Alvez|5 kursi", "Wuling Cortez|7 kursi", "Wuling Formo|2 kursi", "Hyundai Palisade|7-8 kursi", "Kia Sportage|5 kursi", "Mitsubishi Fuso Canter|3 kursi", "Toyota Dyna|3 kursi", "Honda CR-V|5 kursi", "Toyota Yaris Cross|5 kursi", "Suzuki Grand Vitara|5 kursi", "Hyundai All New Palisade Hybrid|7-8 kursi", "Daihatsu Rocky Hybrid|5 kursi"
-                                                ];
-                                                sort($kendaraanList);
-                                            @endphp
-                                            @foreach($kendaraanList as $v)
-                                                @php $pecah = explode('|', $v); @endphp
-                                                <option value="{{ $pecah[0] }}" {{ old('kendaraan_dibutuhkan') == $pecah[0] ? 'selected' : '' }}>
-                                                    {{ $pecah[0] }} (Kapasitas: {{ $pecah[1] }})
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
+                            <label class="block text-sm font-bold text-gray-700 mb-1">Kendaraan yang Dibutuhkan <span class="text-red-500">*</span></label>
+                            <select name="kendaraan_dibutuhkan" id="kendaraan_dibutuhkan" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required>
+                                <option value="">-- Pilih Tipe Kendaraan --</option>
+                                @foreach($kombinasiMobil as $mobil)
+                                    <option value="{{ $mobil->nama_kendaraan }}">
+                                        {{ $mobil->nama_kendaraan }} (Kapasitas: {{ $mobil->kapasitas_penumpang }} Orang)
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
                                     <div>
                                         <label for="jumlah_penumpang" class="block text-sm font-semibold text-gray-700 mb-1">Total Rombongan <span class="text-red-500">*</span></label>
                                         <input type="number" id="jumlah_penumpang" name="jumlah_penumpang" value="{{ old('jumlah_penumpang') }}" min="1" max="60" oninput="if(this.value > 60) this.value = 60;" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required placeholder="Maks. 60 Orang">
@@ -262,13 +255,17 @@
             });
 
             // 4. FLATPICKR: KALENDER CUSTOM (Format Y-m-d H:i, Tanpa T)
+            // 1. Kunci dan beri efek abu-abu pada waktu kembali saat halaman pertama dimuat
+            const inputKembali = document.getElementById('waktu_kembali');
+            inputKembali.disabled = true;
+            inputKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+
             const fpKembali = flatpickr("#waktu_kembali", {
                 enableTime: true,
                 time_24hr: true,
-                dateFormat: "Y-m-d H:i", 
-                minDate: new Date(), 
-                locale: "id", 
-                disableMobile: "true" 
+                dateFormat: "Y-m-d H:i",
+                locale: "id",
+                disableMobile: "true"
             });
 
             const fpBerangkat = flatpickr("#waktu_berangkat", {
@@ -280,6 +277,10 @@
                 disableMobile: "true",
                 onChange: function(selectedDates, dateStr, instance) {
                     if(selectedDates.length > 0) {
+                        // BUKA KUNCI waktu kembali jika waktu berangkat sudah diisi
+                        inputKembali.disabled = false;
+                        inputKembali.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+                        
                         fpKembali.set('minDate', dateStr);
                         
                         let tKembali = document.getElementById('waktu_kembali').value;
@@ -287,11 +288,16 @@
                             showCustomAlert('Waktu kembali yang Anda pilih tidak valid. Harus lebih lambat dari waktu keberangkatan!');
                             fpKembali.clear(); 
                         }
+                    } else {
+                        // KUNCI KEMBALI jika waktu berangkat dihapus
+                        inputKembali.disabled = true;
+                        inputKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
+                        fpKembali.clear();
                     }
                 }
             });
 
-            // Pengecekan Tambahan Jika Memilih Jam Kembali Dulu
+            // Pengecekan Tambahan
             document.getElementById('waktu_kembali').addEventListener('change', function() {
                 let tBerangkat = document.getElementById('waktu_berangkat').value;
                 if(tBerangkat && this.value <= tBerangkat) {

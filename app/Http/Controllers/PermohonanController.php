@@ -7,6 +7,7 @@ use App\Models\Permohonan;
 use App\Models\User;
 use App\Models\Kendaraan;
 use App\Models\Pengemudi;
+use App\Models\KendaraanVendor;
 use App\Notifications\StatusPermohonanNotification;
 use Illuminate\Support\Facades\Auth;
 
@@ -65,6 +66,9 @@ class PermohonanController extends Controller
 
     public function create()
     {
+        // =========================================================
+        // 1. LOGIKA LAMA (DIPERTAHANKAN) - Untuk Jadwal Booking
+        // =========================================================
         $jadwalBooking = Permohonan::with('kendaraan')
             ->whereIn('status_permohonan', ['Disetujui', 'Menunggu Finalisasi'])
             ->where('waktu_kembali', '>=', now())
@@ -72,7 +76,27 @@ class PermohonanController extends Controller
             ->orderBy('waktu_berangkat', 'asc')
             ->get();
 
-        return view('permohonan.create', compact('jadwalBooking'));
+        // =========================================================
+        // 2. LOGIKA BARU (TAMBAHAN) - Untuk Dropdown Pilihan Mobil
+        // =========================================================
+        // Ambil data mobil kampus (nama dan kapasitas)
+        $mobilKampus = Kendaraan::select('nama_kendaraan', 'kapasitas_penumpang')->where('status_kendaraan', '!=', 'Maintenance')->get();
+
+        // Ambil data mobil vendor (nama dan kapasitas)
+        $mobilVendor = KendaraanVendor::select('nama_kendaraan', 'kapasitas_penumpang')->where('status_kendaraan', 'Tersedia')->get();
+
+        // Gabungkan kedua data tersebut
+        $semuaMobil = $mobilKampus->concat($mobilVendor);
+
+        // Hilangkan duplikat berdasarkan 'nama_kendaraan' (huruf besar/kecil diabaikan)
+        $kombinasiMobil = $semuaMobil->unique(function ($item) {
+            return strtolower(trim($item['nama_kendaraan']));
+        })->values();
+
+        // =========================================================
+        // 3. KIRIM KEDUA DATA KE VIEW
+        // =========================================================
+        return view('permohonan.create', compact('jadwalBooking', 'kombinasiMobil'));
     }
 
     public function store(Request $request)
@@ -172,6 +196,7 @@ class PermohonanController extends Controller
             'permohonan' => Permohonan::findOrFail($id),
             'kendaraans' => Kendaraan::where('status_kendaraan', 'Tersedia')->get(),
             'pengemudis' => Pengemudi::where('status_pengemudi', 'Tersedia')->get(),
+            'kendaraanVendors' => KendaraanVendor::where('status_kendaraan', 'Tersedia')->get(),
         ]);
     }
 
@@ -182,7 +207,7 @@ class PermohonanController extends Controller
 
         $request->validate([
             'kendaraan_id'               => $isVendor ? 'nullable' : 'required|exists:kendaraans,id',
-            'kendaraan_vendor'           => $isVendor ? 'required|string' : 'nullable',
+            'kendaraan_vendor_id'        => $isVendor ? 'required|exists:kendaraan_vendors,id' : 'nullable',
             'pengemudi_id'               => 'nullable|exists:pengemudis,id',
             'estimasi_biaya_operasional' => 'required|numeric|min:0',
         ]);
@@ -193,7 +218,7 @@ class PermohonanController extends Controller
 
         $permohonan->update([
             'kendaraan_id'               => $isVendor ? null : $request->kendaraan_id,
-            'kendaraan_vendor'           => $isVendor ? $request->kendaraan_vendor : null,
+            'kendaraan_vendor_id'        => $isVendor ? $request->kendaraan_vendor_id : null,
             'pengemudi_id'               => $request->pengemudi_id ?: null,
             'estimasi_biaya_operasional' => $request->estimasi_biaya_operasional,
             'status_permohonan'          => $statusLanjut,
@@ -283,50 +308,42 @@ class PermohonanController extends Controller
 
     public function selesaikanSewa(Request $request, $id)
     {
-        $permohonan = Permohonan::where('user_id', Auth::id())->findOrFail($id);
+        $permohonan = Permohonan::findOrFail($id);
 
-        // Jika Non-Dinas, langsung selesai
-        if ($permohonan->kategori_kegiatan === 'Non SITH') {
-            $permohonan->update(['status_permohonan' => 'Selesai']);
-            // FIX BUG 2: Bebaskan armada saat perjalanan selesai
-            $this->bebaskanArmada($permohonan);
-            return redirect()->route('dashboard')->with('success', 'Perjalanan Non-Dinas selesai.');
-        }
+        if ($permohonan->kategori_kegiatan === 'Dinas SITH') {
+            $request->validate([
+                'biaya_aktual' => 'required|numeric|min:0',
+                'bukti_lpj' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+            ]);
 
-        // Jika Dinas SITH, hitung LPJ
-        $request->validate([
-            'biaya_aktual' => 'required|numeric|min:0',
-            'bukti_lpj'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-        ]);
+            $permohonan->biaya_aktual = $request->biaya_aktual;
 
-        $pathLpj  = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
-        $selisih  = $permohonan->rab_disetujui - $request->biaya_aktual;
-        $statusAkhir = ($selisih > 0) ? 'Menunggu Pengembalian Dana' : 'Selesai';
-
-        $permohonan->update([
-            'biaya_aktual'      => $request->biaya_aktual,
-            'bukti_lpj'         => $pathLpj,
-            'status_permohonan' => $statusAkhir,
-        ]);
-
-        // FIX BUG 2: Armada selalu dibebaskan begitu perjalanan selesai (LPJ masuk)
-        $this->bebaskanArmada($permohonan);
-
-        // FIX BUG 3: Kirim notifikasi sesuai status akhir
-        if ($statusAkhir === 'Menunggu Pengembalian Dana') {
-            foreach (User::where('role', 'keuangan')->get() as $keu) {
-                $keu->notify(new StatusPermohonanNotification($permohonan, 'LPJ masuk. Ada sisa dana yang harus dikembalikan pemohon.'));
+            if ($request->hasFile('bukti_lpj')) {
+                // Simpan ke folder public/bukti_lpj agar bisa diakses
+                $path = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
+                $permohonan->bukti_lpj = $path;
             }
-            if ($permohonan->user) {
-                $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'LPJ diterima. Mohon segera kembalikan sisa dana ke SITH.'));
+
+            // PERBAIKAN BUG LOGIKA KEUANGAN:
+            if ($permohonan->mekanisme_pembayaran === 'Reimburse') {
+                // Jika ditalangi (Reimburse), pemohon tidak perlu kembalikan uang. Langsung selesai!
+                $permohonan->status_permohonan = 'Selesai';
+            } else {
+                // Jika Cash / Cashless, cek apakah ada sisa uang (Aktual < RAB)
+                if ($permohonan->biaya_aktual < $permohonan->rab_disetujui) {
+                    $permohonan->status_permohonan = 'Menunggu Pengembalian Dana';
+                } else {
+                    $permohonan->status_permohonan = 'Selesai';
+                }
             }
         } else {
-            foreach (User::where('role', 'keuangan')->get() as $keu) {
-                $keu->notify(new StatusPermohonanNotification($permohonan, 'LPJ masuk & lunas. Tiket perjalanan selesai.'));
-            }
+            // Jika Non-Dinas, langsung selesai tanpa urusan uang
+            $permohonan->status_permohonan = 'Selesai';
         }
 
-        return redirect()->back()->with('success', 'LPJ tersimpan. Status: ' . $statusAkhir);
+        $permohonan->save();
+
+        return redirect()->back()->with('success', 'Perjalanan telah diselesaikan. Laporan dicatat.');
     }
 
     /**
@@ -344,21 +361,22 @@ class PermohonanController extends Controller
 
     public function submitPengembalian(Request $request, $id)
     {
-        $permohonan = Permohonan::where('user_id', Auth::id())->findOrFail($id);
-        $request->validate(['bukti_pengembalian' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048']);
+        $permohonan = Permohonan::findOrFail($id);
 
-        $pathBukti = $request->file('bukti_pengembalian')->store('bukti_pengembalian', 'public');
-        $permohonan->update([
-            'bukti_pengembalian' => $pathBukti,
-            'status_permohonan'  => 'Menunggu Verifikasi Pengembalian',
+        $request->validate([
+            'bukti_pengembalian' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
         ]);
 
-        // FIX BUG 4: Notify keuangan agar segera memverifikasi bukti transfer
-        foreach (User::where('role', 'keuangan')->get() as $keu) {
-            $keu->notify(new StatusPermohonanNotification($permohonan, 'Bukti pengembalian dana diunggah. Mohon segera diverifikasi.'));
+        if ($request->hasFile('bukti_pengembalian')) {
+            // Pastikan menggunakan parameter 'public' di sini
+            $path = $request->file('bukti_pengembalian')->store('bukti_pengembalian', 'public');
+            $permohonan->bukti_pengembalian = $path;
         }
 
-        return redirect()->back()->with('success', 'Bukti transfer berhasil diunggah. Menunggu verifikasi Keuangan.');
+        $permohonan->status_permohonan = 'Menunggu Verifikasi Pengembalian';
+        $permohonan->save();
+
+        return redirect()->back()->with('success', 'Bukti pengembalian berhasil diunggah.');
     }
 
     public function verifikasiPengembalian($id)

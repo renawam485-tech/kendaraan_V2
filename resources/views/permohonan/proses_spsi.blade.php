@@ -57,20 +57,16 @@
                             </div>
 
                             <div id="div_vendor" class="md:col-span-2 hidden">
-                                <label class="block font-bold text-gray-700 mb-2">Tentukan Mobil Vendor Luar <span class="text-red-500">*</span></label>
-                                <select id="kendaraan_vendor" name="kendaraan_vendor" class="select2 w-full">
-                                    <option value="">-- Cari Tipe Mobil Vendor --</option>
-                                    @php
-                                        $vendorList = [
-                                            "Toyota Kijang Innova Reborn|7-8 kursi", "Toyota Kijang Innova Zenix|7 kursi", "Toyota Avanza|7 kursi", "Daihatsu Xenia|7 kursi", "Honda Brio|5 kursi", "Daihatsu Sigra|7 kursi", "Toyota Calya|7 kursi", "Toyota Agya|5 kursi", "Daihatsu Ayla|5 kursi", "Mitsubishi Xpander|7 kursi", "Mitsubishi Xpander Cross|7 kursi", "Toyota Rush|7-8 kursi", "Daihatsu Terios|7-8 kursi", "Suzuki Ertiga|7 kursi", "Suzuki XL7|7 kursi", "Honda BR-V|7 kursi", "Honda WR-V|5 kursi", "Honda HR-V|5 kursi", "Toyota Fortuner|7 kursi", "Mitsubishi Pajero Sport|7 kursi", "Suzuki Carry (Pickup)|2 kursi", "Suzuki Carry (Minibus)|9 kursi", "Daihatsu Gran Max (Pickup)|2 kursi", "Daihatsu Gran Max (Minibus)|9 kursi", "Mitsubishi L300|2-10 kursi", "Isuzu Traga|2 kursi", "Toyota HiAce Commuter|12-16 kursi", "Toyota HiAce Premio|12-16 kursi", "Toyota HiAce Luxury|12-14 kursi", "Isuzu Elf|Hingga 20 kursi", "Hyundai Stargazer|7 kursi", "Bus Besar Pariwisata|50 kursi", "Bus Medium|30 kursi"
-                                        ]; sort($vendorList);
-                                    @endphp
-                                    @foreach($vendorList as $v)
-                                        @php $pecah = explode('|', $v); @endphp
-                                        <option value="{{ $pecah[0] }}">{{ $pecah[0] }} ({{ $pecah[1] }})</option>
-                                    @endforeach
-                                </select>
-                            </div>
+    <label class="block font-bold text-gray-700 mb-2">Tentukan Mobil Vendor Luar <span class="text-red-500">*</span></label>
+    <select id="kendaraan_vendor_id" name="kendaraan_vendor_id" class="select2 w-full">
+        <option value="">-- Cari & Pilih Mobil Vendor --</option>
+        @foreach($kendaraanVendors as $v)
+            <option value="{{ $v->id }}">
+                {{ $v->nama_vendor }} - {{ $v->nama_kendaraan }} (Kap: {{ $v->kapasitas_penumpang }})
+            </option>
+        @endforeach
+    </select>
+</div> 
 
                             <div>
                                 <label class="block font-bold text-gray-700 mb-2">Pilih Pengemudi</label>
@@ -122,7 +118,7 @@
             const divKampus = document.getElementById('div_kampus');
             const divVendor = document.getElementById('div_vendor');
             const selKampus = document.getElementById('kendaraan_id');
-            const selVendor = document.getElementById('kendaraan_vendor');
+            const selVendor = document.getElementById('kendaraan_vendor_id');
 
             if(sumber === 'Kampus') {
                 divKampus.classList.remove('hidden'); divVendor.classList.add('hidden');

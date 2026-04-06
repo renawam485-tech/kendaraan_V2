@@ -1,248 +1,257 @@
-<nav x-data="{ open: false }" class="bg-white border-b border-gray-100 shadow-sm sticky top-0 z-30">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+@php
+    $render = $render ?? 'topbar';
+    $user = Auth::user();
+    $role = $user->role ?? 'guest';
+    $isPengguna = $role === 'pengguna';
+@endphp
 
-            {{-- LOGO & MENU DESKTOP --}}
-            <div class="flex">
-                <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-purple-600" />
-                    </a>
+@if ($render === 'sidebar')
+    {{-- ========================================== --}}
+    {{-- RENDER 1: SIDEBAR (RESPONSIVE & LENGKAP)   --}}
+    {{-- ========================================== --}}
+
+    <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+        @click="sidebarOpen = false" x-cloak></div>
+
+    <aside id="sidebar-main"
+        :class="{
+            'translate-x-0': sidebarOpen,
+            '-translate-x-full': !sidebarOpen,
+            'md:w-64': !sidebarCollapsed,
+            'md:w-20': sidebarCollapsed
+        }"
+        class="fixed left-0 top-16 z-40 h-[calc(100vh-64px)] w-64 bg-white border-r border-gray-200 text-gray-700 flex flex-col sidebar-transition shadow-lg md:translate-x-0 {{ $isPengguna ? 'md:hidden' : '' }}"
+        x-cloak>
+
+        <nav class="flex-1 overflow-y-auto py-4 scrollbar-hide">
+            @php
+                $cVal = 0;
+                $cFin = 0;
+                $cAlo = 0;
+                $cRab = 0;
+                $cVer = 0;
+                if ($role === 'kepala_admin') {
+                    $cVal = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
+                    $cFin = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->count();
+                } elseif ($role === 'spsi') {
+                    $cAlo = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->count();
+                } elseif ($role === 'keuangan') {
+                    $cRab = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
+                    $cVer = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        'Menunggu Verifikasi Pengembalian',
+                    )->count();
+                }
+            @endphp
+
+            <a href="{{ route('dashboard') }}" title="Dashboard"
+                class="group flex items-center px-6 py-3 transition {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                <i class="bi bi-grid-1x2-fill text-lg w-8 text-center"></i>
+                <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap">Dashboard</span>
+            </a>
+
+            {{-- MENU PENGGUNA DI MOBILE SIDEBAR --}}
+            @if ($role === 'pengguna')
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Aksi</div>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+                <a href="{{ route('permohonan.create') }}" title="Buat Pengajuan Baru"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('permohonan.create') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-plus-square text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Buat Pengajuan</span>
+                </a>
+            @endif
+
+            @if ($role === 'super_admin')
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data
                 </div>
-
-                <div class="hidden space-x-1 sm:-my-px sm:ms-8 sm:flex items-center">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        Dashboard
-                    </x-nav-link>
-
-                    @auth
-                        @php $role = Auth::user()->role; @endphp
-
-                        {{-- SUPER ADMIN --}}
-                        @if($role === 'super_admin')
-                            <x-dropdown align="left" width="52">
-                                <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('superadmin.*') ? 'border-purple-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} text-sm font-medium leading-5 transition focus:outline-none">
-                                        Master Data
-                                        <svg class="ms-1 fill-current h-4 w-4" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <div class="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Armada</div>
-                                    <x-dropdown-link :href="route('superadmin.kendaraan.index')">🚗 Kendaraan</x-dropdown-link>
-                                    <x-dropdown-link :href="route('superadmin.pengemudi.index')">👤 Pengemudi</x-dropdown-link>
-                                    <div class="border-t border-gray-100 my-1"></div>
-                                    <div class="px-3 py-2 text-xs font-bold text-gray-400 uppercase tracking-wider">Sistem</div>
-                                    <x-dropdown-link :href="route('superadmin.users.index')">👥 Manajemen Pengguna</x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-
-                        {{-- KEPALA ADMIN --}}
-                        @elseif($role === 'kepala_admin')
-                            <x-dropdown align="left" width="48">
-                                <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('admin.*') ? 'border-purple-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} text-sm font-medium leading-5 transition focus:outline-none">
-                                        Tugas Administrasi
-                                        <svg class="ms-1 fill-current h-4 w-4" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <x-dropdown-link :href="route('admin.validasi')">✅ Validasi Masuk</x-dropdown-link>
-                                    <x-dropdown-link :href="route('admin.finalisasi')">📝 Finalisasi</x-dropdown-link>
-                                    <div class="border-t border-gray-100 my-1"></div>
-                                    <x-dropdown-link :href="route('admin.riwayat')">🗂️ Arsip Riwayat</x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-
-                        {{-- SPSI --}}
-                        @elseif($role === 'spsi')
-                            <x-dropdown align="left" width="48">
-                                <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('spsi.*') ? 'border-purple-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} text-sm font-medium leading-5 transition focus:outline-none">
-                                        Kelola Armada
-                                        <svg class="ms-1 fill-current h-4 w-4" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <x-dropdown-link :href="route('spsi.alokasi')">🚐 Penugasan Armada</x-dropdown-link>
-                                    <x-dropdown-link :href="route('spsi.monitoring')">👁️ Pantauan & Riwayat</x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-
-                        {{-- KEUANGAN --}}
-                        @elseif($role === 'keuangan')
-                            <x-dropdown align="left" width="48">
-                                <x-slot name="trigger">
-                                    <button class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('keuangan.*') ? 'border-purple-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} text-sm font-medium leading-5 transition focus:outline-none">
-                                        Kelola Anggaran
-                                        <svg class="ms-1 fill-current h-4 w-4" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                    </button>
-                                </x-slot>
-                                <x-slot name="content">
-                                    <x-dropdown-link :href="route('keuangan.rab')">💰 Persetujuan RAB</x-dropdown-link>
-                                    <x-dropdown-link :href="route('keuangan.monitoring')">📈 Pantauan Anggaran</x-dropdown-link>
-                                </x-slot>
-                            </x-dropdown>
-
-                        {{-- PENGGUNA --}}
-                        @elseif($role === 'pengguna')
-                            <a href="{{ route('permohonan.create') }}"
-                               class="inline-flex items-center px-3 py-2 border-b-2 {{ request()->routeIs('permohonan.create') ? 'border-purple-400 text-gray-900' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300' }} text-sm font-medium leading-5 transition">
-                                + Buat Pengajuan
-                            </a>
-                        @endif
-
-                        {{-- LAPORAN (semua role) --}}
-                        <x-nav-link :href="route('laporan.index')" :active="request()->routeIs('laporan.*')">
-                            📊 Laporan
-                        </x-nav-link>
-
-                        {{-- BANTUAN (semua role) --}}
-                        <x-nav-link :href="route('bantuan.index')" :active="request()->routeIs('bantuan.*')">
-                            ❓ Bantuan
-                        </x-nav-link>
-                    @endauth
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+                <a href="{{ route('superadmin.kendaraan.index') }}" title="Mobil Internal"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.kendaraan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-car-front text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Mobil Internal</span>
+                </a>
+                <a href="{{ route('superadmin.kendaraan_vendor.index') }}" title="Mobil Vendor"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.kendaraan_vendor.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-buildings text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Mobil Vendor</span>
+                </a>
+                <a href="{{ route('superadmin.pengemudi.index') }}" title="Data Pengemudi"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.pengemudi.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-person-vcard text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Pengemudi</span>
+                </a>
+                <a href="{{ route('superadmin.users.index') }}" title="Data Pengguna"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.users.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-people text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Data Pengguna</span>
+                </a>
+            @elseif($role === 'kepala_admin')
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Tugas Utama
                 </div>
-            </div>
-
-            {{-- KANAN: Notif + User --}}
-            <div class="flex items-center gap-2 sm:gap-3">
-                @auth
-                    {{-- NOTIFIKASI --}}
-                    <div x-data="{ hoverOpen: false, unreadCount: {{ auth()->user()->unreadNotifications->count() }} }"
-                         @increase-badge.window="unreadCount++"
-                         @decrease-badge.window="if(unreadCount > 0) unreadCount--"
-                         @clear-badge.window="unreadCount = 0"
-                         @mouseenter="hoverOpen = true" @mouseleave="hoverOpen = false"
-                         class="relative pt-1">
-                        <button @click="$dispatch('open-notif-panel')" class="p-2 text-gray-500 hover:text-purple-600 hover:bg-purple-50 rounded-full transition relative focus:outline-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
-                            </svg>
-                            <template x-if="unreadCount > 0">
-                                <span x-text="unreadCount" class="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold border-2 border-white"></span>
-                            </template>
-                        </button>
-                        {{-- Hover Preview Notif --}}
-                        <div x-show="hoverOpen" x-transition style="display: none;" class="hidden sm:block absolute top-12 right-0 w-80 bg-white shadow-xl rounded-lg border border-gray-100 overflow-hidden z-50">
-                            <div class="px-4 py-2 bg-purple-50 text-xs font-bold text-purple-700 border-b">Notifikasi Terbaru</div>
-                            <div class="max-h-64 overflow-y-auto">
-                                @forelse(auth()->user()->notifications->take(5) as $notif)
-                                    <a href="{{ route('permohonan.show', $notif->data['permohonan_id'] ?? 0) }}"
-                                       class="block px-4 py-3 border-b hover:bg-gray-50 transition {{ $notif->read_at ? 'bg-white' : 'bg-purple-50' }}">
-                                        <p class="font-semibold text-gray-800 text-xs line-clamp-1">{{ $notif->data['status'] ?? 'Info Sistem' }}</p>
-                                        <p class="text-gray-600 text-[11px] mt-1 leading-tight">{{ $notif->data['pesan'] }}</p>
-                                    </a>
-                                @empty
-                                    <div class="px-4 py-4 text-xs text-center text-gray-500">Belum ada notifikasi</div>
-                                @endforelse
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- USER DROPDOWN --}}
-                    <div class="hidden sm:flex sm:items-center">
-                        <x-dropdown align="right" width="48">
-                            <x-slot name="trigger">
-                                <button class="inline-flex items-center gap-2 px-3 py-2 border border-transparent text-sm font-medium rounded-md text-gray-600 bg-white hover:bg-gray-50 hover:text-gray-800 transition focus:outline-none">
-                                    <div class="w-7 h-7 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-xs font-black">
-                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                                    </div>
-                                    <div class="text-left hidden md:block">
-                                        <div class="font-semibold text-sm leading-tight">{{ Auth::user()->name }}</div>
-                                        <div class="text-xs text-gray-400 leading-tight">{{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}</div>
-                                    </div>
-                                    <svg class="fill-current h-4 w-4 text-gray-400" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
-                                </button>
-                            </x-slot>
-                            <x-slot name="content">
-                                <x-dropdown-link :href="route('profile.edit')">👤 Profil Saya</x-dropdown-link>
-                                <x-dropdown-link :href="route('laporan.index')">📊 Laporan</x-dropdown-link>
-                                <x-dropdown-link :href="route('bantuan.index')">❓ Pusat Bantuan</x-dropdown-link>
-                                <div class="border-t border-gray-100 my-1"></div>
-                                <form method="POST" action="{{ route('logout') }}">
-                                    @csrf
-                                    <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                                        🚪 Keluar
-                                    </x-dropdown-link>
-                                </form>
-                            </x-slot>
-                        </x-dropdown>
-                    </div>
-                @endauth
-
-                {{-- HAMBURGER --}}
-                <div class="-me-2 flex items-center sm:hidden">
-                    <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 transition focus:outline-none">
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-                            <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                        </svg>
-                    </button>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+                <a href="{{ route('admin.validasi') }}" title="Validasi Masuk"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('admin.validasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-check-circle text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Validasi Masuk</span>
+                    @if ($cVal > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cVal }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.finalisasi') }}" title="Finalisasi Surat"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('admin.finalisasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-file-earmark-check text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Finalisasi
+                        Surat</span>
+                    @if ($cFin > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cFin }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('admin.riwayat') }}" title="Arsip Riwayat"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('admin.riwayat') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-archive text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Arsip Riwayat</span>
+                </a>
+            @elseif($role === 'spsi')
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
                 </div>
-            </div>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+                <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-truck-front text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
+                        Armada</span>
+                    @if ($cAlo > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-geo-alt text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
+                        class="ml-3 whitespace-nowrap text-sm">Pantauan Armada</span>
+                </a>
+            @elseif($role === 'keuangan')
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Keuangan</div>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+                <a href="{{ route('keuangan.rab') }}" title="Persetujuan RAB"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('keuangan.rab') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-cash-coin text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Persetujuan
+                        RAB</span>
+                    @if ($cRab > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cRab }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('keuangan.monitoring') }}" title="Verifikasi Refund"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('keuangan.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-arrow-return-left text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Verifikasi
+                        Refund</span>
+                    @if ($cVer > 0)
+                        <span class="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cVer }}</span>
+                    @endif
+                </a>
+            @endif
+
+            <div x-show="!sidebarCollapsed" class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Akses Umum</div>
+            <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+            <a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan Filter' }}" class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
+                <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
+                    {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan Filter' }}
+                </span>
+            </a>
+        </nav>
+
+        {{-- FOOTER SIDEBAR: Bantuan dipindah ke area paling bawah --}}
+        <div class="border-t border-gray-100 py-3 mt-auto">
+            <a href="{{ route('bantuan.index') }}" title="Pusat Bantuan"
+                class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
+                <i class="bi bi-question-circle text-xl w-8 text-center"></i>
+                <span x-show="!sidebarCollapsed" class="ml-3 font-semibold text-sm">Pusat Bantuan</span>
+            </a>
         </div>
-    </div>
+    </aside>
+@elseif($render === 'topbar')
+    {{-- ========================================== --}}
+    {{-- RENDER 2: TOP NAVBAR (PUTIH & FULL WIDTH)  --}}
+    {{-- ========================================== --}}
+    <header
+        class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full z-50 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
 
-    {{-- MOBILE MENU --}}
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden border-t border-gray-100 bg-gray-50">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">Dashboard</x-responsive-nav-link>
+        <div class="flex items-center gap-3 sm:gap-4">
+            {{-- Hamburger: Toggle !sidebarOpen berfungsi sempurna untuk buka/tutup di HP --}}
+            <button @click="if(window.innerWidth >= 768) { toggleSidebar() } else { sidebarOpen = !sidebarOpen }"
+                class="text-gray-500 hover:text-blue-600 focus:outline-none transition {{ $isPengguna ? 'md:hidden' : '' }}">
+                <i class="bi bi-list text-2xl sm:text-3xl"></i>
+            </button>
 
-            @auth
-                @php $role = Auth::user()->role; @endphp
+            <a href="{{ route('dashboard') }}"
+                class="text-xl font-black text-blue-700 tracking-widest flex items-center gap-2 {{ $isPengguna ? 'ml-0' : 'ml-2' }}">
+                DRIVORA
+            </a>
 
-                @if($role === 'super_admin')
-                    <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Master Data</div>
-                    <x-responsive-nav-link :href="route('superadmin.kendaraan.index')">🚗 Kendaraan</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('superadmin.pengemudi.index')">👤 Pengemudi</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('superadmin.users.index')">👥 Manajemen Pengguna</x-responsive-nav-link>
+            {{-- Link Navigasi Khusus Pengguna Biasa (Desktop Only) --}}
+            @if($isPengguna)
+                <nav class="hidden md:flex items-center gap-6 ml-8 text-sm font-bold text-gray-500">
+                    <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition {{ request()->routeIs('dashboard') ? 'text-blue-600' : '' }}">Dashboard</a>
+                    <a href="{{ route('permohonan.create') }}" class="hover:text-blue-600 transition {{ request()->routeIs('permohonan.create') ? 'text-blue-600' : '' }}">+ Buat Pengajuan</a>
+                    <a href="{{ route('laporan.index') }}" class="hover:text-blue-600 transition {{ request()->routeIs('laporan.*') ? 'text-blue-600' : '' }}">Riwayat</a>
+                    <a href="{{ route('bantuan.index') }}" class="hover:text-blue-600 transition {{ request()->routeIs('bantuan.*') ? 'text-blue-600' : '' }}">Pusat Bantuan</a>
+                </nav>
+            @endif
+        </div>
 
-                @elseif($role === 'kepala_admin')
-                    <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Administrasi</div>
-                    <x-responsive-nav-link :href="route('admin.validasi')">✅ Validasi Masuk</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.finalisasi')">📝 Finalisasi</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('admin.riwayat')">🗂️ Arsip Riwayat</x-responsive-nav-link>
-
-                @elseif($role === 'spsi')
-                    <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Armada</div>
-                    <x-responsive-nav-link :href="route('spsi.alokasi')">🚐 Penugasan Armada</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('spsi.monitoring')">👁️ Pantauan & Riwayat</x-responsive-nav-link>
-
-                @elseif($role === 'keuangan')
-                    <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Keuangan</div>
-                    <x-responsive-nav-link :href="route('keuangan.rab')">💰 Persetujuan RAB</x-responsive-nav-link>
-                    <x-responsive-nav-link :href="route('keuangan.monitoring')">📈 Pantauan Anggaran</x-responsive-nav-link>
-
-                @elseif($role === 'pengguna')
-                    <x-responsive-nav-link :href="route('permohonan.create')">+ Buat Pengajuan</x-responsive-nav-link>
+        <div class="flex items-center gap-3 sm:gap-5">
+            {{-- Lonceng Notif Universal --}}
+            <button @click="$dispatch('open-notif-panel')"
+                class="p-2 text-gray-500 hover:text-blue-700 bg-gray-50 hover:bg-blue-50 rounded-full transition relative border border-gray-200">
+                <i class="bi bi-bell text-lg"></i>
+                @php $n = auth()->check() ? auth()->user()->unreadNotifications->count() : 0; @endphp
+                @if ($n > 0)
+                    <span
+                        class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">{{ $n }}</span>
                 @endif
+            </button>
 
-                <div class="px-4 py-2 text-xs font-bold text-gray-400 uppercase">Umum</div>
-                <x-responsive-nav-link :href="route('laporan.index')">📊 Laporan</x-responsive-nav-link>
-                <x-responsive-nav-link :href="route('bantuan.index')">❓ Pusat Bantuan</x-responsive-nav-link>
-            @endauth
-        </div>
-
-        @auth
-        <div class="pt-4 pb-1 border-t border-gray-200">
-            <div class="px-4 flex items-center gap-3">
-                <div class="w-9 h-9 rounded-full bg-purple-100 text-purple-700 flex items-center justify-center text-sm font-black flex-shrink-0">
-                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-                </div>
-                <div>
-                    <div class="font-semibold text-sm text-gray-800">{{ Auth::user()->name }}</div>
-                    <div class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', Auth::user()->role)) }}</div>
-                </div>
+            {{-- Dropdown Profile --}}
+            <div class="border-l pl-3 sm:pl-5 border-gray-200">
+                <x-dropdown align="right" width="48">
+                    <x-slot name="trigger">
+                        <button
+                            class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 hover:bg-blue-50 text-gray-700 hover:text-blue-700 border border-gray-200 transition">
+                            <span class="font-bold text-sm hidden sm:inline">{{ explode(' ', $user->name)[0] }}</span>
+                            <i class="bi bi-person-circle text-lg"></i>
+                        </button>
+                    </x-slot>
+                    <x-slot name="content">
+                        <div class="px-4 py-2 border-b border-gray-100 block sm:hidden">
+                            <p class="text-sm font-bold text-gray-800">{{ $user->name }}</p>
+                            <p class="text-xs text-gray-500">{{ ucfirst(str_replace('_', ' ', $role)) }}</p>
+                        </div>
+                        <x-dropdown-link :href="route('profile.edit')" class="hover:text-blue-600"><i
+                                class="bi bi-person mr-2"></i>Profil Saya</x-dropdown-link>
+                        <div class="border-t border-gray-100 my-1"></div>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <x-dropdown-link href="{{ route('logout') }}"
+                                onclick="event.preventDefault(); this.closest('form').submit();"
+                                class="text-red-600 font-bold hover:text-red-800 hover:bg-red-50">
+                                <i class="bi bi-box-arrow-right mr-2"></i>Keluar Aplikasi
+                            </x-dropdown-link>
+                        </form>
+                    </x-slot>
+                </x-dropdown>
             </div>
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')">👤 Profil Saya</x-responsive-nav-link>
-                <form method="POST" action="{{ route('logout') }}">
-                    @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">🚪 Keluar</x-responsive-nav-link>
-                </form>
-            </div>
         </div>
-        @endauth
-    </div>
-</nav>
+    </header>
+@endif
