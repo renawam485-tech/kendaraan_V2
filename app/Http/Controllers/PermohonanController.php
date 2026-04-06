@@ -17,6 +17,10 @@ class PermohonanController extends Controller
         /** @var \App\Models\User $user */
         $user = Auth::user();
 
+        if ($user->role === 'super_admin') {
+        return redirect()->route('superadmin.dashboard');
+    }
+
         if ($user->role === 'pengguna') {
             $permohonans = Permohonan::where('user_id', $user->id)
                 ->orderBy('created_at', 'desc')->get();

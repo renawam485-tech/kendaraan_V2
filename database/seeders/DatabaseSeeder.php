@@ -13,63 +13,68 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // 1. Buat Akun Pengguna (Pemohon)
+        // 1. Super Admin
         User::create([
-            'name' => 'Budi (Pengguna)',
-            'email' => 'pengguna@sith.com',
+            'name'     => 'Super Admin',
+            'email'    => 'superadmin@sith.com',
             'password' => Hash::make('password123'),
-            'role' => 'pengguna',
+            'role'     => 'super_admin',
         ]);
 
-        // 2. Buat Akun Kepala Administrasi
+        // 2. Pengguna
         User::create([
-            'name' => 'Bapak Kepala Admin',
-            'email' => 'admin@sith.com',
+            'name'     => 'Budi (Pengguna)',
+            'email'    => 'pengguna@sith.com',
             'password' => Hash::make('password123'),
-            'role' => 'kepala_admin',
+            'role'     => 'pengguna',
         ]);
 
-        // 3. Buat Akun Kasubag SPSI
+        // 3. Kepala Admin
         User::create([
-            'name' => 'Ibu Kasubag SPSI',
-            'email' => 'spsi@sith.com',
+            'name'     => 'Bapak Kepala Admin',
+            'email'    => 'admin@sith.com',
             'password' => Hash::make('password123'),
-            'role' => 'spsi',
+            'role'     => 'kepala_admin',
         ]);
 
-        // 4. Buat Akun Kasubag Keuangan
+        // 4. SPSI
         User::create([
-            'name' => 'Bapak Kasubag Keuangan',
-            'email' => 'keuangan@sith.com',
+            'name'     => 'Ibu Kasubag SPSI',
+            'email'    => 'spsi@sith.com',
             'password' => Hash::make('password123'),
-            'role' => 'keuangan',
+            'role'     => 'spsi',
         ]);
 
-        // 5. Buat Data Kendaraan Dummy
+        // 5. Keuangan
+        User::create([
+            'name'     => 'Bapak Kasubag Keuangan',
+            'email'    => 'keuangan@sith.com',
+            'password' => Hash::make('password123'),
+            'role'     => 'keuangan',
+        ]);
+
+        // 6. Kendaraan
         Kendaraan::create([
-            'nama_kendaraan' => 'Toyota Hiace',
-            'plat_nomor' => 'D 1234 SITH',
+            'nama_kendaraan'      => 'Toyota Hiace',
+            'plat_nomor'          => 'D 1234 SITH',
             'kapasitas_penumpang' => 15,
-            'status_kendaraan' => 'Tersedia'
+            'status_kendaraan'    => 'Tersedia',
         ]);
 
         Kendaraan::create([
-            'nama_kendaraan' => 'Toyota Innova',
-            'plat_nomor' => 'D 5678 SITH',
+            'nama_kendaraan'      => 'Toyota Innova',
+            'plat_nomor'          => 'D 5678 SITH',
             'kapasitas_penumpang' => 7,
-            'status_kendaraan' => 'Tersedia'
+            'status_kendaraan'    => 'Tersedia',
         ]);
 
-        // 6. Buat Data Pengemudi Dummy
+        // 7. Pengemudi — FIX: kontak harus format +62
         Pengemudi::create([
-            'nama_pengemudi' => 'Asep Supir',
-            'kontak' => '08123456789',
-            'status_pengemudi' => 'Tersedia'
+            'nama_pengemudi'  => 'Asep Supir',
+            'kontak'          => '+6281234567890',
+            'status_pengemudi'=> 'Tersedia',
         ]);
     }
 }
