@@ -19,8 +19,8 @@ class PermohonanController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'super_admin') {
-        return redirect()->route('superadmin.dashboard');
-    }
+            return redirect()->route('superadmin.dashboard');
+        }
 
         if ($user->role === 'pengguna') {
             $permohonans = Permohonan::where('user_id', $user->id)
@@ -33,32 +33,40 @@ class PermohonanController extends Controller
         $ruteTugas  = '';
 
         if ($user->role === 'kepala_admin') {
+            $cVal = Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
+            $cFin = Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->count();
+
             $stats['total_semua']         = Permohonan::count();
-            $stats['menunggu_validasi']   = Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
-            $stats['menunggu_finalisasi'] = Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->count();
+            $stats['menunggu_validasi']   = $cVal;
+            $stats['menunggu_finalisasi'] = $cFin;
+
             $tugasTerbaru = Permohonan::whereIn('status_permohonan', ['Menunggu Validasi Admin', 'Menunggu Finalisasi'])
                 ->orderBy('updated_at', 'desc')->take(10)->get();
-            $ruteTugas = route('admin.validasi');
 
+            // SMART ROUTING: Arahkan ke tugas yang paling banyak
+            $ruteTugas = ($cFin > $cVal) ? route('admin.finalisasi') : route('admin.validasi');
         } elseif ($user->role === 'spsi') {
             $stats['menunggu_alokasi'] = Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->count();
             $stats['mobil_tersedia']   = Kendaraan::where('status_kendaraan', 'Tersedia')->count();
             $stats['supir_tersedia']   = Pengemudi::where('status_pengemudi', 'Tersedia')->count();
+
             $tugasTerbaru = Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')
                 ->orderBy('updated_at', 'desc')->take(10)->get();
-            $ruteTugas = route('spsi.alokasi');
 
+            $ruteTugas = route('spsi.alokasi');
         } elseif ($user->role === 'keuangan') {
-            $stats['menunggu_rab']        = Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
-            // FIX BUG 8: tambahkan menunggu_verifikasi ke stats keuangan
-            $stats['menunggu_verifikasi'] = Permohonan::where('status_permohonan', 'Menunggu Verifikasi Pengembalian')->count();
+            $cRab = Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
+            $cVer = Permohonan::where('status_permohonan', 'Menunggu Verifikasi Pengembalian')->count();
+
+            $stats['menunggu_rab']        = $cRab;
+            $stats['menunggu_verifikasi'] = $cVer;
             $stats['rab_disetujui']       = Permohonan::whereIn('status_permohonan', ['Disetujui', 'Selesai'])->sum('rab_disetujui');
-            // FIX BUG 8: sertakan Menunggu Verifikasi Pengembalian dalam tugasTerbaru
-            $tugasTerbaru = Permohonan::whereIn('status_permohonan', [
-                'Menunggu Proses Keuangan',
-                'Menunggu Verifikasi Pengembalian',
-            ])->orderBy('updated_at', 'desc')->take(10)->get();
-            $ruteTugas = route('keuangan.rab');
+
+            $tugasTerbaru = Permohonan::whereIn('status_permohonan', ['Menunggu Proses Keuangan', 'Menunggu Verifikasi Pengembalian'])
+                ->orderBy('updated_at', 'desc')->take(10)->get();
+
+            // SMART ROUTING: Arahkan ke tugas yang paling banyak
+            $ruteTugas = ($cVer > $cRab) ? route('keuangan.monitoring') : route('keuangan.rab');
         }
 
         return view('dashboard', compact('stats', 'tugasTerbaru', 'ruteTugas'));

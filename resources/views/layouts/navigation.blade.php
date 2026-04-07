@@ -44,8 +44,9 @@
                 }
             @endphp
 
-            <a href="{{ route('dashboard') }}" title="Dashboard"
-                class="group flex items-center px-6 py-3 transition {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+            <a href="{{ Auth::user()->role === 'super_admin' ? route('superadmin.dashboard') : route('dashboard') }}"
+                title="Dashboard"
+                class="group flex items-center px-6 py-3 transition {{ request()->routeIs('dashboard') || request()->routeIs('superadmin.dashboard') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                 <i class="bi bi-grid-1x2-fill text-lg w-8 text-center"></i>
                 <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap">Dashboard</span>
             </a>
@@ -162,9 +163,12 @@
                 </a>
             @endif
 
-            <div x-show="!sidebarCollapsed" class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Akses Umum</div>
+            <div x-show="!sidebarCollapsed"
+                class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Akses Umum</div>
             <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-            <a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan Filter' }}" class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+            <a href="{{ route('laporan.index') }}"
+                title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan Filter' }}"
+                class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                 <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
                 <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
                     {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan Filter' }}
@@ -201,12 +205,18 @@
             </a>
 
             {{-- Link Navigasi Khusus Pengguna Biasa (Desktop Only) --}}
-            @if($isPengguna)
+            @if ($isPengguna)
                 <nav class="hidden md:flex items-center gap-6 ml-8 text-sm font-bold text-gray-500">
-                    <a href="{{ route('dashboard') }}" class="hover:text-blue-600 transition {{ request()->routeIs('dashboard') ? 'text-blue-600' : '' }}">Dashboard</a>
-                    <a href="{{ route('permohonan.create') }}" class="hover:text-blue-600 transition {{ request()->routeIs('permohonan.create') ? 'text-blue-600' : '' }}">+ Buat Pengajuan</a>
-                    <a href="{{ route('laporan.index') }}" class="hover:text-blue-600 transition {{ request()->routeIs('laporan.*') ? 'text-blue-600' : '' }}">Riwayat</a>
-                    <a href="{{ route('bantuan.index') }}" class="hover:text-blue-600 transition {{ request()->routeIs('bantuan.*') ? 'text-blue-600' : '' }}">Pusat Bantuan</a>
+                    <a href="{{ route('dashboard') }}"
+                        class="hover:text-blue-600 transition {{ request()->routeIs('dashboard') ? 'text-blue-600' : '' }}">Dashboard</a>
+                    <a href="{{ route('permohonan.create') }}"
+                        class="hover:text-blue-600 transition {{ request()->routeIs('permohonan.create') ? 'text-blue-600' : '' }}">+
+                        Buat Pengajuan</a>
+                    <a href="{{ route('laporan.index') }}"
+                        class="hover:text-blue-600 transition {{ request()->routeIs('laporan.*') ? 'text-blue-600' : '' }}">Riwayat</a>
+                    <a href="{{ route('bantuan.index') }}"
+                        class="hover:text-blue-600 transition {{ request()->routeIs('bantuan.*') ? 'text-blue-600' : '' }}">Pusat
+                        Bantuan</a>
                 </nav>
             @endif
         </div>

@@ -1,83 +1,57 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800">Manajemen Kendaraan</h2>
-            <a href="{{ route('superadmin.kendaraan.create') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-5 rounded-lg shadow text-sm transition">
-                + Tambah Kendaraan
+            <h2 class="font-semibold text-xl text-gray-800">Manajemen Kendaraan Internal</h2>
+            <a href="{{ route('superadmin.kendaraan.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
+                <i class="bi bi-plus-circle"></i> Tambah Kendaraan
             </a>
         </div>
     </x-slot>
 
     <div class="py-8 bg-gray-50 min-h-screen">
-        <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @if(session('success'))
-                <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded shadow-sm">
-                    <p class="text-sm font-medium">{{ session('success') }}</p>
-                </div>
-            @endif
-            @if(session('error'))
-                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded shadow-sm">
-                    <p class="text-sm font-medium">{{ session('error') }}</p>
+                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
+                    <i class="bi bi-check-circle-fill text-xl"></i>
+                    <p class="text-sm font-bold">{{ session('success') }}</p>
                 </div>
             @endif
 
-            {{-- SUMMARY BADGES --}}
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                @php
-                    $tersedia    = $kendaraans->where('status_kendaraan', 'Tersedia')->count();
-                    $dipinjam    = $kendaraans->where('status_kendaraan', 'Dipinjam')->count();
-                    $maintenance = $kendaraans->where('status_kendaraan', 'Maintenance')->count();
-                @endphp
-                <div class="bg-white border border-green-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-2xl font-black text-green-700">{{ $tersedia }}</p>
-                    <p class="text-xs text-gray-500 font-medium">Tersedia</p>
-                </div>
-                <div class="bg-white border border-blue-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-2xl font-black text-blue-700">{{ $dipinjam }}</p>
-                    <p class="text-xs text-gray-500 font-medium">Dipinjam</p>
-                </div>
-                <div class="bg-white border border-orange-200 rounded-lg p-4 text-center shadow-sm">
-                    <p class="text-2xl font-black text-orange-700">{{ $maintenance }}</p>
-                    <p class="text-xs text-gray-500 font-medium">Maintenance</p>
-                </div>
-            </div>
-
-            <div class="bg-white shadow-sm rounded-xl border border-gray-200 overflow-hidden">
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-sm text-left">
-                        <thead class="bg-gray-100 text-xs uppercase text-gray-600">
+                    <table class="w-full text-left text-sm text-gray-600">
+                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs border-b border-gray-100">
                             <tr>
-                                <th class="px-6 py-3">Nama Kendaraan</th>
-                                <th class="px-6 py-3">Plat Nomor</th>
-                                <th class="px-6 py-3">Kapasitas</th>
-                                <th class="px-6 py-3">Status</th>
-                                <th class="px-6 py-3 text-center">Aksi</th>
+                                <th class="px-6 py-4">Nama Kendaraan</th>
+                                <th class="px-6 py-4">Plat Nomor</th>
+                                <th class="px-6 py-4">Kapasitas</th>
+                                <th class="px-6 py-4">Status</th>
+                                <th class="px-6 py-4 text-center">Aksi</th>
                             </tr>
                         </thead>
                         <tbody>
                             @forelse($kendaraans as $k)
                                 @php
                                     $sc = match($k->status_kendaraan) {
-                                        'Tersedia'    => 'bg-green-100 text-green-800',
-                                        'Dipinjam'    => 'bg-blue-100 text-blue-800',
-                                        'Maintenance' => 'bg-orange-100 text-orange-800',
+                                        'Tersedia'    => 'bg-green-50 text-green-700 border-green-200',
+                                        'Dipinjam'    => 'bg-blue-50 text-blue-700 border-blue-200',
+                                        'Maintenance' => 'bg-orange-50 text-orange-700 border-orange-200',
+                                        default       => 'bg-gray-50 text-gray-700 border-gray-200',
                                     };
                                 @endphp
-                                <tr class="border-b hover:bg-gray-50 transition">
-                                    <td class="px-6 py-4 font-semibold text-gray-800">{{ $k->nama_kendaraan }}</td>
-                                    <td class="px-6 py-4 font-mono font-bold">{{ $k->plat_nomor }}</td>
-                                    <td class="px-6 py-4">{{ $k->kapasitas_penumpang }} Penumpang</td>
-                                    <td class="px-6 py-4">
-                                        <span class="px-3 py-1 rounded-full text-xs font-bold {{ $sc }}">{{ $k->status_kendaraan }}</span>
-                                    </td>
-                                    <td class="px-6 py-4">
-                                        <div class="flex justify-center gap-3">
-                                            <a href="{{ route('superadmin.kendaraan.edit', $k->id) }}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline">Edit</a>
+                                <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
+                                    <td class="px-6 py-4 font-bold text-gray-800"><i class="bi bi-car-front text-gray-400 mr-2"></i> {{ $k->nama_kendaraan }}</td>
+                                    <td class="px-6 py-4 font-mono">{{ $k->plat_nomor }}</td>
+                                    <td class="px-6 py-4">{{ $k->kapasitas_penumpang }} Orang</td>
+                                    <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $sc }}">{{ $k->status_kendaraan }}</span></td>
+                                    <td class="px-6 py-4 text-center">
+                                        <div class="flex justify-center items-center gap-3">
+                                            <a href="{{ route('superadmin.kendaraan.edit', $k->id) }}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline flex items-center gap-1"><i class="bi bi-pencil-square"></i> Edit</a>
                                             <span class="text-gray-300">|</span>
                                             <form action="{{ route('superadmin.kendaraan.destroy', $k->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus kendaraan ini?')">
                                                 @csrf @method('DELETE')
-                                                <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-xs hover:underline">Hapus</button>
+                                                <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-xs hover:underline flex items-center gap-1"><i class="bi bi-trash"></i> Hapus</button>
                                             </form>
                                         </div>
                                     </td>
@@ -85,9 +59,8 @@
                             @empty
                                 <tr>
                                     <td colspan="5" class="text-center py-12 text-gray-400">
-                                        <div class="text-4xl mb-2">🚗</div>
-                                        <p>Belum ada data kendaraan.</p>
-                                        <a href="{{ route('superadmin.kendaraan.create') }}" class="text-purple-600 font-bold hover:underline text-sm mt-1 inline-block">Tambah sekarang →</a>
+                                        <i class="bi bi-car-front text-4xl block mb-3 text-gray-300"></i>
+                                        <p>Belum ada data kendaraan internal.</p>
                                     </td>
                                 </tr>
                             @endforelse
@@ -95,13 +68,12 @@
                     </table>
                 </div>
                 @if($kendaraans->hasPages())
-                    <div class="p-4 border-t">{{ $kendaraans->links() }}</div>
+                    <div class="p-4 border-t border-gray-100 bg-gray-50">{{ $kendaraans->links() }}</div>
                 @endif
             </div>
-
-            {{-- INFO: dimana status disimpan --}}
-            <div class="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm text-blue-700">
-                <strong>ℹ️ Catatan:</strong> Status kendaraan (<em>Tersedia / Dipinjam / Maintenance</em>) dikelola secara otomatis oleh sistem saat SPSI mengalokasikan armada dan saat pengguna menyelesaikan perjalanan. Super Admin dapat mengubah status secara manual melalui tombol <strong>Edit</strong> di atas (misalnya untuk set status <em>Maintenance</em>).
+            <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-700 flex gap-3">
+                <i class="bi bi-info-circle-fill text-lg"></i>
+                <p><strong>Catatan:</strong> Status kendaraan dikelola otomatis oleh sistem saat SPSI mengalokasikan armada. Anda dapat mengubahnya manual via tombol Edit (misal untuk set ke Maintenance).</p>
             </div>
         </div>
     </div>

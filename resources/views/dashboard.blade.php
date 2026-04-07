@@ -5,120 +5,214 @@
         </h2>
     </x-slot>
 
-    <div class="py-6 md:py-12">
+    <div class="py-6 md:py-10">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg mb-6 border-l-4 border-purple-500">
-                <div class="p-6 text-gray-900 flex justify-between items-center">
-                    <div>
-                        <h3 class="text-xl font-bold text-gray-800">Selamat Datang, {{ Auth::user()->name }}!</h3>
-                        <p class="mt-1 text-sm text-gray-600">Berikut adalah ringkasan informasi dan tugas Anda saat ini.</p>
-                    </div>
+
+            {{-- BANNER SELAMAT DATANG (Ada border kiri biru) --}}
+            <div
+                class="bg-white rounded-xl shadow-sm mb-8 border border-gray-100 border-l-4 border-l-blue-600 p-6 flex items-center gap-5">
+                <div class="hidden sm:flex p-4 bg-blue-50 rounded-full text-blue-600">
+                    <i class="bi bi-person-workspace text-3xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl font-black text-gray-800">Selamat Datang, {{ Auth::user()->name }}!</h3>
+                    <p class="mt-1 text-sm text-gray-500">Berikut adalah ringkasan informasi dan tugas operasional Anda
+                        saat ini.</p>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-                
-                @if(Auth::user()->role === 'kepala_admin')
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-gray-500 mb-1">Total Semua Pengajuan</span>
-                        <span class="text-3xl font-black text-purple-600">{{ $stats['total_semua'] }}</span>
+            {{-- STATISTIK KARTU (TANPA BORDER WARNA) --}}
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
+                @if (Auth::user()->role === 'kepala_admin')
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-gray-50 rounded-lg text-gray-500"><i class="bi bi-collection text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Total
+                                Pengajuan</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['total_semua'] }}</span>
+                        </div>
                     </div>
-                    <div class="bg-blue-50 p-6 rounded-lg shadow-sm border border-blue-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-blue-700 mb-1">Menunggu Validasi</span>
-                        <span class="text-3xl font-black text-blue-600">{{ $stats['menunggu_validasi'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-blue-50 rounded-lg text-blue-600"><i class="bi bi-check-circle text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Menunggu
+                                Validasi</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['menunggu_validasi'] }}</span>
+                        </div>
                     </div>
-                    <div class="bg-purple-50 p-6 rounded-lg shadow-sm border border-purple-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-purple-700 mb-1">Menunggu Finalisasi</span>
-                        <span class="text-3xl font-black text-purple-600">{{ $stats['menunggu_finalisasi'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-blue-50 rounded-lg text-blue-600"><i
+                                class="bi bi-file-earmark-check text-2xl"></i></div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Menunggu
+                                Finalisasi</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['menunggu_finalisasi'] }}</span>
+                        </div>
                     </div>
-
                 @elseif(Auth::user()->role === 'spsi')
-                    <div class="bg-green-50 p-6 rounded-lg shadow-sm border border-green-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-green-700 mb-1">Tugas Menunggu Alokasi</span>
-                        <span class="text-3xl font-black text-green-600">{{ $stats['menunggu_alokasi'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-blue-50 rounded-lg text-blue-600"><i class="bi bi-truck-front text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Butuh Alokasi
+                                Armada</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['menunggu_alokasi'] }}</span>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-gray-500 mb-1">Mobil Tersedia</span>
-                        <span class="text-3xl font-black text-gray-800">{{ $stats['mobil_tersedia'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-gray-50 rounded-lg text-green-600"><i class="bi bi-car-front text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Mobil
+                                Tersedia</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['mobil_tersedia'] }}</span>
+                        </div>
                     </div>
-                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-gray-500 mb-1">Pengemudi Tersedia</span>
-                        <span class="text-3xl font-black text-gray-800">{{ $stats['supir_tersedia'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-gray-50 rounded-lg text-green-600"><i
+                                class="bi bi-person-vcard text-2xl"></i></div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Supir
+                                Tersedia</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['supir_tersedia'] }}</span>
+                        </div>
                     </div>
-
                 @elseif(Auth::user()->role === 'keuangan')
-                    <div class="bg-orange-50 p-6 rounded-lg shadow-sm border border-orange-100 flex flex-col justify-center items-center text-center">
-                        <span class="text-sm font-bold text-orange-700 mb-1">Tugas Menunggu RAB</span>
-                        <span class="text-3xl font-black text-orange-600">{{ $stats['menunggu_rab'] }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-blue-50 rounded-lg text-blue-600"><i class="bi bi-cash-coin text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Persetujuan
+                                RAB</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['menunggu_rab'] }}</span>
+                        </div>
                     </div>
-                    <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-100 flex flex-col justify-center items-start">
-                        <span class="text-sm font-bold text-gray-500 mb-1">Total RAB Disetujui (Keseluruhan)</span>
-                        <span class="text-3xl font-black text-green-600">Rp {{ number_format($stats['rab_disetujui'], 0, ',', '.') }}</span>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-gray-50 rounded-lg text-orange-500"><i
+                                class="bi bi-arrow-return-left text-2xl"></i></div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">Verifikasi
+                                Refund</span>
+                            <span class="text-3xl font-black text-gray-800">{{ $stats['menunggu_verifikasi'] }}</span>
+                        </div>
+                    </div>
+                    <div
+                        class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4 hover:shadow transition">
+                        <div class="p-4 bg-gray-50 rounded-lg text-green-600"><i class="bi bi-wallet2 text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">RAB
+                                Disetujui</span>
+                            <span class="text-2xl font-black text-gray-800">Rp
+                                {{ number_format($stats['rab_disetujui'], 0, ',', '.') }}</span>
+                        </div>
                     </div>
                 @endif
             </div>
 
-            <div class="bg-white shadow-sm sm:rounded-lg overflow-hidden">
-                <div class="p-4 md:p-6 text-gray-900">
-                    <div class="flex justify-between items-center mb-6">
-                        <h3 class="text-lg font-bold">Sekilas Tugas yang Belum Diselesaikan</h3>
-                    </div>
-                    
-                    <div class="block md:hidden space-y-3">
-                        @forelse($tugasTerbaru as $tugas)
-                            @php 
-                                // Sembunyikan item ke 6 sampai 10 di HP
-                                $hideMobile = $loop->iteration > 5 ? 'hidden' : ''; 
-                            @endphp
-                            <div class="bg-gray-50 border border-gray-200 p-4 rounded-lg shadow-sm {{ $hideMobile }}">
-                                <div class="flex justify-between items-start mb-2">
-                                    <h4 class="font-bold text-gray-800 text-sm">{{ $tugas->nama_pic }}</h4>
-                                    <span class="px-2 py-1 bg-red-100 text-red-800 text-[10px] font-bold rounded-full text-center">{{ $tugas->status_permohonan }}</span>
-                                </div>
-                                <p class="text-xs text-gray-600 mb-1">Tujuan: {{ $tugas->tujuan }}</p>
-                                <p class="text-xs text-gray-400">Masuk: {{ $tugas->updated_at->diffForHumans() }}</p>
-                            </div>
-                        @empty
-                            <div class="text-center py-6 text-gray-500 text-sm">Tidak ada tugas yang menunggu. Bagus!</div>
-                        @endforelse
+            {{-- TABEL TUGAS TERKINI DENGAN SMART LINKING --}}
+            <div class="bg-white shadow-sm sm:rounded-xl overflow-hidden border border-gray-100">
+                <div class="p-5 md:p-6 text-gray-900">
+                    <div class="flex justify-between items-center mb-6 border-b border-gray-100 pb-4">
+                        <h3 class="text-lg font-bold flex items-center gap-2">
+                            <i class="bi bi-list-task text-blue-600"></i> Sekilas Tugas Menunggu
+                        </h3>
                     </div>
 
+                    {{-- DESKTOP VIEW --}}
                     <div class="hidden md:block overflow-x-auto">
-                        <table class="w-full text-sm text-left text-gray-500">
-                            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                        <table class="w-full text-sm text-left text-gray-600">
+                            <thead class="text-xs text-gray-500 uppercase bg-gray-50 border-y border-gray-100">
                                 <tr>
-                                    <th class="px-6 py-3">Pemohon</th>
-                                    <th class="px-6 py-3">Tujuan & Waktu</th>
-                                    <th class="px-6 py-3">Waktu Masuk</th>
-                                    <th class="px-6 py-3">Status Terkini</th>
+                                    <th class="px-6 py-4">Pemohon</th>
+                                    <th class="px-6 py-4">Tujuan & Waktu Acara</th>
+                                    <th class="px-6 py-4">Waktu Masuk</th>
+                                    <th class="px-6 py-4 text-center">Aksi (Proses)</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 @forelse($tugasTerbaru as $tugas)
-                                    <tr class="bg-white border-b hover:bg-gray-50">
-                                        <td class="px-6 py-4 font-bold text-gray-800">{{ $tugas->nama_pic }}</td>
-                                        <td class="px-6 py-4">
-                                            {{ $tugas->tujuan }} <br>
-                                            <span class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($tugas->waktu_berangkat)->format('d M Y H:i') }}</span>
+                                    @php
+                                        $role = Auth::user()->role;
+                                        $status = $tugas->status_permohonan;
+                                        $detailUrl = route('dashboard');
+
+                                        if ($role === 'kepala_admin') {
+                                            $detailUrl =
+                                                $status === 'Menunggu Validasi Admin'
+                                                    ? route('permohonan.validasi_admin', $tugas->id)
+                                                    : route('permohonan.finalisasi_admin', $tugas->id);
+                                        } elseif ($role === 'spsi') {
+                                            $detailUrl = route('permohonan.proses_spsi', $tugas->id);
+                                        } elseif ($role === 'keuangan') {
+                                            $detailUrl =
+                                                $status === 'Menunggu Proses Keuangan'
+                                                    ? route('permohonan.proses_keuangan', $tugas->id)
+                                                    : route('permohonan.show', $tugas->id);
+                                        }
+
+                                        $badgeClass =
+                                            str_contains($status, 'Validasi') || str_contains($status, 'RAB')
+                                                ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                                : 'bg-orange-50 text-orange-700 border-orange-200';
+                                    @endphp
+                                    <tr class="bg-white border-b border-gray-50 hover:bg-gray-50 transition">
+                                        <td class="px-6 py-4 font-bold text-gray-800"><i
+                                                class="bi bi-person text-gray-400 mr-2"></i> {{ $tugas->nama_pic }}
                                         </td>
-                                        <td class="px-6 py-4 text-xs">{{ $tugas->updated_at->diffForHumans() }}</td>
                                         <td class="px-6 py-4">
-                                            <span class="px-2 py-1 bg-red-100 text-red-800 text-xs font-semibold rounded-full">{{ $tugas->status_permohonan }}</span>
+                                            <div class="flex items-center gap-2 text-gray-700"><i
+                                                    class="bi bi-geo-alt text-gray-400"></i> {{ $tugas->tujuan }}</div>
+                                            <div class="text-xs text-gray-500 mt-1 flex items-center gap-2"><i
+                                                    class="bi bi-calendar-event text-gray-400"></i>
+                                                {{ \Carbon\Carbon::parse($tugas->waktu_berangkat)->format('d M Y H:i') }}
+                                            </div>
+                                        </td>
+                                        <td class="px-6 py-4">
+                                            <span class="text-xs font-medium block mb-1"><i
+                                                    class="bi bi-clock-history text-gray-400 mr-1"></i>
+                                                {{ $tugas->updated_at->diffForHumans() }}</span>
+                                            <span
+                                                class="px-2 py-0.5 border text-[10px] font-bold rounded {{ $badgeClass }}">{{ $status }}</span>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <a href="{{ $detailUrl }}"
+                                                class="inline-flex items-center gap-1 bg-white border border-gray-300 text-gray-700 hover:text-blue-700 hover:border-blue-400 hover:bg-blue-50 py-1.5 px-3 rounded text-xs font-bold transition shadow-sm">
+                                                Proses <i class="bi bi-arrow-right"></i>
+                                            </a>
                                         </td>
                                     </tr>
                                 @empty
-                                    <tr><td colspan="4" class="px-6 py-8 text-center text-gray-500">Tidak ada tugas yang menunggu. Bagus!</td></tr>
+                                    <tr>
+                                        <td colspan="4" class="px-6 py-12 text-center text-gray-500">
+                                            <i class="bi bi-inboxes text-4xl block mb-3 text-gray-300"></i>
+                                            Tidak ada tugas yang menunggu. Bagus!
+                                        </td>
+                                    </tr>
                                 @endforelse
                             </tbody>
                         </table>
                     </div>
 
-                    <div class="mt-6 border-t pt-4">
-                        <a href="{{ $ruteTugas }}" class="block w-full text-center bg-gray-800 hover:bg-black text-white font-bold py-3 rounded-lg shadow transition">
-                            Lihat Semua Tugas Saya & Kerjakan &rarr;
-                        </a>
-                    </div>
+                    {{-- TOMBOL AKSI CEPAT DENGAN SMART ROUTING --}}
+                    @if ($tugasTerbaru->count() > 0)
+                        <div class="mt-6">
+                            <a href="{{ $ruteTugas }}"
+                                class="flex justify-center items-center gap-2 w-full md:w-auto md:inline-flex bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition">
+                                <i class="bi bi-lightning-charge-fill"></i> Mulai Kerjakan Tugas Terbanyak
+                            </a>
+                        </div>
+                    @endif
 
                 </div>
             </div>
