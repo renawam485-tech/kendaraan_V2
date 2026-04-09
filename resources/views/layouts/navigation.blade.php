@@ -7,7 +7,7 @@
 
 @if ($render === 'sidebar')
     {{-- ========================================== --}}
-    {{-- RENDER 1: SIDEBAR (RESPONSIVE & LENGKAP)   --}}
+    {{-- RENDER 1: SIDEBAR (PUTIH & AKSEN BIRU)     --}}
     {{-- ========================================== --}}
 
     <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
@@ -17,10 +17,10 @@
         :class="{
             'translate-x-0': sidebarOpen,
             '-translate-x-full': !sidebarOpen,
-            'md:w-64': !sidebarCollapsed,
-            'md:w-20': sidebarCollapsed
+            'w-64': !sidebarCollapsed,
+            'w-20': sidebarCollapsed
         }"
-        class="fixed left-0 top-16 z-40 h-[calc(100vh-64px)] w-64 bg-white border-r border-gray-200 text-gray-700 flex flex-col sidebar-transition shadow-lg md:translate-x-0 {{ $isPengguna ? 'md:hidden' : '' }}"
+        class="fixed left-0 top-16 z-40 h-[calc(100vh-64px)] bg-white border-r border-gray-200 text-gray-700 flex flex-col sidebar-transition shadow-lg md:translate-x-0 {{ $isPengguna ? 'md:hidden' : '' }}"
         x-cloak>
 
         <nav class="flex-1 overflow-y-auto py-4 scrollbar-hide">
@@ -51,7 +51,6 @@
                 <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap">Dashboard</span>
             </a>
 
-            {{-- MENU PENGGUNA DI MOBILE SIDEBAR --}}
             @if ($role === 'pengguna')
                 <div x-show="!sidebarCollapsed"
                     class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Aksi</div>
@@ -112,11 +111,6 @@
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cFin }}</span>
                     @endif
                 </a>
-                <a href="{{ route('admin.riwayat') }}" title="Arsip Riwayat"
-                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('admin.riwayat') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-archive text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Arsip Riwayat</span>
-                </a>
             @elseif($role === 'spsi')
                 <div x-show="!sidebarCollapsed"
                     class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
@@ -131,11 +125,6 @@
                         <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
                     @endif
-                </a>
-                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
-                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-geo-alt text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Pantauan Armada</span>
                 </a>
             @elseif($role === 'keuangan')
                 <div x-show="!sidebarCollapsed"
@@ -176,7 +165,7 @@
             </a>
         </nav>
 
-        {{-- FOOTER SIDEBAR: Bantuan dipindah ke area paling bawah --}}
+        {{-- FOOTER SIDEBAR --}}
         <div class="border-t border-gray-100 py-3 mt-auto">
             <a href="{{ route('bantuan.index') }}" title="Pusat Bantuan"
                 class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
@@ -193,7 +182,6 @@
         class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full z-50 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
 
         <div class="flex items-center gap-3 sm:gap-4">
-            {{-- Hamburger: Toggle !sidebarOpen berfungsi sempurna untuk buka/tutup di HP --}}
             <button @click="if(window.innerWidth >= 768) { toggleSidebar() } else { sidebarOpen = !sidebarOpen }"
                 class="text-gray-500 hover:text-blue-600 focus:outline-none transition {{ $isPengguna ? 'md:hidden' : '' }}">
                 <i class="bi bi-list text-2xl sm:text-3xl"></i>
@@ -204,7 +192,6 @@
                 DRIVORA
             </a>
 
-            {{-- Link Navigasi Khusus Pengguna Biasa (Desktop Only) --}}
             @if ($isPengguna)
                 <nav class="hidden md:flex items-center gap-6 ml-8 text-sm font-bold text-gray-500">
                     <a href="{{ route('dashboard') }}"
@@ -222,18 +209,21 @@
         </div>
 
         <div class="flex items-center gap-3 sm:gap-5">
-            {{-- Lonceng Notif Universal --}}
-            <button @click="$dispatch('open-notif-panel')"
-                class="p-2 text-gray-500 hover:text-blue-700 bg-gray-50 hover:bg-blue-50 rounded-full transition relative border border-gray-200">
-                <i class="bi bi-bell text-lg"></i>
-                @php $n = auth()->check() ? auth()->user()->unreadNotifications->count() : 0; @endphp
-                @if ($n > 0)
-                    <span
-                        class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold">{{ $n }}</span>
-                @endif
-            </button>
 
-            {{-- Dropdown Profile --}}
+            {{-- KEMBALIKAN LOGIKA ALPINE.JS UNTUK NOTIFIKASI REAL-TIME --}}
+            <div x-data="{ unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }} }" @increase-badge.window="unreadCount++"
+                @decrease-badge.window="if(unreadCount > 0) unreadCount--" @clear-badge.window="unreadCount = 0">
+
+                <button @click="$dispatch('open-notif-panel')"
+                    class="p-2 text-gray-500 hover:text-blue-700 bg-gray-50 hover:bg-blue-50 rounded-full transition relative border border-gray-200 focus:outline-none">
+                    <i class="bi bi-bell text-lg"></i>
+                    <template x-if="unreadCount > 0">
+                        <span x-text="unreadCount"
+                            class="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] text-white font-bold shadow-sm"></span>
+                    </template>
+                </button>
+            </div>
+
             <div class="border-l pl-3 sm:pl-5 border-gray-200">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">

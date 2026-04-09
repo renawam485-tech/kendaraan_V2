@@ -29,7 +29,6 @@
     </style>
 
     <script>
-        // Mencegah Sidebar berkedip saat refresh (FOUC)
         (function() {
             const isMobile = window.innerWidth < 768;
             const collapsed = !isMobile && localStorage.getItem('sidebarCollapsed') === 'true';
@@ -53,7 +52,6 @@
     },
     checkScreen() {
         this.isMobile = window.innerWidth < 768;
-        // Pastikan sidebar teks selalu terbuka jika di HP
         if (this.isMobile) {
             this.sidebarCollapsed = false;
         } else {
@@ -66,14 +64,11 @@
         $isPengguna = auth()->check() ? auth()->user()->role === 'pengguna' : true;
     @endphp
 
-    {{-- TOPBAR UNIVERSAL --}}
     @include('layouts.navigation', ['render' => 'topbar'])
 
     <div class="flex pt-16 min-h-screen">
-        {{-- SIDEBAR ADMIN/STAFF/MOBILE PENGGUNA --}}
         @include('layouts.navigation', ['render' => 'sidebar'])
 
-        {{-- AREA KONTEN UTAMA --}}
         <main class="flex-1 w-full pb-10 content-transition"
             :class="{
                 'md:ml-64': !sidebarCollapsed && !{{ $isPengguna ? 'true' : 'false' }},
@@ -95,7 +90,6 @@
         </main>
     </div>
 
-    {{-- PANEL NOTIFIKASI --}}
     @auth
         <div x-data="{
             open: false,
@@ -206,7 +200,9 @@
                             class="flex-1 flex justify-center items-center py-3 px-2 text-red-600 hover:bg-red-50 font-bold transition focus:outline-none"><i
                                 class="bi bi-trash text-base mr-1"></i> Hapus Terbaca</button>
                     </div>
-                    <div class="bg-white flex-1">
+
+                    {{-- TAMBAHKAN ID UNTUK INJEKSI REAL TIME --}}
+                    <div id="notif-list-container" class="bg-white flex-1">
                         @forelse(auth()->user()->notifications as $notif)
                             <a href="#" @click.prevent="openDetail($el)"
                                 class="block p-4 border-b border-gray-100 hover:bg-gray-50 transition {{ $notif->read_at ? 'opacity-70 bg-white read-item' : 'bg-blue-50/40 unread-item' }}"
@@ -265,6 +261,50 @@
                 setTimeout(() => toast.remove(), 500);
             }, 7000);
         };
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const userId = {{ auth()->check() ? auth()->id() : 'null' }};
+            if (userId !== null && window.Echo) {
+                window.Echo.private('App.Models.User.' + userId).notification((notification) => {
+
+                    const title = notification.status || (notification.data && notification.data.status) ||
+                        'Notifikasi Baru';
+                    const message = notification.pesan || (notification.data && notification.data.pesan) ||
+                        'Silakan cek pembaruan terbaru.';
+                    window.showCompactToast(title, message);
+
+                    // Trigger Alpine.js untuk menambah angka merah di Lonceng
+                    window.dispatchEvent(new CustomEvent('increase-badge'));
+
+                    const autoUpdatePaths = ['/dashboard', '/admin/validasi', '/admin/finalisasi',
+                        '/admin/riwayat', '/spsi/alokasi', '/spsi/monitoring', '/keuangan/rab',
+                        '/keuangan/monitoring'
+                    ];
+
+                    // Ambil konten HTML baru tanpa me-refresh browser
+                    if (autoUpdatePaths.includes(window.location.pathname) || document.getElementById(
+                            'notif-list-container')) {
+                        fetch(window.location.href).then(response => response.text()).then(html => {
+                            const parser = new DOMParser();
+                            const doc = parser.parseFromString(html, 'text/html');
+
+                            // Update Tabel Dashboard secara halus
+                            const newMainContent = doc.querySelector('main');
+                            if (newMainContent && document.querySelector('main')) {
+                                document.querySelector('main').innerHTML = newMainContent.innerHTML;
+                            }
+
+                            // Update Panel Daftar Notifikasi secara halus (agar notif baru langsung terlihat)
+                            const newNotifList = doc.getElementById('notif-list-container');
+                            if (newNotifList && document.getElementById('notif-list-container')) {
+                                document.getElementById('notif-list-container').innerHTML =
+                                    newNotifList.innerHTML;
+                            }
+                        });
+                    }
+                });
+            }
+        });
     </script>
 </body>
 

@@ -10,7 +10,7 @@ class Permohonan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id', 'nama_pic', 'kontak_pic', 'kendaraan_dibutuhkan', 
+        'kode_permohonan','user_id', 'nama_pic', 'kontak_pic', 'kendaraan_dibutuhkan', 
         'titik_jemput', 'tujuan', 'waktu_berangkat', 'waktu_kembali', 
         'jumlah_penumpang', 'file_surat_penugasan', 'anggaran_diajukan','catatan_pemohon',
         'kategori_kegiatan', 'rekomendasi_admin',

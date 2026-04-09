@@ -131,6 +131,7 @@ class PermohonanController extends Controller
 
         $permohonan = Permohonan::create([
             'user_id'               => Auth::id(),
+            'kode_permohonan'       => $this->generateKodePermohonan(),
             'nama_pic'              => $request->nama_pic,
             'kontak_pic'            => $request->kontak_pic,
             'kendaraan_dibutuhkan'  => $request->kendaraan_dibutuhkan,
@@ -351,6 +352,9 @@ class PermohonanController extends Controller
 
         $permohonan->save();
 
+        // TAMBAHAN PERBAIKAN: Bebaskan armada agar mobil & supir kembali "Tersedia"
+        $this->bebaskanArmada($permohonan);
+
         return redirect()->back()->with('success', 'Perjalanan telah diselesaikan. Laporan dicatat.');
     }
 
@@ -515,5 +519,33 @@ class PermohonanController extends Controller
             return redirect()->back()->with('error', 'Dokumen belum tersedia untuk dicetak.');
         }
         return view('permohonan.cetak', compact('permohonan'));
+    }
+
+    /**
+     * Generate kode permohonan unik.
+     * Format: P + YYYYMMDD + 3-digit no urut pengajuan user di hari yang sama.
+     * Contoh: P20260408001, P20260408002, P20260408003, ...
+     */
+    private function generateKodePermohonan(): string
+    {
+        $tanggal = now()->format('Ymd');
+        $userId  = Auth::id();
+
+        // Hitung berapa permohonan yang sudah dibuat user ini HARI INI
+        $urutan = Permohonan::where('user_id', $userId)
+            ->whereDate('created_at', now()->toDateString())
+            ->count();
+
+        // +1 karena record baru belum tersimpan saat dipanggil
+        $noUrut = $urutan + 1;
+
+        // Safeguard race condition: loop sampai kode benar-benar unik
+        do {
+            $kode   = 'P' . $tanggal . str_pad($noUrut, 3, '0', STR_PAD_LEFT);
+            $exists = Permohonan::where('kode_permohonan', $kode)->exists();
+            if ($exists) $noUrut++;
+        } while ($exists);
+
+        return $kode;
     }
 }

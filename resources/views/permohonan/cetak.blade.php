@@ -98,7 +98,7 @@
 
             <div class="title-doc">
                 <h3>BUKTI PERSETUJUAN PERJALANAN</h3>
-                <p>Nomor Referensi: BPP/{{ \Carbon\Carbon::now()->format('Y/m') }}/{{ str_pad($permohonan->id, 4, '0', STR_PAD_LEFT) }}</p>
+                <p>Nomor Referensi: {{ $permohonan->kode_permohonan ?? 'BPP/'. \Carbon\Carbon::now()->format('Y/m') .'/'. str_pad($permohonan->id, 4, '0', STR_PAD_LEFT) }}</p>
             </div>
 
             <div class="content-text">
