@@ -25,6 +25,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/permohonan/buat', [PermohonanController::class, 'create'])->name('permohonan.create');
     Route::post('/permohonan', [PermohonanController::class, 'store'])->name('permohonan.store');
     Route::put('/permohonan/{id}/selesai', [PermohonanController::class, 'selesaikanSewa'])->name('permohonan.selesai');
+    Route::put('/permohonan/{id}/mulai-perjalanan', [PermohonanController::class, 'mulaiPerjalanan'])->name('permohonan.mulai_perjalanan');
     Route::put('/permohonan/{id}/submit-pengembalian', [PermohonanController::class, 'submitPengembalian'])->name('permohonan.submit_pengembalian');
 
     // =========================================================
@@ -47,7 +48,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:spsi'])->group(function () {
         Route::get('/spsi/alokasi', [PermohonanController::class, 'spsiAlokasi'])->name('spsi.alokasi');
         Route::get('/spsi/monitoring', [PermohonanController::class, 'spsiMonitoring'])->name('spsi.monitoring');
-
+        Route::get('/spsi/serah-terima', [PermohonanController::class, 'spsiSerahTerima'])->name('spsi.serah_terima');
+        Route::put('/permohonan/{id}/serah-terima-kunci', [PermohonanController::class, 'serahTerimaKunci'])->name('permohonan.serah_terima_kunci');
         Route::get('/permohonan/{id}/proses-spsi', [PermohonanController::class, 'prosesSpsiForm'])->name('permohonan.proses_spsi');
         Route::put('/permohonan/{id}/proses-spsi', [PermohonanController::class, 'prosesSpsiSubmit'])->name('permohonan.proses_spsi_submit');
     });
@@ -132,4 +134,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

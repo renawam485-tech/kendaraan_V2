@@ -241,6 +241,9 @@
                                                     => 'bg-orange-50 text-orange-700 border-orange-200',
                                                 'Menunggu Verifikasi Pengembalian'
                                                     => 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                                                'Menunggu Mulai Perjalanan'
+                                                    => 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                                                'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
                                                 default => 'bg-gray-50 text-gray-700 border-gray-200',
                                             };
                                         @endphp
@@ -354,6 +357,9 @@
                                                 => 'bg-orange-50 text-orange-700 border-orange-200',
                                             'Menunggu Verifikasi Pengembalian'
                                                 => 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                                            'Menunggu Mulai Perjalanan'
+                                                => 'bg-yellow-50 text-yellow-700 border-yellow-200',
+                                            'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
                                             default => 'bg-gray-50 text-gray-700 border-gray-200',
                                         };
                                     @endphp

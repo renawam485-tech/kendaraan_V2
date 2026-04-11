@@ -21,12 +21,14 @@
             {{-- STATUS BAR --}}
             @php
                 $statusConfig = match($permohonan->status_permohonan) {
-                    'Selesai'                          => ['bg-emerald-50 border-emerald-200','text-emerald-700','bi-patch-check-fill text-emerald-500'],
-                    'Disetujui'                        => ['bg-blue-50 border-blue-200','text-blue-700','bi-check-circle-fill text-blue-500'],
-                    'Ditolak'                          => ['bg-red-50 border-red-200','text-red-700','bi-x-circle-fill text-red-500'],
-                    'Menunggu Pengembalian Dana'        => ['bg-orange-50 border-orange-200','text-orange-700','bi-exclamation-triangle-fill text-orange-500'],
-                    'Menunggu Verifikasi Pengembalian'  => ['bg-amber-50 border-amber-200','text-amber-700','bi-hourglass-split text-amber-500'],
-                    default                            => ['bg-slate-50 border-slate-200','text-slate-700','bi-hourglass-split text-slate-400'],
+                    'Selesai'                          => ['bg-emerald-50 border-emerald-200', 'text-emerald-700', 'bi-patch-check-fill text-emerald-500'],
+                    'Disetujui'                        => ['bg-blue-50 border-blue-200',     'text-blue-700',    'bi-check-circle-fill text-blue-500'],
+                    'Menunggu Mulai Perjalanan'        => ['bg-yellow-50 border-yellow-200',  'text-yellow-700',  'bi-key-fill text-yellow-500'],
+                    'Perjalanan Berlangsung'           => ['bg-teal-50 border-teal-200',      'text-teal-700',    'bi-geo-alt-fill text-teal-500'],
+                    'Ditolak'                          => ['bg-red-50 border-red-200',        'text-red-700',     'bi-x-circle-fill text-red-500'],
+                    'Menunggu Pengembalian Dana'        => ['bg-orange-50 border-orange-200',  'text-orange-700',  'bi-exclamation-triangle-fill text-orange-500'],
+                    'Menunggu Verifikasi Pengembalian'  => ['bg-amber-50 border-amber-200',    'text-amber-700',   'bi-hourglass-split text-amber-500'],
+                    default                            => ['bg-slate-50 border-slate-200',    'text-slate-700',   'bi-hourglass-split text-slate-400'],
                 };
             @endphp
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -39,11 +41,14 @@
                         <p class="font-black text-gray-900 text-sm">{{ $permohonan->status_permohonan }}</p>
                     </div>
                 </div>
-                <div class="flex items-center gap-3 text-xs text-gray-400">
+                <div class="flex items-center gap-3 text-xs text-gray-400 flex-wrap">
                     <span><i class="bi bi-clock mr-1"></i>Diajukan {{ $permohonan->created_at->diffForHumans() }}</span>
                     <span class="hidden sm:inline">·</span>
                     <span class="hidden sm:inline"><i class="bi bi-arrow-repeat mr-1"></i>Update {{ $permohonan->updated_at->diffForHumans() }}</span>
-                    @if(in_array($permohonan->status_permohonan,['Disetujui','Menunggu Pengembalian Dana','Menunggu Verifikasi Pengembalian','Selesai']))
+                    @if(in_array($permohonan->status_permohonan, [
+                        'Disetujui', 'Menunggu Mulai Perjalanan', 'Perjalanan Berlangsung',
+                        'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai',
+                    ]))
                         <a href="{{ route('permohonan.cetak', $permohonan->id) }}" target="_blank"
                            class="ml-2 inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-1.5 rounded-lg transition">
                             <i class="bi bi-printer"></i> Cetak SPJ
@@ -51,6 +56,88 @@
                     @endif
                 </div>
             </div>
+
+            {{-- ════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Disetujui — menunggu serah terima SPSI       --}}
+            {{-- ════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Disetujui')
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
+                    <div class="flex items-start gap-3">
+                        <i class="bi bi-key-fill text-blue-500 text-xl flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <h3 class="font-bold text-blue-900 text-base">Permohonan Disetujui!</h3>
+                            <p class="text-sm text-blue-700 mt-1">
+                                Tim SPSI sedang mempersiapkan kendaraan dan kunci untuk Anda.
+                                Anda akan mendapat notifikasi segera setelah kunci siap diserahkan.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            {{-- ════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Menunggu Mulai Perjalanan — tombol mulai      --}}
+            {{-- ════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Menunggu Mulai Perjalanan' && Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
+                <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-5 shadow-sm">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div class="flex items-start gap-3">
+                            <i class="bi bi-key-fill text-yellow-500 text-xl flex-shrink-0 mt-0.5"></i>
+                            <div>
+                                <h3 class="font-bold text-yellow-900 text-base">Kunci Kendaraan Sudah Diserahkan!</h3>
+                                <p class="text-sm text-yellow-800 mt-1">
+                                    Pastikan Anda sudah memegang kunci fisik, lalu tekan tombol di bawah untuk memulai perjalanan secara resmi.
+                                </p>
+                                @if($permohonan->waktu_serah_terima)
+                                    <p class="text-xs text-yellow-700 mt-1.5">
+                                        <i class="bi bi-clock mr-1"></i>
+                                        Diserahkan pada: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</strong>
+                                        ({{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() }})
+                                    </p>
+                                @endif
+                            </div>
+                        </div>
+                        <form action="{{ route('permohonan.mulai_perjalanan', $permohonan->id) }}" method="POST">
+                            @csrf @method('PUT')
+                            <button type="submit"
+                                onclick="return confirm('Konfirmasi: Anda sudah menerima kunci dan siap berangkat sekarang?')"
+                                class="whitespace-nowrap inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition text-sm shadow-md">
+                                <i class="bi bi-play-circle-fill text-lg"></i> Mulai Perjalanan
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            @endif
+
+            {{-- BANNER: Menunggu Mulai Perjalanan — info untuk SPSI/Admin --}}
+            @if($permohonan->status_permohonan === 'Menunggu Mulai Perjalanan' && Auth::user()->role !== 'pengguna')
+                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                    <i class="bi bi-info-circle-fill text-yellow-500 flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-bold text-yellow-800">Menunggu Pengguna Mulai Perjalanan</p>
+                        <p class="text-xs text-yellow-700 mt-0.5">
+                            Kunci diserahkan {{ $permohonan->waktu_serah_terima ? \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() : '—' }}.
+                            Pengguna belum mengklik tombol "Mulai Perjalanan".
+                        </p>
+                    </div>
+                </div>
+            @endif
+
+            {{-- BANNER: Perjalanan Berlangsung (info) --}}
+            @if($permohonan->status_permohonan === 'Perjalanan Berlangsung')
+                <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                    <i class="bi bi-geo-alt-fill text-teal-500 text-lg flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-bold text-teal-800">Perjalanan Sedang Berlangsung</p>
+                        @if($permohonan->waktu_mulai_perjalanan)
+                            <p class="text-xs text-teal-700 mt-0.5">
+                                Dimulai: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</strong>
+                                ({{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() }})
+                            </p>
+                        @endif
+                    </div>
+                </div>
+            @endif
 
             {{-- BANNER: Pengembalian Dana --}}
             @if($permohonan->status_permohonan === 'Menunggu Pengembalian Dana')
@@ -144,7 +231,7 @@
                             </div>
                             <div>
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jadwal</p>
-                                <p class="text-sm text-gray-700 font-medium">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y, H:i') }}</p>
+                                <p class="text-sm font-medium text-gray-700">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y, H:i') }}</p>
                                 <p class="text-xs text-gray-500">s/d {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M Y, H:i') }}</p>
                             </div>
                             <div>
@@ -174,6 +261,33 @@
                                 @endif
                             </div>
                         </div>
+
+                        {{-- Timeline serah terima (tampil jika sudah ada) --}}
+                        @if($permohonan->waktu_serah_terima || $permohonan->waktu_mulai_perjalanan)
+                            <div class="mt-5 pt-4 border-t border-gray-100">
+                                <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Timeline Perjalanan</p>
+                                <div class="space-y-2">
+                                    @if($permohonan->waktu_serah_terima)
+                                        <div class="flex items-center gap-3 text-sm">
+                                            <span class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0"><i class="bi bi-key-fill text-yellow-600 text-xs"></i></span>
+                                            <div>
+                                                <span class="font-semibold text-gray-700">Serah Terima Kunci</span>
+                                                <span class="text-gray-400 text-xs ml-2">{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                    @if($permohonan->waktu_mulai_perjalanan)
+                                        <div class="flex items-center gap-3 text-sm">
+                                            <span class="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0"><i class="bi bi-play-fill text-teal-600 text-xs"></i></span>
+                                            <div>
+                                                <span class="font-semibold text-gray-700">Perjalanan Dimulai</span>
+                                                <span class="text-gray-400 text-xs ml-2">{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</span>
+                                            </div>
+                                        </div>
+                                    @endif
+                                </div>
+                            </div>
+                        @endif
                     </div>
                 </div>
 
@@ -246,8 +360,10 @@
                 </div>
             </div>
 
-            {{-- FORM LPJ --}}
-            @if($permohonan->status_permohonan === 'Disetujui' && Auth::user()->role === 'pengguna')
+            {{-- ════════════════════════════════════════════════════ --}}
+            {{-- FORM LPJ — hanya muncul saat Perjalanan Berlangsung  --}}
+            {{-- ════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Perjalanan Berlangsung' && Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
                         <i class="bi bi-clipboard2-check text-blue-600"></i>

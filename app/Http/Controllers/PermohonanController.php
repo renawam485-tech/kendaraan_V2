@@ -301,13 +301,26 @@ class PermohonanController extends Controller
     }
 
     public function finalisasiAdminSubmit(Request $request, $id)
-    {
-        $permohonan = Permohonan::findOrFail($id);
-        $permohonan->update(['status_permohonan' => 'Disetujui']);
-        $permohonan->user->notify(new StatusPermohonanNotification($permohonan, 'Hore! Permohonan Anda DISETUJUI.'));
-
-        return redirect()->route('admin.finalisasi')->with('success', 'Permohonan difinalisasi.');
+{
+    $permohonan = Permohonan::findOrFail($id);
+    $permohonan->update(['status_permohonan' => 'Disetujui']);
+ 
+    // Notif pengguna bahwa permohonan disetujui, menunggu serah terima
+    $permohonan->user->notify(new StatusPermohonanNotification(
+        $permohonan,
+        'Permohonan Anda DISETUJUI! Tim SPSI akan segera menghubungi Anda untuk serah terima kunci kendaraan.'
+    ));
+ 
+    // Notif SPSI agar menyiapkan serah terima kunci
+    foreach (User::where('role', 'spsi')->get() as $spsi) {
+        $spsi->notify(new StatusPermohonanNotification(
+            $permohonan,
+            'Permohonan ' . $permohonan->kode_permohonan . ' disetujui. Siapkan serah terima kunci untuk ' . $permohonan->nama_pic . ' (berangkat: ' . \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y H:i') . ').'
+        ));
     }
+ 
+    return redirect()->route('admin.finalisasi')->with('success', 'Permohonan difinalisasi dan SPSI telah dinotifikasi.');
+}
 
     public function show($id)
     {
@@ -316,47 +329,45 @@ class PermohonanController extends Controller
     }
 
     public function selesaikanSewa(Request $request, $id)
-    {
-        $permohonan = Permohonan::findOrFail($id);
-
-        if ($permohonan->kategori_kegiatan === 'Dinas SITH') {
-            $request->validate([
-                'biaya_aktual' => 'required|numeric|min:0',
-                'bukti_lpj' => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
-            ]);
-
-            $permohonan->biaya_aktual = $request->biaya_aktual;
-
-            if ($request->hasFile('bukti_lpj')) {
-                // Simpan ke folder public/bukti_lpj agar bisa diakses
-                $path = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
-                $permohonan->bukti_lpj = $path;
-            }
-
-            // PERBAIKAN BUG LOGIKA KEUANGAN:
-            if ($permohonan->mekanisme_pembayaran === 'Reimburse') {
-                // Jika ditalangi (Reimburse), pemohon tidak perlu kembalikan uang. Langsung selesai!
-                $permohonan->status_permohonan = 'Selesai';
-            } else {
-                // Jika Cash / Cashless, cek apakah ada sisa uang (Aktual < RAB)
-                if ($permohonan->biaya_aktual < $permohonan->rab_disetujui) {
-                    $permohonan->status_permohonan = 'Menunggu Pengembalian Dana';
-                } else {
-                    $permohonan->status_permohonan = 'Selesai';
-                }
-            }
-        } else {
-            // Jika Non-Dinas, langsung selesai tanpa urusan uang
-            $permohonan->status_permohonan = 'Selesai';
-        }
-
-        $permohonan->save();
-
-        // TAMBAHAN PERBAIKAN: Bebaskan armada agar mobil & supir kembali "Tersedia"
-        $this->bebaskanArmada($permohonan);
-
-        return redirect()->back()->with('success', 'Perjalanan telah diselesaikan. Laporan dicatat.');
+{
+    $permohonan = Permohonan::findOrFail($id);
+ 
+    if ($permohonan->user_id !== Auth::id()) {
+        abort(403);
     }
+ 
+    if ($permohonan->status_permohonan !== 'Perjalanan Berlangsung') {
+        return redirect()->back()->with('error', 'Perjalanan belum dimulai secara resmi.');
+    }
+ 
+    if ($permohonan->kategori_kegiatan === 'Dinas SITH') {
+        $request->validate([
+            'biaya_aktual' => 'required|numeric|min:0',
+            'bukti_lpj'    => 'required|file|mimes:jpg,jpeg,png,pdf|max:2048',
+        ]);
+ 
+        $permohonan->biaya_aktual = $request->biaya_aktual;
+ 
+        if ($request->hasFile('bukti_lpj')) {
+            $permohonan->bukti_lpj = $request->file('bukti_lpj')->store('bukti_lpj', 'public');
+        }
+ 
+        if ($permohonan->mekanisme_pembayaran === 'Reimburse') {
+            $permohonan->status_permohonan = 'Selesai';
+        } else {
+            $permohonan->status_permohonan = $permohonan->biaya_aktual < $permohonan->rab_disetujui
+                ? 'Menunggu Pengembalian Dana'
+                : 'Selesai';
+        }
+    } else {
+        $permohonan->status_permohonan = 'Selesai';
+    }
+ 
+    $permohonan->save();
+    $this->bebaskanArmada($permohonan);
+ 
+    return redirect()->back()->with('success', 'Perjalanan telah diselesaikan. Laporan dicatat.');
+}
 
     /**
      * FIX BUG 2: Helper — bebaskan kendaraan & pengemudi saat perjalanan selesai.
@@ -470,19 +481,20 @@ class PermohonanController extends Controller
     }
 
     public function spsiMonitoring()
-    {
-        // FIX BUG 7: tambahkan status pengembalian agar SPSI bisa pantau armada sampai benar-benar selesai
-        return view('dashboard.spsi', [
-            'permohonans' => Permohonan::whereIn('status_permohonan', [
-                'Menunggu Proses Keuangan',
-                'Menunggu Finalisasi',
-                'Disetujui',
-                'Menunggu Pengembalian Dana',
-                'Menunggu Verifikasi Pengembalian',
-                'Selesai',
-            ])->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Pantauan & Riwayat Armada');
-    }
+{
+    return view('dashboard.spsi', [
+        'permohonans' => Permohonan::whereIn('status_permohonan', [
+            'Menunggu Proses Keuangan',
+            'Menunggu Finalisasi',
+            'Disetujui',
+            'Menunggu Mulai Perjalanan',
+            'Perjalanan Berlangsung',
+            'Menunggu Pengembalian Dana',
+            'Menunggu Verifikasi Pengembalian',
+            'Selesai',
+        ])->orderBy('updated_at', 'desc')->get(),
+    ])->with('judul', 'Pantauan & Riwayat Armada');
+}
 
     public function keuanganRab()
     {
@@ -506,20 +518,112 @@ class PermohonanController extends Controller
         ])->with('judul', 'Pantauan Anggaran');
     }
 
-    public function cetakSuratJalan($id)
+    public function spsiSerahTerima()
     {
-        $permohonan = Permohonan::with(['kendaraan', 'pengemudi', 'user'])->findOrFail($id);
-        // FIX BUG 14: izinkan cetak untuk semua status post-approval (perjalanan sudah berlangsung)
-        if (!in_array($permohonan->status_permohonan, [
-            'Disetujui',
-            'Menunggu Pengembalian Dana',
-            'Menunggu Verifikasi Pengembalian',
-            'Selesai',
-        ])) {
-            return redirect()->back()->with('error', 'Dokumen belum tersedia untuk dicetak.');
-        }
-        return view('permohonan.cetak', compact('permohonan'));
+        $pending = Permohonan::with(['kendaraan', 'kendaraanVendor', 'pengemudi', 'user'])
+            ->where('status_permohonan', 'Disetujui')
+            ->orderBy('waktu_berangkat', 'asc')
+            ->get();
+
+        $menungguMulai = Permohonan::with(['kendaraan', 'kendaraanVendor', 'pengemudi', 'user'])
+            ->where('status_permohonan', 'Menunggu Mulai Perjalanan')
+            ->orderBy('waktu_serah_terima', 'desc')
+            ->get();
+
+        $berlangsung = Permohonan::with(['kendaraan', 'kendaraanVendor', 'pengemudi', 'user'])
+            ->where('status_permohonan', 'Perjalanan Berlangsung')
+            ->orderBy('waktu_mulai_perjalanan', 'desc')
+            ->get();
+
+        $riwayat = Permohonan::with(['kendaraan', 'kendaraanVendor', 'pengemudi', 'user'])
+            ->whereIn('status_permohonan', [
+                'Selesai',
+                'Menunggu Pengembalian Dana',
+                'Menunggu Verifikasi Pengembalian',
+            ])
+            ->whereNotNull('waktu_serah_terima')
+            ->orderBy('updated_at', 'desc')
+            ->take(20)
+            ->get();
+
+        return view('permohonan.serah_terima', compact('pending', 'menungguMulai', 'berlangsung', 'riwayat'));
     }
+
+    /**
+     * SPSI konfirmasi serah terima kunci kepada pengguna.
+     */
+    public function serahTerimaKunci(Request $request, $id)
+    {
+        $permohonan = Permohonan::findOrFail($id);
+
+        if ($permohonan->status_permohonan !== 'Disetujui') {
+            return redirect()->back()->with('error', 'Status tidak valid untuk serah terima kunci.');
+        }
+
+        $permohonan->update([
+            'status_permohonan'  => 'Menunggu Mulai Perjalanan',
+            'waktu_serah_terima' => now(),
+        ]);
+
+        if ($permohonan->user) {
+            $permohonan->user->notify(new StatusPermohonanNotification(
+                $permohonan,
+                'Kunci kendaraan sudah diserahkan! Silakan klik "Mulai Perjalanan" di halaman detail untuk memulai perjalanan secara resmi.'
+            ));
+        }
+
+        return redirect()->route('spsi.serah_terima')
+            ->with('success', 'Serah terima kunci berhasil dicatat untuk ' . $permohonan->nama_pic . '.');
+    }
+
+    /**
+     * Pengguna mengkonfirmasi telah menerima kunci dan memulai perjalanan.
+     */
+    public function mulaiPerjalanan($id)
+    {
+        $permohonan = Permohonan::findOrFail($id);
+
+        if ($permohonan->user_id !== Auth::id()) {
+            abort(403, 'Anda tidak berhak memulai perjalanan ini.');
+        }
+
+        if ($permohonan->status_permohonan !== 'Menunggu Mulai Perjalanan') {
+            return redirect()->back()->with('error', 'Kunci belum diserahkan oleh SPSI.');
+        }
+
+        $permohonan->update([
+            'status_permohonan'      => 'Perjalanan Berlangsung',
+            'waktu_mulai_perjalanan' => now(),
+        ]);
+
+        foreach (User::where('role', 'spsi')->get() as $spsi) {
+            $spsi->notify(new StatusPermohonanNotification(
+                $permohonan,
+                'Pemohon ' . $permohonan->nama_pic . ' (' . $permohonan->kode_permohonan . ') telah memulai perjalanan ke ' . $permohonan->tujuan . '.'
+            ));
+        }
+
+        return redirect()->route('permohonan.show', $id)
+            ->with('success', 'Perjalanan dimulai! Selamat bepergian dan hati-hati di jalan.');
+    }
+
+    public function cetakSuratJalan($id)
+{
+    $permohonan = Permohonan::with(['kendaraan', 'pengemudi', 'user'])->findOrFail($id);
+ 
+    if (!in_array($permohonan->status_permohonan, [
+        'Disetujui',
+        'Menunggu Mulai Perjalanan',
+        'Perjalanan Berlangsung',
+        'Menunggu Pengembalian Dana',
+        'Menunggu Verifikasi Pengembalian',
+        'Selesai',
+    ])) {
+        return redirect()->back()->with('error', 'Dokumen belum tersedia untuk dicetak.');
+    }
+ 
+    return view('permohonan.cetak', compact('permohonan'));
+}
 
     /**
      * Generate kode permohonan unik.

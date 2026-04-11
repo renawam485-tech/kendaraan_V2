@@ -25,15 +25,22 @@ class DatabaseSeeder extends Seeder
 
         // 2. Pengguna
         User::create([
-            'name'     => 'Budi (Pengguna)',
+            'name'     => 'Budi',
             'email'    => 'pengguna@sith.com',
+            'password' => Hash::make('password123'),
+            'role'     => 'pengguna',
+        ]);
+
+        User::create([
+            'name'     => 'Edo',
+            'email'    => 'edo@sith.com',
             'password' => Hash::make('password123'),
             'role'     => 'pengguna',
         ]);
 
         // 3. Kepala Admin
         User::create([
-            'name'     => 'Bapak Kepala Admin',
+            'name'     => 'admin',
             'email'    => 'admin@sith.com',
             'password' => Hash::make('password123'),
             'role'     => 'kepala_admin',
@@ -41,7 +48,7 @@ class DatabaseSeeder extends Seeder
 
         // 4. SPSI
         User::create([
-            'name'     => 'Ibu Kasubag SPSI',
+            'name'     => 'spsi',
             'email'    => 'spsi@sith.com',
             'password' => Hash::make('password123'),
             'role'     => 'spsi',
@@ -49,7 +56,7 @@ class DatabaseSeeder extends Seeder
 
         // 5. Keuangan
         User::create([
-            'name'     => 'Bapak Kasubag Keuangan',
+            'name'     => 'keuangan',
             'email'    => 'keuangan@sith.com',
             'password' => Hash::make('password123'),
             'role'     => 'keuangan',
@@ -70,9 +77,49 @@ class DatabaseSeeder extends Seeder
             'status_kendaraan'    => 'Tersedia',
         ]);
 
+        Kendaraan::create([
+            'nama_kendaraan'      => 'Honda CR-V',
+            'plat_nomor'          => 'D 3453 SITH',
+            'kapasitas_penumpang' => 4,
+            'status_kendaraan'    => 'Tersedia',
+        ]);
+
+        Kendaraan::create([
+            'nama_kendaraan'      => 'Honda Brio',
+            'plat_nomor'          => 'D 7654 SITH',
+            'kapasitas_penumpang' => 4,
+            'status_kendaraan'    => 'Tersedia',
+        ]);
+
+        Kendaraan::create([
+            'nama_kendaraan'      => 'Mitsubishi Pajero',
+            'plat_nomor'          => 'D 8564 SITH',
+            'kapasitas_penumpang' => 7,
+            'status_kendaraan'    => 'Tersedia',
+        ]);
+
+        Kendaraan::create([
+            'nama_kendaraan'      => 'Mitsubishi Xpander',
+            'plat_nomor'          => 'D 3452 SITH',
+            'kapasitas_penumpang' => 7,
+            'status_kendaraan'    => 'Tersedia',
+        ]);
+
         // 7. Pengemudi — FIX: kontak harus format +62
         Pengemudi::create([
-            'nama_pengemudi'  => 'Asep Supir',
+            'nama_pengemudi'  => 'Asep',
+            'kontak'          => '+6281234567890',
+            'status_pengemudi'=> 'Tersedia',
+        ]);
+
+        Pengemudi::create([
+            'nama_pengemudi'  => 'Opik',
+            'kontak'          => '+6281234567890',
+            'status_pengemudi'=> 'Tersedia',
+        ]);
+
+        Pengemudi::create([
+            'nama_pengemudi'  => 'Ndit',
             'kontak'          => '+6281234567890',
             'status_pengemudi'=> 'Tersedia',
         ]);
