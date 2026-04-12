@@ -373,15 +373,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($riwayat as $p)
-                                    @php
-                                        $sc = match($p->status_permohonan) {
-                                            'Menunggu Penyelesaian'            => 'bg-purple-50 text-purple-700 border-purple-200',
-                                            'Selesai'                          => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                            'Menunggu Pengembalian Dana'        => 'bg-orange-50 text-orange-700 border-orange-200',
-                                            'Menunggu Verifikasi Pengembalian'  => 'bg-amber-50 text-amber-700 border-amber-200',
-                                            default                            => 'bg-slate-50 text-slate-600 border-slate-200',
-                                        };
-                                    @endphp
+                                    <x-status-badge :status="$p->status_permohonan" />
                                     <tr class="hover:bg-slate-50/50 transition-colors">
                                         <td class="px-4 py-3.5">
                                             <span class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{{ $p->kode_permohonan ?? '—' }}</span>

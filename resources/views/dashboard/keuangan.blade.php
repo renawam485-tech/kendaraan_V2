@@ -36,21 +36,7 @@
                 {{-- MOBILE --}}
                 <div class="block md:hidden divide-y divide-gray-100">
                     @forelse($permohonans as $i => $p)
-                        @php
-                            $sc = match ($p->status_permohonan) {
-                                'Menunggu Proses Keuangan' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                'Menunggu Pengembalian Dana' => 'bg-orange-50 text-orange-700 border-orange-200',
-                                'Menunggu Verifikasi Pengembalian' => 'bg-orange-50 text-orange-700 border-orange-200',
-                                'Disetujui' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                'Selesai' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                'Ditolak' => 'bg-red-50 text-red-700 border-red-200',
-                                'Menunggu Mulai Perjalanan' => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                'Menunggu Konfirmasi Kembali' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-'Menunggu Penyelesaian'       => 'bg-purple-50 text-purple-700 border-purple-200',
-                                default => 'bg-slate-50 text-slate-600 border-slate-200',
-                            };
-                        @endphp
+                        <x-status-badge :status="$p->status_permohonan" />
                         <div class="p-4 hover:bg-slate-50 transition searchable-row"
                             data-search="{{ strtolower($p->nama_pic . ' ' . $p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . $p->status_permohonan) }}">
                             <div class="flex items-start justify-between gap-2">
@@ -134,23 +120,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($permohonans as $i => $p)
-                                @php
-                                    $sc = match ($p->status_permohonan) {
-                                        'Menunggu Proses Keuangan' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        'Menunggu Pengembalian Dana'
-                                            => 'bg-orange-50 text-orange-700 border-orange-200',
-                                        'Menunggu Verifikasi Pengembalian'
-                                            => 'bg-orange-50 text-orange-700 border-orange-200',
-                                        'Disetujui' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                        'Selesai' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        'Ditolak' => 'bg-red-50 text-red-700 border-red-200',
-                                        'Menunggu Mulai Perjalanan' => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                        'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                        'Menunggu Konfirmasi Kembali' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-'Menunggu Penyelesaian'       => 'bg-purple-50 text-purple-700 border-purple-200',
-                                        default => 'bg-slate-50 text-slate-600 border-slate-200',
-                                    };
-                                @endphp
+                                <x-status-badge :status="$p->status_permohonan" />
                                 <tr class="hover:bg-blue-50/20 transition-colors searchable-row"
                                     data-search="{{ strtolower($p->nama_pic . ' ' . $p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . $p->status_permohonan) }}">
                                     <td class="px-4 py-3.5 text-center text-xs text-gray-400 font-semibold">

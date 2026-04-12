@@ -349,24 +349,7 @@
                             </thead>
                             <tbody>
                                 @forelse($data as $i => $p)
-                                    @php
-                                        // PERBAIKAN: Menambahkan Dibatalkan ke dalam Badge (Digabung dengan Ditolak)
-                                        $sc = match ($p->status_permohonan) {
-                                            'Disetujui' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                            'Selesai' => 'bg-green-50 text-green-700 border-green-200',
-                                            'Ditolak', 'Dibatalkan' => 'bg-red-50 text-red-700 border-red-200',
-                                            'Menunggu Pengembalian Dana'
-                                                => 'bg-orange-50 text-orange-700 border-orange-200',
-                                            'Menunggu Verifikasi Pengembalian'
-                                                => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                            'Menunggu Mulai Perjalanan'
-                                                => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                            'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                            'Menunggu Konfirmasi Kembali' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-'Menunggu Penyelesaian'       => 'bg-purple-50 text-purple-700 border-purple-200',
-                                            default => 'bg-gray-50 text-gray-700 border-gray-200',
-                                        };
-                                    @endphp
+                                    <x-status-badge :status="$p->status_permohonan" />
 
                                     @if (Auth::user()->role === 'keuangan')
                                         @php $selisih = ($p->rab_disetujui ?? 0) - ($p->biaya_aktual ?? 0); @endphp

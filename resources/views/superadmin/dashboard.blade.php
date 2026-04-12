@@ -199,19 +199,7 @@
                         </thead>
                         <tbody>
                             @forelse($permohonanTerbaru as $p)
-                                @php
-                                    $sc = match ($p->status_permohonan) {
-                                        'Disetujui' => 'bg-blue-50 text-blue-700 border border-blue-200',
-                                        'Selesai' => 'bg-green-50 text-green-700 border border-green-200',
-                                        'Ditolak' => 'bg-red-50 text-red-700 border border-red-200',
-                                        'Menunggu Mulai Perjalanan' => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                        'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                        'Menunggu Konfirmasi Kembali'
-                                            => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                        'Menunggu Penyelesaian' => 'bg-purple-50 text-purple-700 border-purple-200',
-                                        default => 'bg-gray-50 text-gray-700 border border-gray-200',
-                                    };
-                                @endphp
+                                <x-status-badge :status="$p->status_permohonan" />
                                 <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
                                     <td class="px-6 py-4 font-bold text-gray-800">{{ $p->nama_pic }}</td>
                                     <td class="px-6 py-4 text-gray-600">{{ $p->tujuan }}</td>

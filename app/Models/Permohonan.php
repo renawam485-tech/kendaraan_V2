@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusPermohonan;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -15,19 +16,19 @@ class Permohonan extends Model
         'jumlah_penumpang', 'file_surat_penugasan', 'anggaran_diajukan', 'catatan_pemohon',
         'kategori_kegiatan', 'rekomendasi_admin',
         'kendaraan_id', 'pengemudi_id', 'estimasi_biaya_operasional',
-        'rab_disetujui', 'mekanisme_pembayaran', 'status_permohonan', 'waktu_kembali_aktual',
-        // Serah terima & perjalanan
-        'waktu_serah_terima', 'waktu_mulai_perjalanan',
+        'rab_disetujui', 'mekanisme_pembayaran', 'status_permohonan',
+        'waktu_serah_terima', 'waktu_mulai_perjalanan', 'waktu_kembali_aktual',
     ];
 
     protected function casts(): array
     {
         return [
+            'status_permohonan'      => StatusPermohonan::class,
             'waktu_berangkat'        => 'datetime',
             'waktu_kembali'          => 'datetime',
             'waktu_serah_terima'     => 'datetime',
             'waktu_mulai_perjalanan' => 'datetime',
-            'waktu_kembali_aktual' => 'datetime',
+            'waktu_kembali_aktual'   => 'datetime',
         ];
     }
 

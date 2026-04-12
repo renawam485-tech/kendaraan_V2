@@ -117,6 +117,96 @@
                     @endif
                 </a>
             @elseif($role === 'spsi')
+                @php
+                    $cAlo = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_PROSES_SPSI,
+                    )->count();
+                    $cSerah = \App\Models\Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count();
+                    $cKonfirmasi = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
+                    )->count();
+                    $cSerahTotal = $cSerah + $cKonfirmasi;
+                @endphp
+
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
+                </div>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+
+                <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-truck-front text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
+                        Armada</span>
+                    @if ($cAlo > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
+                    @endif
+                </a>
+
+                <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-key-fill text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
+                        Kunci</span>
+                    @if ($cSerahTotal > 0)
+                        <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerahTotal }}</span>
+                    @endif
+                </a>
+
+                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-binoculars text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Pantauan & Riwayat</span>
+                </a>
+                @php
+                    $cAlo = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_PROSES_SPSI,
+                    )->count();
+                    $cSerah = \App\Models\Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count();
+                    $cKonfirmasi = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
+                    )->count();
+                    $cSerahTotal = $cSerah + $cKonfirmasi;
+                @endphp
+
+                <div x-show="!sidebarCollapsed"
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
+                </div>
+                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+
+                <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-truck-front text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
+                        Armada</span>
+                    @if ($cAlo > 0)
+                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
+                    @endif
+                </a>
+
+                <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
+                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-key-fill text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
+                        Kunci</span>
+                    @if ($cSerahTotal > 0)
+                        <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerahTotal }}</span>
+                    @endif
+                </a>
+
+                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
+                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                    <i class="bi bi-binoculars text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Pantauan & Riwayat</span>
+                </a>
                 <div x-show="!sidebarCollapsed"
                     class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
                 </div>
