@@ -22,12 +22,13 @@
             @endif
 
             {{-- STATS --}}
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
                 @foreach([
-                    [$pending->count(),      'Perlu Serah Terima',   'bi-key-fill',         'bg-amber-50',  'text-amber-600'],
-                    [$menungguMulai->count(), 'Menunggu User Mulai',  'bi-person-walking',   'bg-yellow-50', 'text-yellow-600'],
-                    [$berlangsung->count(),   'Dalam Perjalanan',     'bi-geo-alt-fill',     'bg-teal-50',   'text-teal-600'],
-                    [$riwayat->count(),       'Riwayat Selesai',      'bi-archive',          'bg-slate-100', 'text-slate-600'],
+                    [$pending->count(),            'Perlu Serah Terima',      'bi-key-fill',          'bg-amber-50',   'text-amber-600'],
+                    [$menungguMulai->count(),       'Menunggu User Mulai',     'bi-person-walking',    'bg-yellow-50',  'text-yellow-600'],
+                    [$berlangsung->count(),         'Dalam Perjalanan',        'bi-geo-alt-fill',      'bg-teal-50',    'text-teal-600'],
+                    [$menungguKonfirmasi->count(),  'Menunggu Konfirmasi',     'bi-arrow-return-left', 'bg-indigo-50',  'text-indigo-600'],
+                    [$riwayat->count(),             'Riwayat',                 'bi-archive',           'bg-slate-100',  'text-slate-600'],
                 ] as [$count, $label, $icon, $bg, $tc])
                     <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm flex items-center gap-3">
                         <div class="w-10 h-10 rounded-lg {{ $bg }} flex items-center justify-center flex-shrink-0">
@@ -42,15 +43,17 @@
             </div>
 
             {{-- TABS --}}
-            <div x-data="{ tab: 'pending' }" class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+            <div x-data="{ tab: '{{ $menungguKonfirmasi->count() > 0 ? 'konfirmasi' : ($pending->count() > 0 ? 'pending' : 'berlangsung') }}' }"
+                 class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 
                 {{-- TAB HEADERS --}}
                 <div class="border-b border-gray-200 flex overflow-x-auto bg-gray-50">
                     @foreach([
-                        ['pending',     'Perlu Serah Terima',  $pending->count(),      'bg-amber-500'],
-                        ['menunggu',    'Menunggu User Mulai', $menungguMulai->count(), 'bg-yellow-500'],
-                        ['berlangsung', 'Dalam Perjalanan',    $berlangsung->count(),   'bg-teal-500'],
-                        ['riwayat',     'Riwayat',             $riwayat->count(),       'bg-slate-400'],
+                        ['pending',     'Perlu Serah Terima',     $pending->count(),           'bg-amber-500'],
+                        ['menunggu',    'Menunggu User Mulai',     $menungguMulai->count(),     'bg-yellow-500'],
+                        ['berlangsung', 'Dalam Perjalanan',        $berlangsung->count(),       'bg-teal-500'],
+                        ['konfirmasi',  'Konfirmasi Kembali',      $menungguKonfirmasi->count(), 'bg-indigo-500'],
+                        ['riwayat',     'Riwayat',                 $riwayat->count(),           'bg-slate-400'],
                     ] as [$key, $label, $count, $badgeBg])
                         <button @click="tab = '{{ $key }}'"
                             :class="tab === '{{ $key }}'
@@ -65,9 +68,9 @@
                     @endforeach
                 </div>
 
-                {{-- ╔═══════════════════════════════════════╗ --}}
-                {{-- ║  TAB 1 — PERLU SERAH TERIMA           ║ --}}
-                {{-- ╚═══════════════════════════════════════╝ --}}
+                {{-- ╔══════════════════════════════════════╗ --}}
+                {{-- ║  TAB 1 — PERLU SERAH TERIMA          ║ --}}
+                {{-- ╚══════════════════════════════════════╝ --}}
                 <div x-show="tab === 'pending'" class="overflow-x-auto">
                     @if($pending->isEmpty())
                         <div class="py-16 text-center text-gray-400">
@@ -93,8 +96,8 @@
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($pending as $p)
                                     @php
-                                        $isUrgent = \Carbon\Carbon::parse($p->waktu_berangkat)->isPast() ||
-                                                    \Carbon\Carbon::parse($p->waktu_berangkat)->diffInHours(now()) <= 2;
+                                        $isUrgent = \Carbon\Carbon::parse($p->waktu_berangkat)->diffInHours(now(), false) >= 0
+                                            || \Carbon\Carbon::parse($p->waktu_berangkat)->diffInHours(now()) <= 2;
                                     @endphp
                                     <tr class="hover:bg-amber-50/30 transition-colors {{ $isUrgent ? 'bg-red-50/20' : '' }}">
                                         <td class="px-4 py-3.5">
@@ -128,13 +131,9 @@
                                             @endif
                                         </td>
                                         <td class="px-4 py-3.5 whitespace-nowrap">
-                                            <p class="font-medium text-gray-700 {{ $isUrgent ? 'text-red-600' : '' }}">
-                                                {{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y') }}
-                                            </p>
+                                            <p class="font-medium text-gray-700 {{ $isUrgent ? 'text-red-600' : '' }}">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y') }}</p>
                                             <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('H:i') }} WIB</p>
-                                            <p class="text-xs {{ $isUrgent ? 'text-red-500 font-bold' : 'text-gray-400' }}">
-                                                {{ \Carbon\Carbon::parse($p->waktu_berangkat)->diffForHumans() }}
-                                            </p>
+                                            <p class="text-xs {{ $isUrgent ? 'text-red-500 font-bold' : 'text-gray-400' }}">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->diffForHumans() }}</p>
                                         </td>
                                         <td class="px-4 py-3.5 text-center">
                                             <form action="{{ route('permohonan.serah_terima_kunci', $p->id) }}" method="POST"
@@ -157,9 +156,9 @@
                     @endif
                 </div>
 
-                {{-- ╔═══════════════════════════════════════╗ --}}
-                {{-- ║  TAB 2 — MENUNGGU USER MULAI          ║ --}}
-                {{-- ╚═══════════════════════════════════════╝ --}}
+                {{-- ╔══════════════════════════════════════╗ --}}
+                {{-- ║  TAB 2 — MENUNGGU USER MULAI         ║ --}}
+                {{-- ╚══════════════════════════════════════╝ --}}
                 <div x-show="tab === 'menunggu'" style="display:none" class="overflow-x-auto">
                     @if($menungguMulai->isEmpty())
                         <div class="py-16 text-center text-gray-400">
@@ -193,21 +192,14 @@
                                             <p class="text-xs text-gray-400"><i class="bi bi-telephone mr-0.5"></i>{{ $p->kontak_pic }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            @if($p->kendaraan_id)
-                                                <p class="font-medium text-gray-800">{{ $p->kendaraan->nama_kendaraan }}</p>
-                                                <p class="text-xs font-mono text-gray-500">{{ $p->kendaraan->plat_nomor }}</p>
-                                            @elseif($p->kendaraanVendor)
-                                                <p class="font-medium text-gray-800">{{ $p->kendaraanVendor->nama_kendaraan }}</p>
-                                                <span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded">VENDOR</span>
-                                            @endif
+                                            <p class="font-medium text-gray-800">{{ $p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '—' }}</p>
+                                            <p class="text-xs font-mono text-gray-500">{{ $p->kendaraan?->plat_nomor ?? $p->kendaraanVendor?->plat_nomor ?? '' }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-sm font-medium text-gray-700">
-                                                {{ \Carbon\Carbon::parse($p->waktu_serah_terima)->format('d M Y, H:i') }}
-                                            </p>
+                                            <p class="text-sm font-medium text-gray-700">{{ \Carbon\Carbon::parse($p->waktu_serah_terima)->format('d M Y, H:i') }}</p>
                                             <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->waktu_serah_terima)->diffForHumans() }}</p>
                                         </td>
-                                        <td class="px-4 py-3.5 whitespace-nowrap">
+                                        <td class="px-4 py-3.5">
                                             <p class="text-gray-700 font-medium">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y, H:i') }}</p>
                                         </td>
                                     </tr>
@@ -217,9 +209,9 @@
                     @endif
                 </div>
 
-                {{-- ╔═══════════════════════════════════════╗ --}}
-                {{-- ║  TAB 3 — DALAM PERJALANAN             ║ --}}
-                {{-- ╚═══════════════════════════════════════╝ --}}
+                {{-- ╔══════════════════════════════════════╗ --}}
+                {{-- ║  TAB 3 — DALAM PERJALANAN            ║ --}}
+                {{-- ╚══════════════════════════════════════╝ --}}
                 <div x-show="tab === 'berlangsung'" style="display:none" class="overflow-x-auto">
                     @if($berlangsung->isEmpty())
                         <div class="py-16 text-center text-gray-400">
@@ -240,9 +232,7 @@
                             </thead>
                             <tbody class="divide-y divide-gray-100">
                                 @foreach($berlangsung as $p)
-                                    @php
-                                        $isOverdue = now()->gt(\Carbon\Carbon::parse($p->waktu_kembali));
-                                    @endphp
+                                    @php $isOverdue = now()->gt(\Carbon\Carbon::parse($p->waktu_kembali)); @endphp
                                     <tr class="hover:bg-teal-50/20 transition-colors {{ $isOverdue ? 'bg-red-50/30' : '' }}">
                                         <td class="px-4 py-3.5">
                                             <span class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{{ $p->kode_permohonan ?? '—' }}</span>
@@ -256,37 +246,24 @@
                                             <p class="text-xs text-gray-400"><i class="bi bi-people mr-0.5"></i>{{ $p->jumlah_penumpang }} orang</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            @if($p->kendaraan_id)
-                                                <p class="font-medium text-gray-800">{{ $p->kendaraan->nama_kendaraan }}</p>
-                                                <p class="text-xs font-mono text-gray-500">{{ $p->kendaraan->plat_nomor }}</p>
-                                            @elseif($p->kendaraanVendor)
-                                                <p class="font-medium text-gray-800">{{ $p->kendaraanVendor->nama_kendaraan }}</p>
-                                                <span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded">VENDOR</span>
-                                            @endif
+                                            <p class="font-medium text-gray-800">{{ $p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '—' }}</p>
+                                            <p class="text-xs font-mono text-gray-500">{{ $p->kendaraan?->plat_nomor ?? $p->kendaraanVendor?->plat_nomor ?? '' }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-sm text-teal-700 font-medium">
-                                                {{ \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)->format('d M Y, H:i') }}
-                                            </p>
+                                            <p class="text-sm text-teal-700 font-medium">{{ \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</p>
                                             <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)->diffForHumans() }}</p>
                                         </td>
                                         <td class="px-4 py-3.5 whitespace-nowrap">
-                                            <p class="font-medium {{ $isOverdue ? 'text-red-600' : 'text-gray-700' }}">
-                                                {{ \Carbon\Carbon::parse($p->waktu_kembali)->format('d M Y, H:i') }}
-                                            </p>
+                                            <p class="font-medium {{ $isOverdue ? 'text-red-600' : 'text-gray-700' }}">{{ \Carbon\Carbon::parse($p->waktu_kembali)->format('d M Y, H:i') }}</p>
                                             @if($isOverdue)
-                                                <p class="text-xs text-red-500 font-bold">
-                                                    {{ \Carbon\Carbon::parse($p->waktu_kembali)->diffForHumans() }}
-                                                </p>
+                                                <p class="text-xs text-red-500 font-bold">{{ \Carbon\Carbon::parse($p->waktu_kembali)->diffForHumans() }}</p>
                                             @endif
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-sm text-gray-700">{{ $p->pengemudi->nama_pengemudi ?? 'Lepas Kunci' }}</p>
+                                            <p class="text-sm text-gray-700">{{ $p->pengemudi?->nama_pengemudi ?? 'Lepas Kunci' }}</p>
                                             @if($p->pengemudi?->kontak)
                                                 <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $p->pengemudi->kontak) }}" target="_blank"
-                                                   class="text-xs text-green-600 hover:underline flex items-center gap-1 mt-0.5">
-                                                    <i class="bi bi-whatsapp"></i> {{ $p->pengemudi->kontak }}
-                                                </a>
+                                                   class="text-xs text-green-600 hover:underline"><i class="bi bi-whatsapp mr-0.5"></i>{{ $p->pengemudi->kontak }}</a>
                                             @endif
                                         </td>
                                     </tr>
@@ -296,14 +273,90 @@
                     @endif
                 </div>
 
-                {{-- ╔═══════════════════════════════════════╗ --}}
-                {{-- ║  TAB 4 — RIWAYAT                      ║ --}}
-                {{-- ╚═══════════════════════════════════════╝ --}}
+                {{-- ╔══════════════════════════════════════╗ --}}
+                {{-- ║  TAB 4 — KONFIRMASI KEMBALI ⭐        ║ --}}
+                {{-- ╚══════════════════════════════════════╝ --}}
+                <div x-show="tab === 'konfirmasi'" style="display:none" class="overflow-x-auto">
+                    @if($menungguKonfirmasi->isEmpty())
+                        <div class="py-16 text-center text-gray-400">
+                            <i class="bi bi-arrow-return-left text-5xl block mb-3 text-gray-300"></i>
+                            <p class="font-medium text-gray-500">Tidak ada kendaraan yang menunggu konfirmasi kembali</p>
+                        </div>
+                    @else
+                        <div class="p-4 bg-indigo-50 border-b border-indigo-100 flex items-start gap-2">
+                            <i class="bi bi-info-circle-fill text-indigo-500 flex-shrink-0 mt-0.5"></i>
+                            <p class="text-sm text-indigo-700">
+                                Pemohon berikut sudah melaporkan kendaraan dikembalikan.
+                                <strong>Periksa kondisi fisik kendaraan</strong> terlebih dahulu, lalu klik konfirmasi.
+                            </p>
+                        </div>
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kode</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemohon & Tujuan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kendaraan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mulai Perjalanan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Dilaporkan Kembali</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($menungguKonfirmasi as $p)
+                                    <tr class="hover:bg-indigo-50/30 transition-colors">
+                                        <td class="px-4 py-3.5">
+                                            <span class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">{{ $p->kode_permohonan ?? '—' }}</span>
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            <p class="font-semibold text-gray-800">{{ $p->nama_pic }}</p>
+                                            <p class="text-xs text-gray-500"><i class="bi bi-geo-alt mr-0.5"></i>{{ $p->tujuan }}</p>
+                                            <p class="text-xs text-gray-400"><i class="bi bi-telephone mr-0.5"></i>{{ $p->kontak_pic }}</p>
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            <p class="font-medium text-gray-800">{{ $p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '—' }}</p>
+                                            <p class="text-xs font-mono text-gray-500">{{ $p->kendaraan?->plat_nomor ?? $p->kendaraanVendor?->plat_nomor ?? '' }}</p>
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            <p class="text-sm text-gray-700">{{ \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</p>
+                                            @php
+                                                $durasi = \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)
+                                                    ->diffForHumans($p->waktu_kembali_aktual, true);
+                                            @endphp
+                                            <p class="text-xs text-gray-400">Durasi: {{ $durasi }}</p>
+                                        </td>
+                                        <td class="px-4 py-3.5">
+                                            <p class="text-sm font-medium text-indigo-700">{{ \Carbon\Carbon::parse($p->waktu_kembali_aktual)->format('d M Y, H:i') }}</p>
+                                            <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->waktu_kembali_aktual)->diffForHumans() }}</p>
+                                        </td>
+                                        <td class="px-4 py-3.5 text-center">
+                                            <form action="{{ route('permohonan.konfirmasi_kembali', $p->id) }}" method="POST"
+                                                  onsubmit="return confirm('Konfirmasi kendaraan {{ addslashes($p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '') }} sudah kembali dan kondisi baik?')">
+                                                @csrf @method('PUT')
+                                                <button type="submit"
+                                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-2 rounded-lg shadow-sm transition whitespace-nowrap">
+                                                    <i class="bi bi-check2-circle"></i> Konfirmasi Kembali
+                                                </button>
+                                            </form>
+                                            <a href="{{ route('permohonan.show', $p->id) }}"
+                                               class="mt-1.5 inline-flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 transition">
+                                                <i class="bi bi-eye"></i> Detail
+                                            </a>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    @endif
+                </div>
+
+                {{-- ╔══════════════════════════════════════╗ --}}
+                {{-- ║  TAB 5 — RIWAYAT                     ║ --}}
+                {{-- ╚══════════════════════════════════════╝ --}}
                 <div x-show="tab === 'riwayat'" style="display:none" class="overflow-x-auto">
                     @if($riwayat->isEmpty())
                         <div class="py-16 text-center text-gray-400">
                             <i class="bi bi-archive text-5xl block mb-3 text-gray-300"></i>
-                            <p class="font-medium text-gray-500">Belum ada riwayat perjalanan yang selesai</p>
+                            <p class="font-medium text-gray-500">Belum ada riwayat perjalanan</p>
                         </div>
                     @else
                         <table class="w-full text-sm">
@@ -313,7 +366,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Pemohon & Tujuan</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kendaraan</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Serah Terima</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Mulai Perjalanan</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kembali</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Detail</th>
                                 </tr>
@@ -322,6 +375,7 @@
                                 @foreach($riwayat as $p)
                                     @php
                                         $sc = match($p->status_permohonan) {
+                                            'Menunggu Penyelesaian'            => 'bg-purple-50 text-purple-700 border-purple-200',
                                             'Selesai'                          => 'bg-emerald-50 text-emerald-700 border-emerald-200',
                                             'Menunggu Pengembalian Dana'        => 'bg-orange-50 text-orange-700 border-orange-200',
                                             'Menunggu Verifikasi Pengembalian'  => 'bg-amber-50 text-amber-700 border-amber-200',
@@ -337,28 +391,16 @@
                                             <p class="text-xs text-gray-500"><i class="bi bi-geo-alt mr-0.5"></i>{{ $p->tujuan }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-sm text-gray-700">
-                                                {{ $p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '—' }}
-                                            </p>
+                                            <p class="text-sm text-gray-700">{{ $p->kendaraan?->nama_kendaraan ?? $p->kendaraanVendor?->nama_kendaraan ?? '—' }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-xs text-gray-600">
-                                                {{ $p->waktu_serah_terima
-                                                    ? \Carbon\Carbon::parse($p->waktu_serah_terima)->format('d M Y, H:i')
-                                                    : '—' }}
-                                            </p>
+                                            <p class="text-xs text-gray-600">{{ $p->waktu_serah_terima ? \Carbon\Carbon::parse($p->waktu_serah_terima)->format('d M Y, H:i') : '—' }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <p class="text-xs text-gray-600">
-                                                {{ $p->waktu_mulai_perjalanan
-                                                    ? \Carbon\Carbon::parse($p->waktu_mulai_perjalanan)->format('d M Y, H:i')
-                                                    : '—' }}
-                                            </p>
+                                            <p class="text-xs text-gray-600">{{ $p->waktu_kembali_aktual ? \Carbon\Carbon::parse($p->waktu_kembali_aktual)->format('d M Y, H:i') : '—' }}</p>
                                         </td>
                                         <td class="px-4 py-3.5">
-                                            <span class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">
-                                                {{ $p->status_permohonan }}
-                                            </span>
+                                            <span class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $p->status_permohonan }}</span>
                                         </td>
                                         <td class="px-4 py-3.5 text-center">
                                             <a href="{{ route('permohonan.show', $p->id) }}"
@@ -372,8 +414,8 @@
                         </table>
                         <div class="px-5 py-3 border-t border-gray-100">
                             <p class="text-xs text-gray-400">
-                                Menampilkan 20 riwayat terakhir. Lihat laporan lengkap di
-                                <a href="{{ route('laporan.index') }}" class="text-blue-600 hover:underline font-medium">Laporan Filter</a>.
+                                Menampilkan 20 riwayat terakhir.
+                                <a href="{{ route('laporan.index') }}" class="text-blue-600 hover:underline font-medium">Lihat laporan lengkap →</a>
                             </p>
                         </div>
                     @endif

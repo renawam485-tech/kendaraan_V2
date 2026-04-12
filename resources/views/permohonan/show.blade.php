@@ -22,13 +22,15 @@
             @php
                 $statusConfig = match($permohonan->status_permohonan) {
                     'Selesai'                          => ['bg-emerald-50 border-emerald-200', 'text-emerald-700', 'bi-patch-check-fill text-emerald-500'],
-                    'Disetujui'                        => ['bg-blue-50 border-blue-200',     'text-blue-700',    'bi-check-circle-fill text-blue-500'],
-                    'Menunggu Mulai Perjalanan'        => ['bg-yellow-50 border-yellow-200',  'text-yellow-700',  'bi-key-fill text-yellow-500'],
-                    'Perjalanan Berlangsung'           => ['bg-teal-50 border-teal-200',      'text-teal-700',    'bi-geo-alt-fill text-teal-500'],
-                    'Ditolak'                          => ['bg-red-50 border-red-200',        'text-red-700',     'bi-x-circle-fill text-red-500'],
-                    'Menunggu Pengembalian Dana'        => ['bg-orange-50 border-orange-200',  'text-orange-700',  'bi-exclamation-triangle-fill text-orange-500'],
-                    'Menunggu Verifikasi Pengembalian'  => ['bg-amber-50 border-amber-200',    'text-amber-700',   'bi-hourglass-split text-amber-500'],
-                    default                            => ['bg-slate-50 border-slate-200',    'text-slate-700',   'bi-hourglass-split text-slate-400'],
+                    'Disetujui'                        => ['bg-blue-50 border-blue-200',       'text-blue-700',    'bi-check-circle-fill text-blue-500'],
+                    'Menunggu Mulai Perjalanan'         => ['bg-yellow-50 border-yellow-200',   'text-yellow-700',  'bi-key-fill text-yellow-500'],
+                    'Perjalanan Berlangsung'            => ['bg-teal-50 border-teal-200',       'text-teal-700',    'bi-geo-alt-fill text-teal-500'],
+                    'Menunggu Konfirmasi Kembali'       => ['bg-indigo-50 border-indigo-200',   'text-indigo-700',  'bi-arrow-return-left text-indigo-500'],
+                    'Menunggu Penyelesaian'             => ['bg-purple-50 border-purple-200',   'text-purple-700',  'bi-clipboard2-check text-purple-500'],
+                    'Ditolak'                          => ['bg-red-50 border-red-200',          'text-red-700',     'bi-x-circle-fill text-red-500'],
+                    'Menunggu Pengembalian Dana'        => ['bg-orange-50 border-orange-200',   'text-orange-700',  'bi-exclamation-triangle-fill text-orange-500'],
+                    'Menunggu Verifikasi Pengembalian'  => ['bg-amber-50 border-amber-200',     'text-amber-700',   'bi-hourglass-split text-amber-500'],
+                    default                            => ['bg-slate-50 border-slate-200',      'text-slate-700',   'bi-hourglass-split text-slate-400'],
                 };
             @endphp
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm px-5 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -47,6 +49,7 @@
                     <span class="hidden sm:inline"><i class="bi bi-arrow-repeat mr-1"></i>Update {{ $permohonan->updated_at->diffForHumans() }}</span>
                     @if(in_array($permohonan->status_permohonan, [
                         'Disetujui', 'Menunggu Mulai Perjalanan', 'Perjalanan Berlangsung',
+                        'Menunggu Konfirmasi Kembali', 'Menunggu Penyelesaian',
                         'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai',
                     ]))
                         <a href="{{ route('permohonan.cetak', $permohonan->id) }}" target="_blank"
@@ -57,89 +60,174 @@
                 </div>
             </div>
 
-            {{-- ════════════════════════════════════════════════════ --}}
-            {{-- BANNER: Disetujui — menunggu serah terima SPSI       --}}
-            {{-- ════════════════════════════════════════════════════ --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Disetujui — menunggu SPSI serahkan kunci        --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
             @if($permohonan->status_permohonan === 'Disetujui')
-                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm">
-                    <div class="flex items-start gap-3">
-                        <i class="bi bi-key-fill text-blue-500 text-xl flex-shrink-0 mt-0.5"></i>
-                        <div>
-                            <h3 class="font-bold text-blue-900 text-base">Permohonan Disetujui!</h3>
-                            <p class="text-sm text-blue-700 mt-1">
-                                Tim SPSI sedang mempersiapkan kendaraan dan kunci untuk Anda.
-                                Anda akan mendapat notifikasi segera setelah kunci siap diserahkan.
-                            </p>
-                        </div>
+                <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 shadow-sm flex items-start gap-3">
+                    <i class="bi bi-key-fill text-blue-400 text-xl flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <h3 class="font-bold text-blue-900">Permohonan Disetujui!</h3>
+                        <p class="text-sm text-blue-700 mt-1">Tim SPSI sedang mempersiapkan kendaraan. Anda akan mendapat notifikasi saat kunci siap diserahkan.</p>
                     </div>
                 </div>
             @endif
 
-            {{-- ════════════════════════════════════════════════════ --}}
-            {{-- BANNER: Menunggu Mulai Perjalanan — tombol mulai      --}}
-            {{-- ════════════════════════════════════════════════════ --}}
-            @if($permohonan->status_permohonan === 'Menunggu Mulai Perjalanan' && Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
-                <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-5 shadow-sm">
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div class="flex items-start gap-3">
-                            <i class="bi bi-key-fill text-yellow-500 text-xl flex-shrink-0 mt-0.5"></i>
-                            <div>
-                                <h3 class="font-bold text-yellow-900 text-base">Kunci Kendaraan Sudah Diserahkan!</h3>
-                                <p class="text-sm text-yellow-800 mt-1">
-                                    Pastikan Anda sudah memegang kunci fisik, lalu tekan tombol di bawah untuk memulai perjalanan secara resmi.
-                                </p>
-                                @if($permohonan->waktu_serah_terima)
-                                    <p class="text-xs text-yellow-700 mt-1.5">
-                                        <i class="bi bi-clock mr-1"></i>
-                                        Diserahkan pada: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</strong>
-                                        ({{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() }})
-                                    </p>
-                                @endif
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Menunggu Mulai Perjalanan — tombol MULAI        --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Menunggu Mulai Perjalanan')
+                @if(Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
+                    <div class="bg-yellow-50 border border-yellow-300 rounded-xl p-5 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-key-fill text-yellow-500 text-xl flex-shrink-0 mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-bold text-yellow-900">Kunci Kendaraan Sudah Diserahkan!</h3>
+                                    <p class="text-sm text-yellow-800 mt-1">Pastikan Anda sudah memegang kunci fisik, lalu tekan tombol di bawah untuk memulai perjalanan secara resmi.</p>
+                                    @if($permohonan->waktu_serah_terima)
+                                        <p class="text-xs text-yellow-700 mt-1.5">
+                                            <i class="bi bi-clock mr-1"></i>
+                                            Diserahkan: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</strong>
+                                        </p>
+                                    @endif
+                                </div>
                             </div>
+                            <form action="{{ route('permohonan.mulai_perjalanan', $permohonan->id) }}" method="POST">
+                                @csrf @method('PUT')
+                                <button type="submit"
+                                    onclick="return confirm('Konfirmasi: Anda sudah menerima kunci dan siap berangkat sekarang?')"
+                                    class="whitespace-nowrap inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition text-sm shadow-md">
+                                    <i class="bi bi-play-circle-fill text-lg"></i> Mulai Perjalanan
+                                </button>
+                            </form>
                         </div>
-                        <form action="{{ route('permohonan.mulai_perjalanan', $permohonan->id) }}" method="POST">
-                            @csrf @method('PUT')
-                            <button type="submit"
-                                onclick="return confirm('Konfirmasi: Anda sudah menerima kunci dan siap berangkat sekarang?')"
-                                class="whitespace-nowrap inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-3 px-6 rounded-xl transition text-sm shadow-md">
-                                <i class="bi bi-play-circle-fill text-lg"></i> Mulai Perjalanan
-                            </button>
-                        </form>
                     </div>
-                </div>
+                @else
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                        <i class="bi bi-info-circle-fill text-yellow-500 flex-shrink-0 mt-0.5"></i>
+                        <p class="text-sm text-yellow-700">Kunci diserahkan {{ $permohonan->waktu_serah_terima ? \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() : '—' }}. Menunggu pengguna mengklik <strong>"Mulai Perjalanan"</strong>.</p>
+                    </div>
+                @endif
             @endif
 
-            {{-- BANNER: Menunggu Mulai Perjalanan — info untuk SPSI/Admin --}}
-            @if($permohonan->status_permohonan === 'Menunggu Mulai Perjalanan' && Auth::user()->role !== 'pengguna')
-                <div class="bg-yellow-50 border border-yellow-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                    <i class="bi bi-info-circle-fill text-yellow-500 flex-shrink-0 mt-0.5"></i>
-                    <div>
-                        <p class="text-sm font-bold text-yellow-800">Menunggu Pengguna Mulai Perjalanan</p>
-                        <p class="text-xs text-yellow-700 mt-0.5">
-                            Kunci diserahkan {{ $permohonan->waktu_serah_terima ? \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() : '—' }}.
-                            Pengguna belum mengklik tombol "Mulai Perjalanan".
-                        </p>
-                    </div>
-                </div>
-            @endif
-
-            {{-- BANNER: Perjalanan Berlangsung (info) --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Perjalanan Berlangsung — tombol LAPOR KEMBALI   --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
             @if($permohonan->status_permohonan === 'Perjalanan Berlangsung')
-                <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
-                    <i class="bi bi-geo-alt-fill text-teal-500 text-lg flex-shrink-0 mt-0.5"></i>
-                    <div>
-                        <p class="text-sm font-bold text-teal-800">Perjalanan Sedang Berlangsung</p>
-                        @if($permohonan->waktu_mulai_perjalanan)
+                @if(Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
+                    <div class="bg-teal-50 border border-teal-200 rounded-xl p-5 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-geo-alt-fill text-teal-500 text-xl flex-shrink-0 mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-bold text-teal-900">Perjalanan Sedang Berlangsung</h3>
+                                    <p class="text-sm text-teal-700 mt-1">
+                                        Setelah perjalanan selesai dan kendaraan sudah dikembalikan ke SPSI, tekan tombol di bawah untuk memberi tahu tim.
+                                    </p>
+                                    @if($permohonan->waktu_mulai_perjalanan)
+                                        <p class="text-xs text-teal-600 mt-1.5">
+                                            <i class="bi bi-play-circle mr-1"></i>
+                                            Dimulai: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</strong>
+                                            ({{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() }})
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                            <form action="{{ route('permohonan.lapor_kembali', $permohonan->id) }}" method="POST">
+                                @csrf @method('PUT')
+                                <button type="submit"
+                                    onclick="return confirm('Konfirmasi: Anda sudah kembali dan kendaraan sudah diserahkan ke SPSI?')"
+                                    class="whitespace-nowrap inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-6 rounded-xl transition text-sm shadow-md">
+                                    <i class="bi bi-arrow-return-left text-lg"></i> Saya Sudah Kembali
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                @else
+                    <div class="bg-teal-50 border border-teal-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                        <i class="bi bi-geo-alt-fill text-teal-500 flex-shrink-0 mt-0.5"></i>
+                        <div>
+                            <p class="text-sm font-bold text-teal-800">Perjalanan Sedang Berlangsung</p>
                             <p class="text-xs text-teal-700 mt-0.5">
-                                Dimulai: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</strong>
-                                ({{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() }})
+                                Dimulai {{ $permohonan->waktu_mulai_perjalanan ? \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() : '—' }}.
+                                Rencana kembali: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M Y, H:i') }}</strong>.
                             </p>
-                        @endif
+                        </div>
+                    </div>
+                @endif
+            @endif
+
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Menunggu Konfirmasi Kembali                     --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Menunggu Konfirmasi Kembali')
+                @if(Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-xl p-5 shadow-sm flex items-start gap-3">
+                        <i class="bi bi-hourglass-split text-indigo-400 text-xl flex-shrink-0 mt-0.5 animate-spin" style="animation-duration:3s"></i>
+                        <div>
+                            <h3 class="font-bold text-indigo-900">Menunggu Konfirmasi SPSI</h3>
+                            <p class="text-sm text-indigo-700 mt-1">Laporan kembali Anda sudah diterima. Tim SPSI sedang memeriksa kondisi kendaraan. Anda akan mendapat notifikasi segera setelah konfirmasi selesai.</p>
+                            @if($permohonan->waktu_kembali_aktual)
+                                <p class="text-xs text-indigo-600 mt-1.5">
+                                    <i class="bi bi-clock mr-1"></i>
+                                    Dilaporkan kembali: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->format('d M Y, H:i') }}</strong>
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+                @else
+                    {{-- View untuk SPSI / Admin --}}
+                    <div class="bg-indigo-50 border border-indigo-300 rounded-xl p-5 shadow-sm">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                            <div class="flex items-start gap-3">
+                                <i class="bi bi-arrow-return-left text-indigo-500 text-xl flex-shrink-0 mt-0.5"></i>
+                                <div>
+                                    <h3 class="font-bold text-indigo-900">Pemohon Melaporkan Sudah Kembali</h3>
+                                    <p class="text-sm text-indigo-700 mt-1">
+                                        <strong>{{ $permohonan->nama_pic }}</strong> melaporkan kendaraan sudah dikembalikan.
+                                        Periksa kondisi fisik kendaraan, lalu klik tombol konfirmasi.
+                                    </p>
+                                    @if($permohonan->waktu_kembali_aktual)
+                                        <p class="text-xs text-indigo-600 mt-1.5">
+                                            <i class="bi bi-clock mr-1"></i>
+                                            Dilaporkan: <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->format('d M Y, H:i') }}</strong>
+                                            ({{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->diffForHumans() }})
+                                        </p>
+                                    @endif
+                                </div>
+                            </div>
+                            @if(Auth::user()->role === 'spsi')
+                                <form action="{{ route('permohonan.konfirmasi_kembali', $permohonan->id) }}" method="POST">
+                                    @csrf @method('PUT')
+                                    <button type="submit"
+                                        onclick="return confirm('Konfirmasi kendaraan sudah kembali dan dalam kondisi baik?')"
+                                        class="whitespace-nowrap inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-6 rounded-xl transition text-sm shadow-md">
+                                        <i class="bi bi-check2-circle text-lg"></i> Konfirmasi Kendaraan Kembali
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                    </div>
+                @endif
+            @endif
+
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Menunggu Penyelesaian — info kendaraan aman     --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Menunggu Penyelesaian')
+                <div class="bg-purple-50 border border-purple-200 rounded-xl p-4 shadow-sm flex items-start gap-3">
+                    <i class="bi bi-check-circle-fill text-purple-500 text-xl flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="text-sm font-bold text-purple-900">Kendaraan Sudah Dikonfirmasi Kembali oleh SPSI</p>
+                        <p class="text-sm text-purple-700 mt-0.5">Silakan lengkapi laporan perjalanan di bawah untuk menutup tiket ini.</p>
                     </div>
                 </div>
             @endif
 
-            {{-- BANNER: Pengembalian Dana --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- BANNER: Pengembalian Dana                               --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
             @if($permohonan->status_permohonan === 'Menunggu Pengembalian Dana')
                 @php $sisaDana = $permohonan->rab_disetujui - $permohonan->biaya_aktual; @endphp
                 <div class="bg-orange-50 border border-orange-200 rounded-xl p-5 shadow-sm">
@@ -203,7 +291,7 @@
             {{-- DETAIL CARDS --}}
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-5">
 
-                {{-- KARTU 1: Info Kegiatan --}}
+                {{-- KARTU: Info Kegiatan --}}
                 <div class="lg:col-span-2 bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                     <div class="px-5 py-3.5 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
                         <i class="bi bi-info-circle text-blue-600"></i>
@@ -262,36 +350,38 @@
                             </div>
                         </div>
 
-                        {{-- Timeline serah terima (tampil jika sudah ada) --}}
-                        @if($permohonan->waktu_serah_terima || $permohonan->waktu_mulai_perjalanan)
+                        {{-- Timeline --}}
+                        @php
+                            $hasTimeline = $permohonan->waktu_serah_terima
+                                || $permohonan->waktu_mulai_perjalanan
+                                || $permohonan->waktu_kembali_aktual;
+                        @endphp
+                        @if($hasTimeline)
                             <div class="mt-5 pt-4 border-t border-gray-100">
                                 <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Timeline Perjalanan</p>
-                                <div class="space-y-2">
-                                    @if($permohonan->waktu_serah_terima)
-                                        <div class="flex items-center gap-3 text-sm">
-                                            <span class="w-7 h-7 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0"><i class="bi bi-key-fill text-yellow-600 text-xs"></i></span>
-                                            <div>
-                                                <span class="font-semibold text-gray-700">Serah Terima Kunci</span>
-                                                <span class="text-gray-400 text-xs ml-2">{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</span>
-                                            </div>
-                                        </div>
-                                    @endif
-                                    @if($permohonan->waktu_mulai_perjalanan)
-                                        <div class="flex items-center gap-3 text-sm">
-                                            <span class="w-7 h-7 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0"><i class="bi bi-play-fill text-teal-600 text-xs"></i></span>
-                                            <div>
-                                                <span class="font-semibold text-gray-700">Perjalanan Dimulai</span>
-                                                <span class="text-gray-400 text-xs ml-2">{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</span>
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
+                                <ol class="relative border-l-2 border-gray-200 ml-3 space-y-0">
+                                    @foreach([
+                                        [$permohonan->waktu_serah_terima,     'Serah Terima Kunci',          'bi-key-fill',          'bg-yellow-100 text-yellow-600'],
+                                        [$permohonan->waktu_mulai_perjalanan,  'Perjalanan Dimulai',          'bi-play-fill',         'bg-teal-100 text-teal-600'],
+                                        [$permohonan->waktu_kembali_aktual,    'Dilaporkan Kembali',          'bi-arrow-return-left', 'bg-indigo-100 text-indigo-600'],
+                                    ] as [$waktu, $label, $icon, $style])
+                                        @if($waktu)
+                                            <li class="ml-6 pb-4 last:pb-0">
+                                                <span class="absolute -left-[13px] w-6 h-6 rounded-full {{ $style }} flex items-center justify-center ring-4 ring-white">
+                                                    <i class="bi {{ $icon }} text-xs"></i>
+                                                </span>
+                                                <p class="text-sm font-semibold text-gray-700">{{ $label }}</p>
+                                                <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($waktu)->format('d M Y, H:i') }} · {{ \Carbon\Carbon::parse($waktu)->diffForHumans() }}</p>
+                                            </li>
+                                        @endif
+                                    @endforeach
+                                </ol>
                             </div>
                         @endif
                     </div>
                 </div>
 
-                {{-- KARTU 2: Armada + Keuangan --}}
+                {{-- KARTU: Armada + Keuangan --}}
                 <div class="space-y-4">
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                         <div class="px-5 py-3.5 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
@@ -360,13 +450,15 @@
                 </div>
             </div>
 
-            {{-- ════════════════════════════════════════════════════ --}}
-            {{-- FORM LPJ — hanya muncul saat Perjalanan Berlangsung  --}}
-            {{-- ════════════════════════════════════════════════════ --}}
-            @if($permohonan->status_permohonan === 'Perjalanan Berlangsung' && Auth::user()->role === 'pengguna' && Auth::id() === $permohonan->user_id)
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            {{-- FORM LPJ — hanya muncul saat 'Menunggu Penyelesaian'    --}}
+            {{-- ═══════════════════════════════════════════════════════ --}}
+            @if($permohonan->status_permohonan === 'Menunggu Penyelesaian'
+                && Auth::user()->role === 'pengguna'
+                && Auth::id() === $permohonan->user_id)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-3.5 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
-                        <i class="bi bi-clipboard2-check text-blue-600"></i>
+                    <div class="px-5 py-3.5 border-b border-gray-100 bg-purple-50 flex items-center gap-2">
+                        <i class="bi bi-clipboard2-check text-purple-600"></i>
                         <h4 class="font-bold text-gray-800 text-sm">Selesaikan Perjalanan & Submit LPJ</h4>
                     </div>
                     <div class="p-5">
@@ -392,12 +484,12 @@
                                 <div class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-5">
                                     <p class="text-sm text-gray-600 flex items-start gap-2">
                                         <i class="bi bi-info-circle text-blue-500 mt-0.5 flex-shrink-0"></i>
-                                        Kegiatan Non-Dinas tidak memerlukan laporan pengeluaran anggaran instansi. Silakan langsung tutup tiket ini.
+                                        Kegiatan Non-Dinas tidak memerlukan laporan pengeluaran. Silakan langsung tutup tiket ini.
                                     </p>
                                 </div>
                             @endif
                             <button type="submit"
-                                onclick="return confirm('Yakin ingin menutup tiket perjalanan ini? Pastikan data sudah benar.')"
+                                onclick="return confirm('Yakin ingin menutup tiket ini? Pastikan semua data sudah benar.')"
                                 class="inline-flex items-center gap-2 bg-gray-800 hover:bg-black text-white font-bold py-2.5 px-6 rounded-lg transition text-sm">
                                 <i class="bi bi-check2-square"></i> Tutup & Selesaikan Perjalanan
                             </button>

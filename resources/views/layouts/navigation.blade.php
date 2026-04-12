@@ -36,6 +36,10 @@
                 } elseif ($role === 'spsi') {
                     $cAlo = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->count();
                     $cSerah = \App\Models\Permohonan::where('status_permohonan', 'Disetujui')->count();
+                    $cKonfirmasi = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        'Menunggu Konfirmasi Kembali',
+                    )->count();
                 } elseif ($role === 'keuangan') {
                     $cRab = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
                     $cVer = \App\Models\Permohonan::where(
@@ -134,9 +138,9 @@
                     <i class="bi bi-key-fill text-lg w-8 text-center"></i>
                     <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
                         Kunci</span>
-                    @if ($cSerah > 0)
+                    @if ($cSerah + $cKonfirmasi > 0)
                         <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerah }}</span>
+                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerah + $cKonfirmasi }}</span>
                     @endif
                 </a>
 
