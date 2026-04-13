@@ -13,12 +13,16 @@ class PermohonanSeeder extends Seeder
 {
     public function run(): void
     {
-        $pengguna = User::where('role', 'pengguna')->get();
+        // Ambil user dengan nama 'Budi' dan role 'pengguna'
+        $userBudi = User::where('name', 'Budi')->where('role', 'pengguna')->first();
 
-        if ($pengguna->isEmpty()) {
-            $this->command->warn('Tidak ada user dengan role pengguna. Jalankan DatabaseSeeder terlebih dahulu.');
+        if (!$userBudi) {
+            $this->command->error('User dengan nama "Budi" dan role pengguna tidak ditemukan!');
+            $this->command->warn('Pastikan DatabaseSeeder sudah dijalankan terlebih dahulu.');
             return;
         }
+
+        $this->command->info("Membuat 11 data permohonan untuk user: {$userBudi->name} (ID: {$userBudi->id})");
 
         $dummyData = [
             [
@@ -34,7 +38,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Mohon kendaraan besar karena rombongan banyak.',
             ],
             [
-                'nama_pic'             => 'Siti Rahayu',
+                'nama_pic'             => 'Budi Raharjo',
                 'kontak_pic'           => '+6281234567892',
                 'kendaraan_dibutuhkan' => 'Toyota Innova',
                 'titik_jemput'         => 'Laboratorium Teknik Sipil',
@@ -46,7 +50,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Perjalanan 2 hari untuk seminar nasional.',
             ],
             [
-                'nama_pic'             => 'Ahmad Fauzi',
+                'nama_pic'             => 'Budi Wijaya',
                 'kontak_pic'           => '+6281234567893',
                 'kendaraan_dibutuhkan' => 'Honda CR-V',
                 'titik_jemput'         => 'Kantor Dekan Fakultas Teknik',
@@ -58,7 +62,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => null,
             ],
             [
-                'nama_pic'             => 'Dewi Lestari',
+                'nama_pic'             => 'Budi Pranoto',
                 'kontak_pic'           => '+6281234567894',
                 'kendaraan_dibutuhkan' => 'Toyota Hiace',
                 'titik_jemput'         => 'Aula Serbaguna Gedung A',
@@ -70,7 +74,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Kunjungan industri mahasiswa semester 6.',
             ],
             [
-                'nama_pic'             => 'Rizky Pratama',
+                'nama_pic'             => 'Budi Hartono',
                 'kontak_pic'           => '+6281234567895',
                 'kendaraan_dibutuhkan' => 'Mitsubishi Pajero',
                 'titik_jemput'         => 'Parkiran Gedung Rektorat',
@@ -82,7 +86,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Kegiatan non-dinas, biaya ditanggung pribadi.',
             ],
             [
-                'nama_pic'             => 'Rina Marlina',
+                'nama_pic'             => 'Budi Setiawan',
                 'kontak_pic'           => '+6281234567896',
                 'kendaraan_dibutuhkan' => 'Mitsubishi Xpander',
                 'titik_jemput'         => 'Gedung Pascasarjana Lt. 2',
@@ -94,7 +98,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => null,
             ],
             [
-                'nama_pic'             => 'Hendra Gunawan',
+                'nama_pic'             => 'Budi Kusuma',
                 'kontak_pic'           => '+6281234567897',
                 'kendaraan_dibutuhkan' => 'Honda Brio',
                 'titik_jemput'         => 'Pintu Gerbang Utama Kampus',
@@ -106,7 +110,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Antar pejabat yang akan dinas luar kota.',
             ],
             [
-                'nama_pic'             => 'Yuliana Putri',
+                'nama_pic'             => 'Budi Santoso',
                 'kontak_pic'           => '+6281234567898',
                 'kendaraan_dibutuhkan' => 'Toyota Hiace',
                 'titik_jemput'         => 'Gedung Olahraga Kampus',
@@ -118,7 +122,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Kegiatan olahraga mahasiswa (non-dinas).',
             ],
             [
-                'nama_pic'             => 'Doni Setiawan',
+                'nama_pic'             => 'Budi Prasetyo',
                 'kontak_pic'           => '+6281234567899',
                 'kendaraan_dibutuhkan' => 'Mitsubishi Xpander',
                 'titik_jemput'         => 'Ruang Rapat Dekan',
@@ -130,7 +134,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Koordinasi penelitian bersama LIPI.',
             ],
             [
-                'nama_pic'             => 'Mega Wulandari',
+                'nama_pic'             => 'Budi Wibowo',
                 'kontak_pic'           => '+6281234567800',
                 'kendaraan_dibutuhkan' => 'Toyota Innova',
                 'titik_jemput'         => 'Lobi Gedung Rektorat',
@@ -142,7 +146,7 @@ class PermohonanSeeder extends Seeder
                 'catatan_pemohon'      => 'Pertemuan MoU dengan mitra industri.',
             ],
             [
-                'nama_pic'             => 'Fajar Nugroho',
+                'nama_pic'             => 'Budi Nugroho',
                 'kontak_pic'           => '+6281234567811',
                 'kendaraan_dibutuhkan' => 'Honda CR-V',
                 'titik_jemput'         => 'Sekretariat BEM Kampus',
@@ -156,42 +160,45 @@ class PermohonanSeeder extends Seeder
         ];
 
         $successCount = 0;
+        $failedData = [];
         
         foreach ($dummyData as $index => $data) {
-            $user = $pengguna->get($index % $pengguna->count());
+            // Generate kode unik menggunakan timestamp + index + random
+            $uniqueCode = 'P' . Carbon::now()->format('YmdHis') . Str::padLeft($index + 1, 3, '0') . Str::upper(Str::random(2));
             
             try {
                 Permohonan::create(array_merge($data, [
-                    'user_id'           => $user->id,
-                    'kode_permohonan'   => $this->generateUniqueKode(),
-                    'file_surat_penugasan' => 'surat_penugasan/dummy_surat_' . ($index + 1) . '.pdf',
+                    'user_id'           => $userBudi->id,
+                    'kode_permohonan'   => $uniqueCode,
+                    'file_surat_penugasan' => 'surat_penugasan/dummy_surat_budi_' . ($index + 1) . '.pdf',
                     'status_permohonan' => StatusPermohonan::MENUNGGU_VALIDASI_ADMIN,
                 ]));
                 $successCount++;
+                $this->command->line("  ✓ Data {$index} berhasil: {$data['nama_pic']} - Kode: {$uniqueCode}");
             } catch (\Exception $e) {
-                $this->command->error("Gagal insert data ke-" . ($index + 1) . ": " . $e->getMessage());
+                $failedData[] = [
+                    'index' => $index + 1,
+                    'nama' => $data['nama_pic'],
+                    'error' => $e->getMessage()
+                ];
+                $this->command->error("  ✗ Gagal insert data {$index}: {$data['nama_pic']} - " . $e->getMessage());
             }
         }
 
-        $this->command->info("✅ {$successCount} dari " . count($dummyData) . " data permohonan dummy berhasil dibuat.");
-    }
-
-    /**
-     * Generate kode permohonan yang unik (pasti tidak akan duplikat)
-     */
-    private function generateUniqueKode(): string
-    {
-        // Method 1: Menggunakan timestamp + random (paling aman)
-        $kode = 'P' . Carbon::now()->format('YmdHis') . Str::upper(Str::random(4));
+        $this->command->newLine();
+        $this->command->info("=================== HASIL SEEDER ===================");
+        $this->command->info("📊 Target: 11 data permohonan untuk user '{$userBudi->name}'");
+        $this->command->info("✅ Berhasil: {$successCount} dari 11 data");
         
-        // Method 2: Alternatif jika ingin lebih pendek (uncomment jika mau)
-        // $kode = 'P' . Str::upper(Str::random(10));
-        
-        // Pastikan benar-benar unik (hanya untuk jaga-jaga)
-        while (Permohonan::where('kode_permohonan', $kode)->exists()) {
-            $kode = 'P' . Carbon::now()->format('YmdHis') . Str::upper(Str::random(6));
+        if (count($failedData) > 0) {
+            $this->command->warn("❌ Gagal: " . count($failedData) . " data");
+            foreach ($failedData as $failed) {
+                $this->command->warn("   - Data {$failed['index']} ({$failed['nama']}): {$failed['error']}");
+            }
+        } else {
+            $this->command->info("🎉 SEMUA 11 DATA BERHASIL DIMASUKKAN!");
+            $this->command->info("💡 Total permohonan untuk user '{$userBudi->name}': " . Permohonan::where('user_id', $userBudi->id)->count());
         }
-        
-        return $kode;
+        $this->command->info("====================================================");
     }
 }

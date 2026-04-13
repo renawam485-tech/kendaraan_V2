@@ -26,23 +26,39 @@ class PermohonanController extends Controller
         if ($user->role === 'pengguna') {
             $search = $request->query('search');
 
-            $query = Permohonan::where('user_id', $user->id);
+            // Stats dihitung dari SEMUA data user (bukan hanya current page)
+            $baseQuery = Permohonan::where('user_id', $user->id);
 
-            // Jika ada input pencarian
+            $nonAktifStatuses = [
+                StatusPermohonan::SELESAI->value,
+                StatusPermohonan::DITOLAK->value,
+            ];
+
+            $stats = [
+                'total'   => (clone $baseQuery)->count(),
+                'proses'  => (clone $baseQuery)->whereNotIn('status_permohonan', $nonAktifStatuses)->count(),
+                'selesai' => (clone $baseQuery)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
+                'ditolak' => (clone $baseQuery)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
+            ];
+
+            // Tabel hanya tampilkan status aktif (exclude selesai & ditolak) — server-side
+            $aktifQuery = Permohonan::where('user_id', $user->id)
+                ->whereNotIn('status_permohonan', $nonAktifStatuses);
+
             if ($search) {
-                $query->where(function ($q) use ($search) {
+                $aktifQuery->where(function ($q) use ($search) {
                     $q->where('tujuan', 'like', "%{$search}%")
                         ->orWhere('kode_permohonan', 'like', "%{$search}%")
                         ->orWhere('titik_jemput', 'like', "%{$search}%");
                 });
             }
 
-            $permohonans = $query->orderBy('created_at', 'desc')->paginate(5);
+            $permohonans = $aktifQuery
+                ->orderBy('created_at', 'desc')
+                ->paginate(5)
+                ->appends(['search' => $search]);
 
-            // Penting: tambahkan appends agar saat pindah halaman, kata kunci pencariannya tidak hilang
-            $permohonans->appends(['search' => $search]);
-
-            return view('dashboard.pengguna', compact('permohonans'));
+            return view('dashboard.pengguna', compact('permohonans', 'stats'));
         }
 
         $stats        = [];
@@ -702,15 +718,12 @@ class PermohonanController extends Controller
     private function generateKodePermohonan(): string
     {
         $tanggal = now()->format('Ymd');
-        $urutan  = Permohonan::where('user_id', Auth::id())
-            ->whereDate('created_at', now()->toDateString())
-            ->count() + 1;
 
         do {
-            $kode   = 'P' . $tanggal . str_pad($urutan, 3, '0', STR_PAD_LEFT);
-            $exists = Permohonan::where('kode_permohonan', $kode)->exists();
-            if ($exists) $urutan++;
-        } while ($exists);
+            $urutan  = Permohonan::whereDate('created_at', now()->toDateString())->count() + 1;
+            $random  = \Illuminate\Support\Str::upper(\Illuminate\Support\Str::random(5));
+            $kode    = 'P' . $tanggal . str_pad($urutan, 3, '0', STR_PAD_LEFT) . $random;
+        } while (Permohonan::where('kode_permohonan', $kode)->exists());
 
         return $kode;
     }
