@@ -135,8 +135,12 @@
                     fetch(`/notifikasi/${el.dataset.id}/baca`, { method: 'POST', headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' } });
                 }
             },
-            handleTouchStart(e) { if (this.$refs.notifList.scrollTop === 0) { this.touchStartY = e.touches[0].clientY;
-                    this.isPulling = true; } },
+            handleTouchStart(e) {
+                if (this.$refs.notifList.scrollTop === 0) {
+                    this.touchStartY = e.touches[0].clientY;
+                    this.isPulling = true;
+                }
+            },
             handleTouchMove(e) {
                 if (!this.isPulling) return;
                 let currentY = e.touches[0].clientY;
@@ -147,8 +151,10 @@
             },
             handleTouchEnd() {
                 if (!this.isPulling) return;
-                if (this.pullDistance > 65) { this.isRefreshing = true;
-                    setTimeout(() => window.location.reload(), 400); } else { this.pullDistance = 0; }
+                if (this.pullDistance > 65) {
+                    this.isRefreshing = true;
+                    setTimeout(() => window.location.reload(), 400);
+                } else { this.pullDistance = 0; }
                 this.isPulling = false;
             }
         }" @open-notif-panel.window="open = true; view = 'list'"
@@ -201,7 +207,6 @@
                                 class="bi bi-trash text-base mr-1"></i> Hapus Terbaca</button>
                     </div>
 
-                    {{-- TAMBAHKAN ID UNTUK INJEKSI REAL TIME --}}
                     <div id="notif-list-container" class="bg-white flex-1">
                         @forelse(auth()->user()->notifications as $notif)
                             <a href="#" @click.prevent="openDetail($el)"
@@ -299,6 +304,14 @@
                             if (newNotifList && document.getElementById('notif-list-container')) {
                                 document.getElementById('notif-list-container').innerHTML =
                                     newNotifList.innerHTML;
+                            }
+
+                            // Update Sidebar secara halus (memperbarui angka/badge notifikasi realtime)
+                            const newSidebarNav = doc.querySelector('#sidebar-main nav');
+                            const currentSidebarNav = document.querySelector('#sidebar-main nav');
+
+                            if (newSidebarNav && currentSidebarNav) {
+                                currentSidebarNav.innerHTML = newSidebarNav.innerHTML;
                             }
                         });
                     }

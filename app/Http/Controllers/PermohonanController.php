@@ -594,88 +594,173 @@ class PermohonanController extends Controller
     // DAFTAR TUGAS PER ROLE
     // ─────────────────────────────────────────────────────────────
 
-    public function adminValidasi()
+    public function adminValidasi(Request $request)  // ← tambahkan Request $request
     {
-        return view('dashboard.admin', [
-            'permohonans' => Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
-                ->orderBy('created_at', 'desc')->get(),
-        ])->with('judul', 'Validasi Permohonan Masuk');
+        $query = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_VALIDASI_ADMIN);
+
+        // Tambahkan pencarian
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                    ->orWhere('kontak_pic', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('created_at', 'desc')->paginate(15)->withQueryString();
+
+        return view('dashboard.admin', compact('permohonans'))->with('judul', 'Validasi Permohonan Masuk');
     }
 
-    public function adminFinalisasi()
+    public function adminFinalisasi(Request $request)  // ← tambahkan Request $request
     {
-        return view('dashboard.admin', [
-            'permohonans' => Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_FINALISASI)
-                ->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Finalisasi Penerbitan');
+        $query = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_FINALISASI);
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')->paginate(15)->withQueryString();
+
+        return view('dashboard.admin', compact('permohonans'))->with('judul', 'Finalisasi Penerbitan');
     }
 
-    public function adminRiwayat()
+    public function adminRiwayat(Request $request)
     {
-        return view('dashboard.admin', [
-            'permohonans' => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                StatusPermohonan::DISETUJUI,
-                StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
-                StatusPermohonan::PERJALANAN_BERLANGSUNG,
-                StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-                StatusPermohonan::MENUNGGU_PENYELESAIAN,
-                StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
-                StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
-                StatusPermohonan::SELESAI,
-                StatusPermohonan::DITOLAK,
-            ))->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Arsip & Riwayat');
+        $statuses = StatusPermohonan::values(
+            StatusPermohonan::DISETUJUI,
+            StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
+            StatusPermohonan::PERJALANAN_BERLANGSUNG,
+            StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
+            StatusPermohonan::MENUNGGU_PENYELESAIAN,
+            StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
+            StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
+            StatusPermohonan::SELESAI,
+            StatusPermohonan::DITOLAK,
+        );
+
+        $query = Permohonan::whereIn('status_permohonan', $statuses);
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')->paginate(15)->withQueryString();
+
+        return view('dashboard.admin', compact('permohonans'))->with('judul', 'Arsip & Riwayat');
     }
 
-    public function spsiAlokasi()
+    public function spsiAlokasi(Request $request)
     {
-        return view('dashboard.spsi', [
-            'permohonans' => Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_SPSI)
-                ->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Penugasan Armada');
+        $query = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_SPSI);
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                    ->orWhere('kategori_kegiatan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('dashboard.spsi', compact('permohonans'))->with('judul', 'Penugasan Armada');
     }
 
-    public function spsiMonitoring()
+    public function spsiMonitoring(Request $request)
     {
-        return view('dashboard.spsi', [
-            'permohonans' => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                StatusPermohonan::MENUNGGU_PROSES_KEUANGAN,
-                StatusPermohonan::MENUNGGU_FINALISASI,
-                StatusPermohonan::DISETUJUI,
-                StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
-                StatusPermohonan::PERJALANAN_BERLANGSUNG,
-                StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-                StatusPermohonan::MENUNGGU_PENYELESAIAN,
-                StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
-                StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
-                StatusPermohonan::SELESAI,
-            ))->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Pantauan & Riwayat Armada');
+        $statuses = StatusPermohonan::values(
+            StatusPermohonan::MENUNGGU_PROSES_KEUANGAN,
+            StatusPermohonan::MENUNGGU_FINALISASI,
+            StatusPermohonan::DISETUJUI,
+            StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
+            StatusPermohonan::PERJALANAN_BERLANGSUNG,
+            StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
+            StatusPermohonan::MENUNGGU_PENYELESAIAN,
+            StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
+            StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
+            StatusPermohonan::SELESAI,
+        );
+
+        $query = Permohonan::whereIn('status_permohonan', $statuses);
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('dashboard.spsi', compact('permohonans'))->with('judul', 'Pantauan & Riwayat Armada');
     }
 
-    public function keuanganRab()
+    public function keuanganRab(Request $request)
     {
-        return view('dashboard.keuangan', [
-            'permohonans' => Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_KEUANGAN)
-                ->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Persetujuan Anggaran (RAB)');
+        $query = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_KEUANGAN);
+
+        // Pencarian server-side
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('dashboard.keuangan', compact('permohonans'))->with('judul', 'Persetujuan Anggaran (RAB)');
     }
 
-    public function keuanganMonitoring()
+    public function keuanganMonitoring(Request $request)
     {
-        return view('dashboard.keuangan', [
-            'permohonans' => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                StatusPermohonan::MENUNGGU_FINALISASI,
-                StatusPermohonan::DISETUJUI,
-                StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
-                StatusPermohonan::PERJALANAN_BERLANGSUNG,
-                StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-                StatusPermohonan::MENUNGGU_PENYELESAIAN,
-                StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
-                StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
-                StatusPermohonan::SELESAI,
-            ))->orderBy('updated_at', 'desc')->get(),
-        ])->with('judul', 'Pantauan Anggaran');
+        $statuses = StatusPermohonan::values(
+            StatusPermohonan::MENUNGGU_FINALISASI,
+            StatusPermohonan::DISETUJUI,
+            StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
+            StatusPermohonan::PERJALANAN_BERLANGSUNG,
+            StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
+            StatusPermohonan::MENUNGGU_PENYELESAIAN,
+            StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
+            StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
+            StatusPermohonan::SELESAI,
+        );
+
+        $query = Permohonan::whereIn('status_permohonan', $statuses);
+
+        // Pencarian server-side
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_pic', 'like', "%{$search}%")
+                    ->orWhere('tujuan', 'like', "%{$search}%")
+                    ->orWhere('kode_permohonan', 'like', "%{$search}%");
+            });
+        }
+
+        $permohonans = $query->orderBy('updated_at', 'desc')
+            ->paginate(15)
+            ->withQueryString();
+
+        return view('dashboard.keuangan', compact('permohonans'))->with('judul', 'Pantauan Anggaran');
     }
 
     // ─────────────────────────────────────────────────────────────

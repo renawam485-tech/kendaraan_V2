@@ -23,13 +23,28 @@
                         <i class="bi bi-truck-front-fill text-blue-600"></i>
                         {{ $judul ?? 'Daftar Penugasan Kendaraan' }}
                         <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
-                            id="countBadge">{{ $permohonans->count() }} data</span>
+                            id="countBadge">
+                            {{ $permohonans->total() }} data
+                        </span>
                     </h3>
                     <div class="relative w-full sm:w-72">
                         <i
                             class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-                        <input type="text" id="searchInput" placeholder="Cari nama, tujuan, kategori..."
-                            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white">
+                        <div class="relative w-full sm:w-72">
+                            <form action="{{ url()->current() }}" method="GET" class="relative">
+                                <i
+                                    class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                                <input type="text" name="search" value="{{ request('search') }}"
+                                    placeholder="Cari kode, nama, tujuan..." autocomplete="off"
+                                    class="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white">
+                                @if (request('search'))
+                                    <a href="{{ url()->current() }}"
+                                        class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition">
+                                        <i class="bi bi-x-circle-fill"></i>
+                                    </a>
+                                @endif
+                            </form>
+                        </div>
                     </div>
                 </div>
 
@@ -186,25 +201,100 @@
                 </div>
 
                 <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-                    <p class="text-xs text-gray-400" id="tableInfo">Menampilkan {{ $permohonans->count() }} data</p>
-                    <p class="text-xs text-gray-400">{{ now()->format('d M Y, H:i') }}</p>
+                    <p class="text-xs text-gray-400">
+                        Menampilkan {{ $permohonans->firstItem() ?? 0 }} - {{ $permohonans->lastItem() ?? 0 }}
+                        dari {{ $permohonans->total() }} data
+                    </p>
+
+                    <div class="flex items-center gap-2">
+                        @if ($permohonans->onFirstPage())
+                            <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                <i class="bi bi-chevron-left"></i>
+                            </span>
+                        @else
+                            <a href="{{ $permohonans->previousPageUrl() }}"
+                                class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        @endif
+
+                        <div class="hidden md:flex items-center gap-1">
+                            @php
+                                $current = $permohonans->currentPage();
+                                $last = $permohonans->lastPage();
+                                $start = max(1, $current - 1);
+                                $end = min($last, $current + 1);
+
+                                if ($current <= 2) {
+                                    $start = 1;
+                                    $end = min(3, $last);
+                                }
+                                if ($current >= $last - 1) {
+                                    $start = max(1, $last - 2);
+                                    $end = $last;
+                                }
+                            @endphp
+
+                            @if ($start > 1)
+                                <a href="{{ $permohonans->url(1) }}"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">1</a>
+                                @if ($start > 2)
+                                    <span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                @endif
+                            @endif
+
+                            @for ($page = $start; $page <= $end; $page++)
+                                @if ($page == $current)
+                                    <span
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm">{{ $page }}</span>
+                                @else
+                                    <a href="{{ $permohonans->url($page) }}"
+                                        class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">{{ $page }}</a>
+                                @endif
+                            @endfor
+
+                            @if ($end < $last)
+                                @if ($end < $last - 1)
+                                    <span class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                @endif
+                                <a href="{{ $permohonans->url($last) }}"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">{{ $last }}</a>
+                            @endif
+                        </div>
+
+                        @if ($permohonans->hasMorePages())
+                            <a href="{{ $permohonans->nextPageUrl() }}"
+                                class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        @else
+                            <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                        @endif
+                    </div>
+
+                    <p class="text-xs text-gray-400" id="realtimeClock"></p>
                 </div>
             </div>
         </div>
     </div>
     <script>
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const q = this.value.toLowerCase().trim();
-            let vis = 0;
-            const total = {{ $permohonans->count() }};
-            document.querySelectorAll('.searchable-row').forEach(r => {
-                const s = !q || r.dataset.search.includes(q);
-                r.style.display = s ? '' : 'none';
-                if (s) vis++;
-            });
-            document.getElementById('tableInfo').textContent = q ? `Menampilkan ${vis} dari ${total} data` :
-                `Menampilkan ${total} data`;
-            document.getElementById('countBadge').textContent = q ? `${vis} data` : `${total} data`;
-        });
+        function updateClock() {
+            const now = new Date();
+            const formatted = now.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(/\./g, ':');
+            const el = document.getElementById('realtimeClock');
+            if (el) el.textContent = formatted + ' WIB';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
     </script>
 </x-app-layout>
