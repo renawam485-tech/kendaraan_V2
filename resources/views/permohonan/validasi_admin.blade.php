@@ -46,7 +46,7 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Anggaran Diajukan</p>
-                        <p class="font-bold text-gray-800">Rp {{ number_format($permohonan->anggaran_diajukan,0,',','.') }}</p>
+                        <p class="font-semibold text-gray-800">{{ $permohonan->anggaran_diajukan ?: '—' }}</p>
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Surat Penugasan</p>

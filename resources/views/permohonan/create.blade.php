@@ -1,184 +1,333 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Buat Pengajuan Kendaraan Baru') }}
-        </h2>
+        <div class="flex items-center gap-3">
+            <a href="{{ route('dashboard') }}" class="text-gray-400 hover:text-gray-600 transition">
+                <i class="bi bi-arrow-left text-lg"></i>
+            </a>
+            <div>
+                <h2 class="font-semibold text-xl text-gray-800">Buat Pengajuan Kendaraan</h2>
+                <p class="text-sm text-gray-400 mt-0.5">Lengkapi semua data dengan benar dan jelas</p>
+            </div>
+        </div>
     </x-slot>
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-    
+
     <style>
-        /* Styling Custom Select2 agar identik dengan Input Tailwind */
         .select2-container { width: 100% !important; }
-        .select2-container--default .select2-selection--single { 
-            height: 42px; border: 1px solid #d1d5db; border-radius: 0.375rem; 
-            display: flex; align-items: center; padding-left: 4px; transition: all 0.2s; background-color: #fff;
-        }
-        .select2-container--default .select2-selection--single:focus, 
-        .select2-container--default.select2-container--open .select2-selection--single { 
-            border-color: #22c55e; box-shadow: 0 0 0 1px #22c55e; outline: none;
-        }
-        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 40px; right: 10px; }
-        .select2-container--default .select2-selection--single .select2-selection__rendered { color: #374151; font-size: 0.875rem; font-weight: 500; }
-        .select2-dropdown { border: 1px solid #22c55e; border-radius: 0.375rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); border-top: none; }
-        .select2-search__field { border-radius: 0.25rem !important; border: 1px solid #d1d5db !important; }
-        .select2-search__field:focus { border-color: #22c55e !important; outline: none !important; }
-        .select2-container--default .select2-results__option--highlighted[aria-selected] { background-color: #22c55e; color: white; }
-        
-        /* Styling Custom Flatpickr Kalender */
-        .flatpickr-calendar { font-family: inherit; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: 1px solid #e5e7eb; }
-        .flatpickr-day.selected { background: #22c55e !important; border-color: #22c55e !important; }
+        .select2-container--default .select2-selection--single { height: 40px; border: 1px solid #d1d5db; border-radius: 0.5rem; display: flex; align-items: center; background: #fff; transition: all .15s; }
+        .select2-container--default.select2-container--open .select2-selection--single,
+        .select2-container--default .select2-selection--single:focus { border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,.15); }
+        .select2-container--default .select2-selection--single .select2-selection__arrow { height: 38px; right: 8px; }
+        .select2-container--default .select2-selection--single .select2-selection__rendered { color: #374151; font-size: .875rem; padding-left: 12px; }
+        .select2-dropdown { border: 1px solid #3b82f6; border-radius: .5rem; box-shadow: 0 6px 20px rgba(0,0,0,.1); }
+        .select2-results__option--highlighted { background: #3b82f6 !important; }
+        .flatpickr-day.selected { background: #3b82f6 !important; border-color: #3b82f6 !important; }
     </style>
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <div class="flex flex-col lg:flex-row gap-6">
-                
-                <div class="lg:w-2/3 bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200">
-                    <div class="p-8 text-gray-900">
-                        
-                        <div class="mb-8 border-b border-gray-100 pb-4">
-                            <h3 class="text-xl font-bold text-gray-800">Formulir Permohonan Perjalanan</h3>
-                            <p class="text-sm text-gray-500 mt-1">Lengkapi data perjalanan dan pilih armada yang sesuai dengan kebutuhan Anda.</p>
-                        </div>
+    <div class="py-8 bg-slate-50 min-h-screen">
+        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                        @if ($errors->any())
-                            <div class="mb-6 bg-red-50 border border-red-200 p-4 rounded-md">
-                                <span class="text-red-700 font-bold text-sm flex items-center gap-2">
-                                    <svg class="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    Mohon perbaiki kesalahan berikut:
-                                </span>
-                                <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
-                                    @foreach ($errors->all() as $error)
-                                        <li>{{ $error }}</li>
-                                    @endforeach
-                                </ul>
-                            </div>
-                        @endif
-
-                        <form action="{{ route('permohonan.store') }}" method="POST" enctype="multipart/form-data" class="space-y-8">
-                            @csrf
-
-                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition duration-200">
-                                <h4 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Informasi Pemohon</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div>
-                                        <label for="nama_pic" class="block text-sm font-semibold text-gray-700 mb-1">Nama PIC <span class="text-red-500">*</span></label>
-                                        <input type="text" id="nama_pic" name="nama_pic" value="{{ old('nama_pic', Auth::user()->name) }}" maxlength="100" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required>
-                                    </div>
-                                    <div>
-                                        <label for="kontak_pic" class="block text-sm font-semibold text-gray-700 mb-1">Nomor Kontak <span class="text-red-500">*</span></label>
-                                        <input type="text" id="kontak_pic" name="kontak_pic" value="{{ old('kontak_pic', '+62') }}" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm font-medium text-gray-800 bg-gray-50 transition" required>
-                                    </div>
-                                    <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-100 pt-4 mt-2">
-                                        <div>
-                                            <label for="titik_jemput" class="block text-sm font-semibold text-gray-700 mb-1">Titik Jemput <span class="text-red-500">*</span></label>
-                                            <input type="text" id="titik_jemput" name="titik_jemput" value="{{ old('titik_jemput') }}" maxlength="150" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required placeholder="Contoh: Gedung Rektorat">
-                                        </div>
-                                        <div>
-                                            <label for="tujuan" class="block text-sm font-semibold text-gray-700 mb-1">Tujuan / Lokasi <span class="text-red-500">*</span></label>
-                                            <input type="text" id="tujuan" name="tujuan" value="{{ old('tujuan') }}" maxlength="150" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required placeholder="Contoh: Kemenag Jakarta">
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition duration-200">
-                                <h4 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Jadwal Perjalanan</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 relative">
-                                    <div>
-                                        <label for="waktu_berangkat" class="block text-sm font-semibold text-gray-700 mb-1">Waktu Keberangkatan <span class="text-red-500">*</span></label>
-                                        <input type="text" id="waktu_berangkat" name="waktu_berangkat" value="{{ old('waktu_berangkat') }}" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm bg-white cursor-pointer transition" placeholder="Pilih Tanggal & Jam" required readonly>
-                                    </div>
-                                    <div>
-                                        <label for="waktu_kembali" class="block text-sm font-semibold text-gray-700 mb-1">Waktu Kembali <span class="text-red-500">*</span></label>
-                                        <input type="text" id="waktu_kembali" name="waktu_kembali" value="{{ old('waktu_kembali') }}" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm bg-white cursor-pointer transition" placeholder="Pilih Tanggal & Jam" required readonly>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition duration-200">
-                                <h4 class="text-sm font-bold text-gray-800 mb-4 uppercase tracking-wider">Kebutuhan Armada & Anggaran</h4>
-                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div class="md:col-span-2">
-                            <label class="block text-sm font-bold text-gray-700 mb-1">Kendaraan yang Dibutuhkan <span class="text-red-500">*</span></label>
-                            <select name="kendaraan_dibutuhkan" id="kendaraan_dibutuhkan" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required>
-                                <option value="">-- Pilih Tipe Kendaraan --</option>
-                                @foreach($kombinasiMobil as $mobil)
-                                    <option value="{{ $mobil->nama_kendaraan }}">
-                                        {{ $mobil->nama_kendaraan }} (Kapasitas: {{ $mobil->kapasitas_penumpang }} Orang)
-                                    </option>
-                                @endforeach
-                            </select>
-                        </div>
-                                    <div>
-                                        <label for="jumlah_penumpang" class="block text-sm font-semibold text-gray-700 mb-1">Total Rombongan <span class="text-red-500">*</span></label>
-                                        <input type="number" id="jumlah_penumpang" name="jumlah_penumpang" value="{{ old('jumlah_penumpang') }}" min="1" max="60" oninput="if(this.value > 60) this.value = 60;" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" required placeholder="Maks. 60 Orang">
-                                    </div>
-                                    <div class="relative">
-                                        <label for="anggaran_diajukan" class="block text-sm font-semibold text-gray-700 mb-1">Estimasi Anggaran (Rp)</label>
-                                        <input type="number" id="anggaran_diajukan" name="anggaran_diajukan" value="{{ old('anggaran_diajukan') }}" min="0" max="500000000" step="1000" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition bg-gray-50" placeholder="Kosongkan jika Non-Dinas">
-                                        <p class="text-[11px] text-gray-500 font-medium mt-1">Biarkan kosong jika ini merupakan kegiatan Mandiri / Non-Dinas.</p>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="bg-white p-5 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition duration-200 space-y-6">
-                                <div>
-                                    <label for="catatan_pemohon" class="block text-sm font-semibold text-gray-700 mb-1">Catatan Tambahan (Opsional)</label>
-                                    <textarea id="catatan_pemohon" name="catatan_pemohon" rows="3" maxlength="500" class="w-full border-gray-300 focus:border-green-500 focus:ring-green-500 rounded-md shadow-sm transition" placeholder="Instruksi khusus untuk armada atau supir...">{{ old('catatan_pemohon') }}</textarea>
-                                    <div class="text-right text-xs text-gray-400 mt-1"><span id="char_count">0</span> / 500 karakter</div>
-                                </div>
-
-                                <div class="pt-4 border-t border-gray-100">
-                                    <label for="file_surat" class="block text-sm font-semibold text-gray-700 mb-2">Unggah Surat Tugas (PDF/JPG) <span class="text-red-500">*</span></label>
-                                    <input type="file" id="file_surat" name="file_surat" accept=".pdf,.jpg,.jpeg,.png" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-gray-100 file:text-gray-700 hover:file:bg-gray-200 transition" required>
-                                </div>
-                            </div>
-
-                            <div class="flex items-center justify-end gap-4 pt-2">
-                                <a href="{{ route('dashboard') }}" class="text-gray-500 hover:text-gray-700 font-medium text-sm transition">Batalkan</a>
-                                <button type="submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2.5 px-8 rounded-md transition shadow-md">
-                                    Ajukan Perjalanan
-                                </button>
-                            </div>
-                        </form>
+            @if ($errors->any())
+                <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3 items-start shadow-sm">
+                    <i class="bi bi-exclamation-triangle-fill text-red-500 text-lg flex-shrink-0 mt-0.5"></i>
+                    <div>
+                        <p class="font-bold text-red-700 text-sm mb-1.5">Mohon perbaiki kesalahan berikut:</p>
+                        <ul class="text-sm text-red-600 space-y-0.5">
+                            @foreach ($errors->all() as $error)
+                                <li class="flex items-start gap-1.5">
+                                    <span class="text-red-400 mt-0.5 flex-shrink-0">•</span>{{ $error }}
+                                </li>
+                            @endforeach
+                        </ul>
                     </div>
-                </div> 
+                </div>
+            @endif
 
-                <div class="lg:w-1/3">
-                    <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg border border-gray-200 sticky top-20">
-                        <div class="bg-gray-50 px-5 py-4 border-b border-gray-200 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-gray-500" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            <h3 class="font-bold text-gray-800 text-sm">Info Pemakaian Armada Kampus</h3>
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+                {{-- ── FORM UTAMA ── --}}
+                <div class="lg:col-span-2 space-y-4">
+                    <form action="{{ route('permohonan.store') }}" method="POST" enctype="multipart/form-data">
+                        @csrf
+
+                        {{-- SEKSI 1: Pemohon --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                <span class="w-7 h-7 bg-blue-600 text-white text-xs font-black rounded-lg flex items-center justify-center flex-shrink-0">1</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm">Informasi Pemohon</h3>
+                                    <p class="text-xs text-gray-400">Person in charge yang bertanggung jawab atas perjalanan</p>
+                                </div>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Nama PIC <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="nama_pic"
+                                        value="{{ old('nama_pic', Auth::user()->name) }}"
+                                        maxlength="100" required
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Nomor Kontak (WhatsApp) <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="kontak_pic" name="kontak_pic"
+                                        value="{{ old('kontak_pic', '+62') }}" required
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
+                                    <p class="text-xs text-gray-400 mt-1">Format: +62xxxxxxxxxx</p>
+                                </div>
+                            </div>
                         </div>
-                        <div class="p-5 max-h-[600px] overflow-y-auto bg-white">
-                            @if($jadwalBooking->count() > 0)
-                                <p class="text-xs text-gray-500 mb-4 text-justify">Daftar armada internal yang sedang bertugas. Jika armada penuh di jadwal Anda, admin akan mengupayakan opsi vendor luar.</p>
-                                
-                                <div class="space-y-4">
-                                    @foreach($jadwalBooking as $jadwal)
-                                        <div class="bg-white p-4 rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition text-sm">
-                                            <div class="font-bold text-gray-800 mb-1 line-clamp-1">{{ $jadwal->kendaraan->nama_kendaraan ?? 'Kendaraan' }} ({{ $jadwal->kendaraan->plat_nomor ?? '-' }})</div>
-                                            <div class="text-xs text-gray-600 font-medium mb-3">Tujuan: {{ $jadwal->tujuan }}</div>
-                                            <div class="grid grid-cols-2 gap-2 text-[11px] text-gray-500 border-t border-gray-100 pt-3">
-                                                <div><span class="block font-bold text-gray-700">Mulai:</span> {{ \Carbon\Carbon::parse($jadwal->waktu_berangkat)->format('d/m/y H:i') }}</div>
-                                                <div><span class="block font-bold text-gray-700">Selesai:</span> {{ \Carbon\Carbon::parse($jadwal->waktu_kembali)->format('d/m/y H:i') }}</div>
+
+                        {{-- SEKSI 2: Rute & Jadwal --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                <span class="w-7 h-7 bg-blue-600 text-white text-xs font-black rounded-lg flex items-center justify-center flex-shrink-0">2</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm">Rute & Jadwal Perjalanan</h3>
+                                    <p class="text-xs text-gray-400">Titik berangkat, tujuan, dan estimasi waktu perjalanan</p>
+                                </div>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Titik Jemput / Keberangkatan <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="titik_jemput"
+                                        value="{{ old('titik_jemput') }}"
+                                        maxlength="150" required
+                                        placeholder="cth: Gedung Rektorat lt.1"
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Tujuan / Lokasi Kegiatan <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" name="tujuan"
+                                        value="{{ old('tujuan') }}"
+                                        maxlength="150" required
+                                        placeholder="cth: Kementerian Pendidikan, Jakarta"
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Waktu Keberangkatan <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="waktu_berangkat" name="waktu_berangkat"
+                                        value="{{ old('waktu_berangkat') }}"
+                                        placeholder="Pilih tanggal & jam" required readonly
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm bg-white cursor-pointer transition">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Waktu Kembali <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="text" id="waktu_kembali" name="waktu_kembali"
+                                        value="{{ old('waktu_kembali') }}"
+                                        placeholder="Pilih tanggal & jam" required readonly
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm bg-white transition">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- SEKSI 3: Kebutuhan Armada --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                <span class="w-7 h-7 bg-blue-600 text-white text-xs font-black rounded-lg flex items-center justify-center flex-shrink-0">3</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm">Kebutuhan Armada</h3>
+                                    <p class="text-xs text-gray-400">Tipe kendaraan dan jumlah penumpang yang ikut</p>
+                                </div>
+                            </div>
+                            <div class="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div class="sm:col-span-2">
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Tipe Kendaraan yang Dibutuhkan <span class="text-red-500">*</span>
+                                    </label>
+                                    <select name="kendaraan_dibutuhkan" id="kendaraan_dibutuhkan" required
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm">
+                                        <option value="">— Pilih tipe kendaraan —</option>
+                                        @foreach($kombinasiMobil as $mobil)
+                                            <option value="{{ $mobil->nama_kendaraan }}"
+                                                {{ old('kendaraan_dibutuhkan') === $mobil->nama_kendaraan ? 'selected' : '' }}>
+                                                {{ $mobil->nama_kendaraan }} — kapasitas {{ $mobil->kapasitas_penumpang }} orang
+                                            </option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Jumlah Rombongan <span class="text-red-500">*</span>
+                                    </label>
+                                    <input type="number" name="jumlah_penumpang"
+                                        value="{{ old('jumlah_penumpang') }}"
+                                        min="1" max="60" required
+                                        placeholder="Maks. 60 orang"
+                                        oninput="if(this.value > 60) this.value = 60"
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
+                                    <p class="text-xs text-gray-400 mt-1">Termasuk pengemudi jika membawa supir sendiri</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- SEKSI 4: Anggaran & Catatan --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                <span class="w-7 h-7 bg-blue-600 text-white text-xs font-black rounded-lg flex items-center justify-center flex-shrink-0">4</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm">Anggaran & Catatan</h3>
+                                    <p class="text-xs text-gray-400">Perkiraan biaya dan instruksi tambahan untuk tim logistik</p>
+                                </div>
+                            </div>
+                            <div class="p-5 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Perkiraan Anggaran yang Dibutuhkan
+                                        <span class="text-gray-400 font-normal">(opsional)</span>
+                                    </label>
+                                    <textarea name="anggaran_diajukan" rows="3" maxlength="500"
+                                        placeholder="cth: BBM Rp 200.000, Tol Rp 75.000, Parkir Rp 25.000 → Estimasi total Rp 300.000"
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition resize-none">{{ old('anggaran_diajukan') }}</textarea>
+                                    <p class="text-xs text-gray-400 mt-1">
+                                        Kosongkan jika kegiatan Non-Dinas atau biaya ditanggung pribadi. Rincian membantu proses RAB lebih cepat.
+                                    </p>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                                        Catatan Tambahan
+                                        <span class="text-gray-400 font-normal">(opsional)</span>
+                                    </label>
+                                    <textarea id="catatan_pemohon" name="catatan_pemohon" rows="3" maxlength="500"
+                                        placeholder="Instruksi khusus: preferensi rute, kebutuhan khusus penumpang, dll."
+                                        class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition resize-none">{{ old('catatan_pemohon') }}</textarea>
+                                    <div class="flex justify-end mt-1">
+                                        <span class="text-xs text-gray-400"><span id="char_count">0</span>/500 karakter</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- SEKSI 5: Dokumen --}}
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                            <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-3 bg-gray-50">
+                                <span class="w-7 h-7 bg-blue-600 text-white text-xs font-black rounded-lg flex items-center justify-center flex-shrink-0">5</span>
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-sm">Dokumen Pendukung</h3>
+                                    <p class="text-xs text-gray-400">Surat penugasan wajib dilampirkan untuk kelengkapan berkas</p>
+                                </div>
+                            </div>
+                            <div class="p-5">
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                                    Surat Tugas / Surat Penugasan <span class="text-red-500">*</span>
+                                </label>
+                                <div id="drop_zone"
+                                    class="border-2 border-dashed border-gray-200 rounded-xl p-7 text-center hover:border-blue-400 hover:bg-blue-50/30 transition cursor-pointer"
+                                    onclick="document.getElementById('file_surat').click()">
+                                    <i class="bi bi-cloud-arrow-up text-4xl text-gray-300 block mb-2"></i>
+                                    <p class="text-sm font-semibold text-gray-500">Klik untuk pilih file</p>
+                                    <p class="text-xs text-gray-400 mt-1">PDF, JPG, PNG — Maks. 2 MB</p>
+                                    <div id="file_info" class="hidden mt-3 inline-flex items-center gap-2 bg-blue-50 border border-blue-200 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-lg">
+                                        <i class="bi bi-file-earmark-check"></i>
+                                        <span id="file_name"></span>
+                                    </div>
+                                </div>
+                                <input type="file" id="file_surat" name="file_surat"
+                                    accept=".pdf,.jpg,.jpeg,.png" required class="hidden">
+                            </div>
+                        </div>
+
+                        {{-- TOMBOL SUBMIT --}}
+                        <div class="flex items-center justify-end gap-3 pt-1">
+                            <a href="{{ route('dashboard') }}"
+                                class="text-sm text-gray-500 hover:text-gray-700 font-medium transition">
+                                Batalkan
+                            </a>
+                            <button type="submit"
+                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-2.5 px-8 rounded-xl transition shadow-sm text-sm">
+                                <i class="bi bi-send-fill"></i> Ajukan Perjalanan
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+
+                {{-- ── SIDEBAR ── --}}
+                <div class="lg:col-span-1 space-y-4 lg:sticky lg:top-20">
+
+                    {{-- Jadwal Armada Aktif --}}
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                        <div class="px-5 py-4 border-b border-gray-100 flex items-center gap-2">
+                            <i class="bi bi-calendar-check text-blue-600"></i>
+                            <h4 class="font-bold text-gray-800 text-sm">Jadwal Armada Aktif</h4>
+                        </div>
+                        @if($jadwalBooking->count() > 0)
+                            <div class="p-3 max-h-80 overflow-y-auto space-y-2">
+                                <p class="text-xs text-gray-400 px-1 pb-1">
+                                    Armada berikut sedang atau akan digunakan. Admin akan mempertimbangkan jadwal Anda.
+                                </p>
+                                @foreach($jadwalBooking as $jadwal)
+                                    <div class="bg-slate-50 border border-gray-200 rounded-lg p-3">
+                                        <div class="flex items-start justify-between gap-1">
+                                            <p class="font-bold text-gray-800 text-xs leading-tight">
+                                                {{ $jadwal->kendaraan->nama_kendaraan ?? '—' }}
+                                            </p>
+                                            <span class="font-mono text-[10px] text-gray-400 flex-shrink-0">
+                                                {{ $jadwal->kendaraan->plat_nomor ?? '—' }}
+                                            </span>
+                                        </div>
+                                        <p class="text-[11px] text-gray-500 mt-1 flex items-center gap-1">
+                                            <i class="bi bi-geo-alt text-gray-400 flex-shrink-0"></i>
+                                            {{ Str::limit($jadwal->tujuan, 32) }}
+                                        </p>
+                                        <div class="grid grid-cols-2 gap-1 mt-2 pt-2 border-t border-gray-100">
+                                            <div>
+                                                <p class="text-[10px] text-gray-400">Berangkat</p>
+                                                <p class="text-[11px] font-semibold text-gray-700">
+                                                    {{ \Carbon\Carbon::parse($jadwal->waktu_berangkat)->format('d/m H:i') }}
+                                                </p>
+                                            </div>
+                                            <div>
+                                                <p class="text-[10px] text-gray-400">Kembali</p>
+                                                <p class="text-[11px] font-semibold text-gray-700">
+                                                    {{ \Carbon\Carbon::parse($jadwal->waktu_kembali)->format('d/m H:i') }}
+                                                </p>
                                             </div>
                                         </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="text-center py-10">
-                                    <div class="mx-auto w-16 h-16 bg-green-50 rounded-full flex items-center justify-center mb-3">
-                                        <svg class="w-8 h-8 text-green-500" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                                     </div>
-                                    <p class="text-sm font-bold text-gray-800">Seluruh Armada Tersedia</p>
-                                    <p class="text-xs text-gray-500 mt-1">Belum ada jadwal yang aktif.</p>
-                                </div>
-                            @endif
-                        </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="p-8 text-center">
+                                <i class="bi bi-check-circle text-3xl text-emerald-400 block mb-2"></i>
+                                <p class="text-sm font-bold text-gray-600">Semua Armada Tersedia</p>
+                                <p class="text-xs text-gray-400 mt-1">Tidak ada jadwal aktif saat ini.</p>
+                            </div>
+                        @endif
+                    </div>
+
+                    {{-- Tips Pengajuan --}}
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                        <p class="text-xs font-bold text-amber-700 flex items-center gap-1.5 mb-2.5">
+                            <i class="bi bi-lightbulb-fill"></i> Tips Pengajuan
+                        </p>
+                        <ul class="text-xs text-amber-800 space-y-2">
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                                Ajukan minimal <strong>H-2</strong> dari jadwal keberangkatan
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                                Surat penugasan harus sudah ditandatangani pejabat berwenang
+                            </li>
+                            <li class="flex items-start gap-1.5">
+                                <span class="text-amber-500 mt-0.5 flex-shrink-0">•</span>
+                                Isi anggaran dengan rincian agar lebih mudah diproses Tim Keuangan
+                            </li>
+                        </ul>
                     </div>
                 </div>
 
@@ -186,15 +335,17 @@
         </div>
     </div>
 
-    <div id="customAlertModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-gray-900 bg-opacity-60 px-4 transition-opacity duration-300">
-        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center transform scale-95 transition-transform duration-300" id="customAlertContent">
-            <div class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-red-100 mb-4 shadow-inner">
-                <svg class="h-8 w-8 text-red-600" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    {{-- Alert Modal --}}
+    <div id="customAlertModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-gray-900 bg-opacity-60 px-4">
+        <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
+            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-red-500 text-xl"></i>
             </div>
-            <h3 class="text-lg font-bold text-gray-900 mb-2">Peringatan Jadwal</h3>
-            <p id="customAlertMessage" class="text-sm text-gray-600 mb-6 px-2"></p>
-            <button type="button" onclick="closeCustomAlert()" class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2.5 bg-red-600 text-base font-bold text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:text-sm transition-colors">
-                Saya Mengerti
+            <h3 class="text-base font-bold text-gray-900 mb-2">Jadwal Tidak Valid</h3>
+            <p id="customAlertMessage" class="text-sm text-gray-600 mb-5"></p>
+            <button onclick="closeCustomAlert()"
+                class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2.5 rounded-lg text-sm transition">
+                Mengerti
             </button>
         </div>
     </div>
@@ -205,102 +356,85 @@
     <script src="https://npmcdn.com/flatpickr/dist/l10n/id.js"></script>
 
     <script>
-        // --- LOGIKA CUSTOM ALERT MODAL ---
-        function showCustomAlert(message) {
-            const modal = document.getElementById('customAlertModal');
-            const content = document.getElementById('customAlertContent');
-            document.getElementById('customAlertMessage').innerText = message;
-            
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('bg-opacity-0');
-                content.classList.remove('scale-95');
-                content.classList.add('scale-100');
-            }, 10);
+        function showCustomAlert(msg) {
+            document.getElementById('customAlertMessage').innerText = msg;
+            document.getElementById('customAlertModal').classList.remove('hidden');
         }
-
         function closeCustomAlert() {
-            const modal = document.getElementById('customAlertModal');
-            const content = document.getElementById('customAlertContent');
-            content.classList.remove('scale-100');
-            content.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            document.getElementById('customAlertModal').classList.add('hidden');
         }
 
-        document.addEventListener('DOMContentLoaded', function() {
-            
-            // 1. SELECT2 UNTUK PENCARIAN KENDARAAN (Sangat Responsif & Bersih)
+        document.addEventListener('DOMContentLoaded', function () {
+            // Select2
             if (typeof jQuery !== 'undefined') {
-                $('.select2-mobil').select2({
-                    placeholder: "Ketik merk/model mobil di sini...",
-                    allowClear: true
+                $('#kendaraan_dibutuhkan').select2({
+                    placeholder: 'Ketik atau pilih tipe kendaraan...',
+                    allowClear: true,
                 });
             }
 
-            // 2. COUNTER CATATAN
-            const textarea = document.getElementById('catatan_pemohon');
-            const countDisplay = document.getElementById('char_count');
-            if (textarea) {
-                textarea.addEventListener('input', function() {
-                    countDisplay.textContent = this.value.length;
-                });
+            // Char counter catatan
+            const catatan = document.getElementById('catatan_pemohon');
+            const charCount = document.getElementById('char_count');
+            if (catatan) {
+                catatan.addEventListener('input', () => charCount.textContent = catatan.value.length);
             }
 
-            // 3. KEAMANAN NOMOR HP (+62)
-            document.getElementById('kontak_pic').addEventListener('input', function() {
-                let val = this.value;
-                if (!val.startsWith('+62')) { val = '+62' + val.replace(/[^0-9]/g, ''); } 
-                else { val = '+62' + val.substring(3).replace(/[^0-9]/g, ''); }
-                this.value = val;
+            // File upload display
+            document.getElementById('file_surat').addEventListener('change', function () {
+                const fileInfo = document.getElementById('file_info');
+                const fileName = document.getElementById('file_name');
+                if (this.files[0]) {
+                    fileName.textContent = this.files[0].name;
+                    fileInfo.classList.remove('hidden');
+                } else {
+                    fileInfo.classList.add('hidden');
+                }
             });
 
-            // 4. FLATPICKR: KALENDER CUSTOM (Format Y-m-d H:i, Tanpa T)
-            // 1. Kunci dan beri efek abu-abu pada waktu kembali saat halaman pertama dimuat
+            // Format kontak +62
+            document.getElementById('kontak_pic').addEventListener('input', function () {
+                let v = this.value;
+                if (!v.startsWith('+62')) v = '+62' + v.replace(/[^0-9]/g, '');
+                else v = '+62' + v.substring(3).replace(/[^0-9]/g, '');
+                this.value = v;
+            });
+
+            // Flatpickr waktu kembali (disabled sampai berangkat diisi)
             const inputKembali = document.getElementById('waktu_kembali');
             inputKembali.disabled = true;
             inputKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
 
-            const fpKembali = flatpickr("#waktu_kembali", {
-                enableTime: true,
-                time_24hr: true,
-                dateFormat: "Y-m-d H:i",
-                locale: "id",
-                disableMobile: "true"
+            const fpKembali = flatpickr('#waktu_kembali', {
+                enableTime: true, time_24hr: true,
+                dateFormat: 'Y-m-d H:i', locale: 'id', disableMobile: true,
             });
 
-            const fpBerangkat = flatpickr("#waktu_berangkat", {
-                enableTime: true,
-                time_24hr: true,
-                dateFormat: "Y-m-d H:i",
-                minDate: new Date(), 
-                locale: "id",
-                disableMobile: "true",
-                onChange: function(selectedDates, dateStr, instance) {
-                    if(selectedDates.length > 0) {
-                        // BUKA KUNCI waktu kembali jika waktu berangkat sudah diisi
+            flatpickr('#waktu_berangkat', {
+                enableTime: true, time_24hr: true,
+                dateFormat: 'Y-m-d H:i', minDate: new Date(),
+                locale: 'id', disableMobile: true,
+                onChange: function (selectedDates, dateStr) {
+                    if (selectedDates.length > 0) {
                         inputKembali.disabled = false;
                         inputKembali.classList.remove('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
-                        
                         fpKembali.set('minDate', dateStr);
-                        
-                        let tKembali = document.getElementById('waktu_kembali').value;
-                        if(tKembali && tKembali <= dateStr) {
-                            showCustomAlert('Waktu kembali yang Anda pilih tidak valid. Harus lebih lambat dari waktu keberangkatan!');
-                            fpKembali.clear(); 
+                        const tK = document.getElementById('waktu_kembali').value;
+                        if (tK && tK <= dateStr) {
+                            showCustomAlert('Waktu kembali harus lebih lambat dari waktu keberangkatan!');
+                            fpKembali.clear();
                         }
                     } else {
-                        // KUNCI KEMBALI jika waktu berangkat dihapus
                         inputKembali.disabled = true;
                         inputKembali.classList.add('bg-gray-100', 'cursor-not-allowed', 'opacity-60');
                         fpKembali.clear();
                     }
-                }
+                },
             });
 
-            // Pengecekan Tambahan
-            document.getElementById('waktu_kembali').addEventListener('change', function() {
-                let tBerangkat = document.getElementById('waktu_berangkat').value;
-                if(tBerangkat && this.value <= tBerangkat) {
+            document.getElementById('waktu_kembali').addEventListener('change', function () {
+                const tB = document.getElementById('waktu_berangkat').value;
+                if (tB && this.value <= tB) {
                     showCustomAlert('Waktu kembali harus lebih lambat dari waktu keberangkatan!');
                     fpKembali.clear();
                 }

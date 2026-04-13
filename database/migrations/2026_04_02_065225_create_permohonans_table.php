@@ -26,7 +26,7 @@ return new class extends Migration
             $table->dateTime('waktu_kembali');
             $table->integer('jumlah_penumpang');
             $table->string('file_surat_penugasan'); // Path file PDF/JPG
-            $table->string('anggaran_diajukan');
+            $table->string('anggaran_diajukan')->nullable();
 
             // --- PROSES KEPALA ADMIN (LANGKAH 2) ---
             $table->enum('kategori_kegiatan', ['Dinas SITH', 'Non SITH'])->nullable();

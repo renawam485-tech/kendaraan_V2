@@ -117,7 +117,7 @@ class PermohonanController extends Controller
             'waktu_berangkat'      => 'required|date',
             'waktu_kembali'        => 'required|date|after:waktu_berangkat',
             'jumlah_penumpang'     => 'required|integer|min:1|max:60',
-            'anggaran_diajukan'    => 'nullable|numeric|min:0|max:500000000',
+            'anggaran_diajukan'    => 'nullable|string|max:500',
             'catatan_pemohon'      => 'nullable|string|max:500',
             'file_surat'           => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048',
         ], [
@@ -138,7 +138,7 @@ class PermohonanController extends Controller
             'waktu_berangkat'      => $request->waktu_berangkat,
             'waktu_kembali'        => $request->waktu_kembali,
             'jumlah_penumpang'     => $request->jumlah_penumpang,
-            'anggaran_diajukan'    => $request->anggaran_diajukan ?: 0,
+            'anggaran_diajukan'    => $request->anggaran_diajukan,
             'catatan_pemohon'      => $request->catatan_pemohon,
             'file_surat_penugasan' => $filePath,
             'status_permohonan'    => StatusPermohonan::MENUNGGU_VALIDASI_ADMIN,

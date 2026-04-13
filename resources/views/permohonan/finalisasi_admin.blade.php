@@ -24,7 +24,7 @@
                     @foreach([
                         ['Pemohon',          $permohonan->nama_pic . ' — ' . $permohonan->tujuan, 'bi-person'],
                         ['Kategori Dana',    $permohonan->kategori_kegiatan ?? '—',                'bi-tag'],
-                        ['Anggaran Diajukan','Rp ' . number_format($permohonan->anggaran_diajukan, 0, ',', '.'), 'bi-wallet'],
+                        ['Anggaran Diajukan','Rp ' . number_format((float)$permohonan->anggaran_diajukan, 0, ',', '.'), 'bi-wallet'],
                     ] as [$lbl, $val, $icon])
                         <div class="px-6 py-3.5 flex items-center justify-between">
                             <span class="text-sm text-gray-500 flex items-center gap-2"><i class="bi {{ $icon }} text-gray-400"></i>{{ $lbl }}</span>
