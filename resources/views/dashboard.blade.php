@@ -144,46 +144,55 @@
                                 @forelse($tugasTerbaru as $tugas)
                                     @php
                                         $role = Auth::user()->role;
+                                        // $status sekarang adalah objek Enum StatusPermohonan
                                         $status = $tugas->status_permohonan;
                                         $detailUrl = route('dashboard');
 
+                                        // PERBAIKAN: Gunakan perbandingan dengan Class Enum langsung atau ->value
                                         if ($role === 'kepala_admin') {
                                             $detailUrl =
-                                                $status === 'Menunggu Validasi Admin'
+                                                $status === \App\Enums\StatusPermohonan::MENUNGGU_VALIDASI_ADMIN
                                                     ? route('permohonan.validasi_admin', $tugas->id)
                                                     : route('permohonan.finalisasi_admin', $tugas->id);
                                         } elseif ($role === 'spsi') {
                                             $detailUrl = route('permohonan.proses_spsi', $tugas->id);
                                         } elseif ($role === 'keuangan') {
                                             $detailUrl =
-                                                $status === 'Menunggu Proses Keuangan'
+                                                $status === \App\Enums\StatusPermohonan::MENUNGGU_PROSES_KEUANGAN
                                                     ? route('permohonan.proses_keuangan', $tugas->id)
                                                     : route('permohonan.show', $tugas->id);
                                         }
 
+                                        // PERBAIKAN: Tambahkan ->value agar str_contains menerima string, bukan objek
                                         $badgeClass =
-                                            str_contains($status, 'Validasi') || str_contains($status, 'RAB')
+                                            str_contains($status->value, 'Validasi') ||
+                                            str_contains($status->value, 'RAB')
                                                 ? 'bg-blue-50 text-blue-700 border-blue-200'
                                                 : 'bg-orange-50 text-orange-700 border-orange-200';
                                     @endphp
                                     <tr class="bg-white border-b border-gray-50 hover:bg-gray-50 transition">
-                                        <td class="px-6 py-4 font-bold text-gray-800"><i
-                                                class="bi bi-person text-gray-400 mr-2"></i> {{ $tugas->nama_pic }}
+                                        <td class="px-6 py-4 font-bold text-gray-800">
+                                            <i class="bi bi-person text-gray-400 mr-2"></i> {{ $tugas->nama_pic }}
                                         </td>
                                         <td class="px-6 py-4">
-                                            <div class="flex items-center gap-2 text-gray-700"><i
-                                                    class="bi bi-geo-alt text-gray-400"></i> {{ $tugas->tujuan }}</div>
-                                            <div class="text-xs text-gray-500 mt-1 flex items-center gap-2"><i
-                                                    class="bi bi-calendar-event text-gray-400"></i>
+                                            <div class="flex items-center gap-2 text-gray-700">
+                                                <i class="bi bi-geo-alt text-gray-400"></i> {{ $tugas->tujuan }}
+                                            </div>
+                                            <div class="text-xs text-gray-500 mt-1 flex items-center gap-2">
+                                                <i class="bi bi-calendar-event text-gray-400"></i>
                                                 {{ \Carbon\Carbon::parse($tugas->waktu_berangkat)->format('d M Y H:i') }}
                                             </div>
                                         </td>
                                         <td class="px-6 py-4">
-                                            <span class="text-xs font-medium block mb-1"><i
-                                                    class="bi bi-clock-history text-gray-400 mr-1"></i>
-                                                {{ $tugas->updated_at->diffForHumans() }}</span>
+                                            <span class="text-xs font-medium block mb-1">
+                                                <i class="bi bi-clock-history text-gray-400 mr-1"></i>
+                                                {{ $tugas->updated_at->diffForHumans() }}
+                                            </span>
+                                            {{-- PERBAIKAN: Tampilkan nilai string dengan ->value --}}
                                             <span
-                                                class="px-2 py-0.5 border text-[10px] font-bold rounded {{ $badgeClass }}">{{ $status }}</span>
+                                                class="px-2 py-0.5 border text-[10px] font-bold rounded {{ $badgeClass }}">
+                                                {{ $status->value }}
+                                            </span>
                                         </td>
                                         <td class="px-6 py-4 text-center">
                                             <a href="{{ $detailUrl }}"

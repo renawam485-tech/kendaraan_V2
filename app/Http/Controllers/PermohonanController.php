@@ -324,7 +324,7 @@ class PermohonanController extends Controller
             ->orderBy('updated_at', 'desc')
             ->take(20)->get();
 
-        return view('spsi.serah_terima', compact(
+        return view('permohonan.serah_terima', compact(
             'pending', 'menungguMulai', 'berlangsung', 'menungguKonfirmasi', 'riwayat'
         ));
     }

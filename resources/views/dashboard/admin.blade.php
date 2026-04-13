@@ -5,8 +5,6 @@
         </h2>
     </x-slot>
 
-    @use('App\Enums\StatusPermohonan')
-
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
@@ -53,11 +51,12 @@
                                 <x-status-badge :status="$p->status_permohonan" />
                             </div>
                             <div class="mt-3 pl-8">
-                                @if($p->status_permohonan === StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
+                                {{-- PERBAIKAN: Menggunakan Namespace Lengkap --}}
+                                @if($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
                                     <a href="{{ route('permohonan.validasi_admin', $p->id) }}" class="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs transition">
                                         <i class="bi bi-check2-circle"></i> Validasi Sekarang
                                     </a>
-                                @elseif($p->status_permohonan === StatusPermohonan::MENUNGGU_FINALISASI)
+                                @elseif($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_FINALISASI)
                                     <a href="{{ route('permohonan.finalisasi_admin', $p->id) }}" class="w-full flex justify-center items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 rounded-lg text-xs transition">
                                         <i class="bi bi-file-earmark-check"></i> Finalisasi
                                     </a>
@@ -129,12 +128,13 @@
                                         <x-status-badge :status="$p->status_permohonan" />
                                     </td>
                                     <td class="px-4 py-3.5 text-center">
-                                        @if($p->status_permohonan === StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
+                                        {{-- PERBAIKAN: Menggunakan Namespace Lengkap --}}
+                                        @if($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
                                             <a href="{{ route('permohonan.validasi_admin', $p->id) }}"
                                                class="inline-flex items-center gap-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm transition">
                                                 <i class="bi bi-check2-circle"></i> Validasi
                                             </a>
-                                        @elseif($p->status_permohonan === StatusPermohonan::MENUNGGU_FINALISASI)
+                                        @elseif($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_FINALISASI)
                                             <a href="{{ route('permohonan.finalisasi_admin', $p->id) }}"
                                                class="inline-flex items-center gap-1 text-xs font-bold text-white bg-purple-600 hover:bg-purple-700 px-3 py-1.5 rounded-lg shadow-sm transition">
                                                 <i class="bi bi-file-earmark-check"></i> Finalisasi

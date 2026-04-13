@@ -11,13 +11,34 @@ class Permohonan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kode_permohonan', 'user_id', 'nama_pic', 'kontak_pic', 'kendaraan_dibutuhkan',
-        'titik_jemput', 'tujuan', 'waktu_berangkat', 'waktu_kembali',
-        'jumlah_penumpang', 'file_surat_penugasan', 'anggaran_diajukan', 'catatan_pemohon',
-        'kategori_kegiatan', 'rekomendasi_admin',
-        'kendaraan_id', 'pengemudi_id', 'estimasi_biaya_operasional',
-        'rab_disetujui', 'mekanisme_pembayaran', 'status_permohonan',
-        'waktu_serah_terima', 'waktu_mulai_perjalanan', 'waktu_kembali_aktual',
+        'kode_permohonan',
+        'user_id',
+        'nama_pic',
+        'kontak_pic',
+        'kendaraan_dibutuhkan',
+        'titik_jemput',
+        'tujuan',
+        'waktu_berangkat',
+        'waktu_kembali',
+        'jumlah_penumpang',
+        'file_surat_penugasan',
+        'anggaran_diajukan',
+        'catatan_pemohon',
+        'kategori_kegiatan',
+        'rekomendasi_admin',
+        'kendaraan_id',
+        'kendaraan_vendor_id',   // ← was missing
+        'pengemudi_id',
+        'estimasi_biaya_operasional',
+        'rab_disetujui',
+        'mekanisme_pembayaran',
+        'biaya_aktual',           // ← was missing
+        'bukti_lpj',              // ← was missing
+        'bukti_pengembalian',     // ← was missing
+        'status_permohonan',
+        'waktu_serah_terima',
+        'waktu_mulai_perjalanan',
+        'waktu_kembali_aktual',
     ];
 
     protected function casts(): array

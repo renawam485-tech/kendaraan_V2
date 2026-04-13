@@ -36,7 +36,7 @@
                 {{-- MOBILE --}}
                 <div class="block md:hidden divide-y divide-gray-100">
                     @forelse($permohonans as $i => $p)
-                        <x-status-badge :status="$p->status_permohonan" />
+                        @php $sc = $p->status_permohonan->badgeClass(); @endphp
                         <div class="p-4 hover:bg-slate-50 transition searchable-row"
                             data-search="{{ strtolower($p->nama_pic . ' ' . $p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . ($p->kategori_kegiatan ?? '')) }}">
                             <div class="flex items-start justify-between gap-2">
@@ -61,10 +61,10 @@
                                     </div>
                                 </div>
                                 <span
-                                    class="text-[10px] font-bold px-2 py-1 rounded-md border whitespace-nowrap {{ $sc }}">{{ $p->status_permohonan }}</span>
+                                    class="text-[10px] font-bold px-2 py-1 rounded-md border whitespace-nowrap {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                             </div>
                             <div class="mt-3 pl-8">
-                                @if ($p->status_permohonan === 'Menunggu Proses SPSI')
+                                @if ($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_PROSES_SPSI)
                                     <a href="{{ route('permohonan.proses_spsi', $p->id) }}"
                                         class="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg text-xs transition">
                                         <i class="bi bi-signpost-split"></i> Alokasi Armada
@@ -118,7 +118,7 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100">
                             @forelse($permohonans as $i => $p)
-                                <x-status-badge :status="$p->status_permohonan" />
+                                @php $sc = $p->status_permohonan->badgeClass(); @endphp
                                 <tr class="hover:bg-blue-50/20 transition-colors searchable-row"
                                     data-search="{{ strtolower($p->nama_pic . ' ' . $p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . ($p->kategori_kegiatan ?? '')) }}">
                                     <td class="px-4 py-3.5 text-center text-xs text-gray-400 font-semibold">
@@ -157,10 +157,10 @@
                                     </td>
                                     <td class="px-4 py-3.5">
                                         <span
-                                            class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $p->status_permohonan }}</span>
+                                            class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                                     </td>
                                     <td class="px-4 py-3.5 text-center">
-                                        @if ($p->status_permohonan === 'Menunggu Proses SPSI')
+                                        @if ($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_PROSES_SPSI)
                                             <a href="{{ route('permohonan.proses_spsi', $p->id) }}"
                                                 class="inline-flex items-center gap-1 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-lg shadow-sm transition">
                                                 <i class="bi bi-signpost-split"></i> Alokasi

@@ -34,12 +34,14 @@
                     </div>
                     <div>
                         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Armada Dialokasikan</p>
-                        @if($permohonan->kendaraan_id)
+                        @if($permohonan->kendaraan_id && $permohonan->kendaraan)
                             <p class="font-semibold text-gray-800 text-sm">{{ $permohonan->kendaraan->nama_kendaraan }}</p>
                             <p class="text-xs text-gray-500">{{ $permohonan->kendaraan->plat_nomor }}</p>
-                        @elseif($permohonan->kendaraan_vendor)
-                            <p class="font-semibold text-gray-800 text-sm">{{ $permohonan->kendaraan_vendor }}</p>
+                        @elseif($permohonan->kendaraanVendor)
+                            <p class="font-semibold text-gray-800 text-sm">{{ $permohonan->kendaraanVendor->nama_kendaraan }}</p>
                             <span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-100 px-1 rounded">VENDOR</span>
+                        @else
+                            <span class="text-gray-400 italic text-sm">—</span>
                         @endif
                     </div>
                     <div>
@@ -48,7 +50,7 @@
                     </div>
                     <div class="sm:col-span-2 bg-blue-50 border border-blue-200 rounded-xl p-4">
                         <p class="text-xs font-semibold text-blue-600 uppercase tracking-wider mb-1">Estimasi Biaya dari SPSI</p>
-                        <p class="text-2xl font-black text-gray-900">Rp {{ number_format($permohonan->estimasi_biaya_operasional,0,',','.') }}</p>
+                        <p class="text-2xl font-black text-gray-900">Rp {{ number_format($permohonan->estimasi_biaya_operasional, 0, ',', '.') }}</p>
                         <p class="text-xs text-blue-600 mt-0.5">Gunakan nilai ini sebagai acuan RAB atau sesuaikan di bawah</p>
                     </div>
                 </div>

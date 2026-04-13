@@ -3,13 +3,11 @@
     $user = Auth::user();
     $role = $user->role ?? 'guest';
     $isPengguna = $role === 'pengguna';
+
+    use App\Enums\StatusPermohonan;
 @endphp
 
 @if ($render === 'sidebar')
-    {{-- ========================================== --}}
-    {{-- RENDER 1: SIDEBAR (PUTIH & AKSEN BIRU)     --}}
-    {{-- ========================================== --}}
-
     <div x-show="sidebarOpen" x-transition.opacity class="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
         @click="sidebarOpen = false" x-cloak></div>
 
@@ -28,23 +26,41 @@
                 $cVal = 0;
                 $cFin = 0;
                 $cAlo = 0;
+                $cSerahTotal = 0;
                 $cRab = 0;
                 $cVer = 0;
+
                 if ($role === 'kepala_admin') {
-                    $cVal = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Validasi Admin')->count();
-                    $cFin = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Finalisasi')->count();
+                    $cVal = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_VALIDASI_ADMIN->value,
+                    )->count();
+                    $cFin = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_FINALISASI->value,
+                    )->count();
                 } elseif ($role === 'spsi') {
-                    $cAlo = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses SPSI')->count();
-                    $cSerah = \App\Models\Permohonan::where('status_permohonan', 'Disetujui')->count();
+                    $cAlo = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_PROSES_SPSI->value,
+                    )->count();
+                    $cSerah = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::DISETUJUI->value,
+                    )->count();
                     $cKonfirmasi = \App\Models\Permohonan::where(
                         'status_permohonan',
-                        'Menunggu Konfirmasi Kembali',
+                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI->value,
                     )->count();
+                    $cSerahTotal = $cSerah + $cKonfirmasi;
                 } elseif ($role === 'keuangan') {
-                    $cRab = \App\Models\Permohonan::where('status_permohonan', 'Menunggu Proses Keuangan')->count();
+                    $cRab = \App\Models\Permohonan::where(
+                        'status_permohonan',
+                        StatusPermohonan::MENUNGGU_PROSES_KEUANGAN->value,
+                    )->count();
                     $cVer = \App\Models\Permohonan::where(
                         'status_permohonan',
-                        'Menunggu Verifikasi Pengembalian',
+                        StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
                     )->count();
                 }
             @endphp
@@ -62,35 +78,33 @@
                 <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
                 <a href="{{ route('permohonan.create') }}" title="Buat Pengajuan Baru"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('permohonan.create') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-plus-square text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Buat Pengajuan</span>
+                    <i class="bi bi-plus-square text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Buat Pengajuan</span>
                 </a>
-            @endif
-
-            @if ($role === 'super_admin')
+            @elseif ($role === 'super_admin')
                 <div x-show="!sidebarCollapsed"
                     class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Master Data
                 </div>
                 <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
                 <a href="{{ route('superadmin.kendaraan.index') }}" title="Mobil Internal"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.kendaraan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-car-front text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Mobil Internal</span>
+                    <i class="bi bi-car-front text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Mobil Internal</span>
                 </a>
                 <a href="{{ route('superadmin.kendaraan_vendor.index') }}" title="Mobil Vendor"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.kendaraan_vendor.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-buildings text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Mobil Vendor</span>
+                    <i class="bi bi-buildings text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Mobil Vendor</span>
                 </a>
                 <a href="{{ route('superadmin.pengemudi.index') }}" title="Data Pengemudi"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.pengemudi.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-person-vcard text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Pengemudi</span>
+                    <i class="bi bi-person-vcard text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Pengemudi</span>
                 </a>
                 <a href="{{ route('superadmin.users.index') }}" title="Data Pengguna"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('superadmin.users.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-people text-lg w-8 text-center"></i><span x-show="!sidebarCollapsed"
-                        class="ml-3 whitespace-nowrap text-sm">Data Pengguna</span>
+                    <i class="bi bi-people text-lg w-8 text-center"></i>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Data Pengguna</span>
                 </a>
             @elseif($role === 'kepala_admin')
                 <div x-show="!sidebarCollapsed"
@@ -117,24 +131,11 @@
                     @endif
                 </a>
             @elseif($role === 'spsi')
-                @php
-                    $cAlo = \App\Models\Permohonan::where(
-                        'status_permohonan',
-                        StatusPermohonan::MENUNGGU_PROSES_SPSI,
-                    )->count();
-                    $cSerah = \App\Models\Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count();
-                    $cKonfirmasi = \App\Models\Permohonan::where(
-                        'status_permohonan',
-                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-                    )->count();
-                    $cSerahTotal = $cSerah + $cKonfirmasi;
-                @endphp
-
+                {{-- SATU set menu SPSI saja (bug lama: di-render 3x) --}}
                 <div x-show="!sidebarCollapsed"
                     class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
                 </div>
                 <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-
                 <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-truck-front text-lg w-8 text-center"></i>
@@ -145,7 +146,6 @@
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
                     @endif
                 </a>
-
                 <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-key-fill text-lg w-8 text-center"></i>
@@ -156,84 +156,6 @@
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerahTotal }}</span>
                     @endif
                 </a>
-
-                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
-                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-binoculars text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Pantauan & Riwayat</span>
-                </a>
-                @php
-                    $cAlo = \App\Models\Permohonan::where(
-                        'status_permohonan',
-                        StatusPermohonan::MENUNGGU_PROSES_SPSI,
-                    )->count();
-                    $cSerah = \App\Models\Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count();
-                    $cKonfirmasi = \App\Models\Permohonan::where(
-                        'status_permohonan',
-                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-                    )->count();
-                    $cSerahTotal = $cSerah + $cKonfirmasi;
-                @endphp
-
-                <div x-show="!sidebarCollapsed"
-                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
-                </div>
-                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-
-                <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
-                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-truck-front text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
-                        Armada</span>
-                    @if ($cAlo > 0)
-                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
-                    @endif
-                </a>
-
-                <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
-                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-key-fill text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
-                        Kunci</span>
-                    @if ($cSerahTotal > 0)
-                        <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerahTotal }}</span>
-                    @endif
-                </a>
-
-                <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
-                    class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-binoculars text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Pantauan & Riwayat</span>
-                </a>
-                <div x-show="!sidebarCollapsed"
-                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Operasional
-                </div>
-                <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-
-                <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
-                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-truck-front text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
-                        Armada</span>
-                    @if ($cAlo > 0)
-                        <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
-                    @endif
-                </a>
-
-                <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
-                    class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                    <i class="bi bi-key-fill text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
-                        Kunci</span>
-                    @if ($cSerah + $cKonfirmasi > 0)
-                        <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerah + $cKonfirmasi }}</span>
-                    @endif
-                </a>
-
                 <a href="{{ route('spsi.monitoring') }}" title="Pantauan Armada"
                     class="flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-binoculars text-lg w-8 text-center"></i>
@@ -241,8 +163,7 @@
                 </a>
             @elseif($role === 'keuangan')
                 <div x-show="!sidebarCollapsed"
-                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Keuangan
-                </div>
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Keuangan</div>
                 <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
                 <a href="{{ route('keuangan.rab') }}" title="Persetujuan RAB"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('keuangan.rab') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
@@ -279,7 +200,6 @@
             </a>
         </nav>
 
-        {{-- FOOTER SIDEBAR --}}
         <div class="border-t border-gray-100 py-3 mt-auto">
             <a href="{{ route('bantuan.index') }}" title="Pusat Bantuan"
                 class="flex items-center px-6 py-3 text-gray-500 hover:bg-gray-50 hover:text-blue-600 transition">
@@ -289,9 +209,6 @@
         </div>
     </aside>
 @elseif($render === 'topbar')
-    {{-- ========================================== --}}
-    {{-- RENDER 2: TOP NAVBAR (PUTIH & FULL WIDTH)  --}}
-    {{-- ========================================== --}}
     <header
         class="bg-white border-b border-gray-200 shadow-sm fixed top-0 left-0 w-full z-50 h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8">
 
@@ -323,11 +240,8 @@
         </div>
 
         <div class="flex items-center gap-3 sm:gap-5">
-
-            {{-- KEMBALIKAN LOGIKA ALPINE.JS UNTUK NOTIFIKASI REAL-TIME --}}
             <div x-data="{ unreadCount: {{ auth()->check() ? auth()->user()->unreadNotifications->count() : 0 }} }" @increase-badge.window="unreadCount++"
                 @decrease-badge.window="if(unreadCount > 0) unreadCount--" @clear-badge.window="unreadCount = 0">
-
                 <button @click="$dispatch('open-notif-panel')"
                     class="p-2 text-gray-500 hover:text-blue-700 bg-gray-50 hover:bg-blue-50 rounded-full transition relative border border-gray-200 focus:outline-none">
                     <i class="bi bi-bell text-lg"></i>

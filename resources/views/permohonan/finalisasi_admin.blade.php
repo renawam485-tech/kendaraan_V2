@@ -22,25 +22,31 @@
                 </div>
                 <div class="divide-y divide-gray-100">
                     @foreach([
-                        ['Pemohon',          $permohonan->nama_pic . ' — ' . $permohonan->tujuan,    'bi-person'],
-                        ['Kategori Dana',    $permohonan->kategori_kegiatan ?? '—',                  'bi-tag'],
-                        ['Anggaran Diajukan','Rp ' . number_format($permohonan->anggaran_diajukan,0,',','.'), 'bi-wallet'],
-                    ] as [$lbl,$val,$icon])
+                        ['Pemohon',          $permohonan->nama_pic . ' — ' . $permohonan->tujuan, 'bi-person'],
+                        ['Kategori Dana',    $permohonan->kategori_kegiatan ?? '—',                'bi-tag'],
+                        ['Anggaran Diajukan','Rp ' . number_format($permohonan->anggaran_diajukan, 0, ',', '.'), 'bi-wallet'],
+                    ] as [$lbl, $val, $icon])
                         <div class="px-6 py-3.5 flex items-center justify-between">
                             <span class="text-sm text-gray-500 flex items-center gap-2"><i class="bi {{ $icon }} text-gray-400"></i>{{ $lbl }}</span>
                             <span class="text-sm font-semibold text-gray-800">{{ $val }}</span>
                         </div>
                     @endforeach
+
+                    {{-- Kendaraan: gunakan relasi, bukan kolom string lama --}}
                     <div class="px-6 py-3.5 flex items-center justify-between">
                         <span class="text-sm text-gray-500 flex items-center gap-2"><i class="bi bi-car-front text-gray-400"></i>Kendaraan</span>
                         <span class="text-sm font-semibold text-gray-800">
-                            @if($permohonan->kendaraan_id)
+                            @if($permohonan->kendaraan_id && $permohonan->kendaraan)
                                 {{ $permohonan->kendaraan->nama_kendaraan }} ({{ $permohonan->kendaraan->plat_nomor }})
+                            @elseif($permohonan->kendaraanVendor)
+                                {{ $permohonan->kendaraanVendor->nama_kendaraan }}
+                                <span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded ml-1">VENDOR</span>
                             @else
-                                {{ $permohonan->kendaraan_vendor }} <span class="text-[10px] font-bold text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded ml-1">VENDOR</span>
+                                <span class="text-gray-400 italic">—</span>
                             @endif
                         </span>
                     </div>
+
                     <div class="px-6 py-3.5 flex items-center justify-between">
                         <span class="text-sm text-gray-500 flex items-center gap-2"><i class="bi bi-person-badge text-gray-400"></i>Pengemudi</span>
                         <span class="text-sm font-semibold text-gray-800">{{ $permohonan->pengemudi->nama_pengemudi ?? 'Tanpa Pengemudi' }}</span>
