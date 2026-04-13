@@ -123,5 +123,7 @@ class DatabaseSeeder extends Seeder
             'kontak'          => '+6281234567890',
             'status_pengemudi'=> 'Tersedia',
         ]);
+
+        $this->call(PermohonanSeeder::class);
     }
 }

@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PermohonanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         /** @var \App\Models\User $user */
         $user = Auth::user();
@@ -24,8 +24,24 @@ class PermohonanController extends Controller
         }
 
         if ($user->role === 'pengguna') {
-            $permohonans = Permohonan::where('user_id', $user->id)
-                ->orderBy('created_at', 'desc')->get();
+            $search = $request->query('search');
+
+            $query = Permohonan::where('user_id', $user->id);
+
+            // Jika ada input pencarian
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('tujuan', 'like', "%{$search}%")
+                        ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                        ->orWhere('titik_jemput', 'like', "%{$search}%");
+                });
+            }
+
+            $permohonans = $query->orderBy('created_at', 'desc')->paginate(5);
+
+            // Penting: tambahkan appends agar saat pindah halaman, kata kunci pencariannya tidak hilang
+            $permohonans->appends(['search' => $search]);
+
             return view('dashboard.pengguna', compact('permohonans'));
         }
 
@@ -47,7 +63,6 @@ class PermohonanController extends Controller
             ))->orderBy('updated_at', 'desc')->take(10)->get();
 
             $ruteTugas = ($cFin > $cVal) ? route('admin.finalisasi') : route('admin.validasi');
-
         } elseif ($user->role === 'spsi') {
             $stats['menunggu_alokasi'] = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_SPSI)->count();
             $stats['mobil_tersedia']   = Kendaraan::where('status_kendaraan', 'Tersedia')->count();
@@ -57,7 +72,6 @@ class PermohonanController extends Controller
                 ->orderBy('updated_at', 'desc')->take(10)->get();
 
             $ruteTugas = route('spsi.alokasi');
-
         } elseif ($user->role === 'keuangan') {
             $cRab = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_PROSES_KEUANGAN)->count();
             $cVer = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI)->count();
@@ -179,8 +193,10 @@ class PermohonanController extends Controller
         $statusBaru = StatusPermohonan::from($request->status_permohonan);
         $anggaranAktual = $permohonan->anggaran_diajukan;
 
-        if ($statusBaru === StatusPermohonan::MENUNGGU_PROSES_SPSI
-            && $request->kategori_kegiatan === 'Non SITH') {
+        if (
+            $statusBaru === StatusPermohonan::MENUNGGU_PROSES_SPSI
+            && $request->kategori_kegiatan === 'Non SITH'
+        ) {
             $anggaranAktual = 0;
         }
 
@@ -239,7 +255,7 @@ class PermohonanController extends Controller
             'permohonan'      => Permohonan::findOrFail($id),
             'kendaraans'      => Kendaraan::where('status_kendaraan', 'Tersedia')->get(),
             'pengemudis'      => Pengemudi::where('status_pengemudi', 'Tersedia')->get(),
-            'kendaraanVendors'=> KendaraanVendor::where('status_kendaraan', 'Tersedia')->get(),
+            'kendaraanVendors' => KendaraanVendor::where('status_kendaraan', 'Tersedia')->get(),
         ]);
     }
 
@@ -325,7 +341,11 @@ class PermohonanController extends Controller
             ->take(20)->get();
 
         return view('permohonan.serah_terima', compact(
-            'pending', 'menungguMulai', 'berlangsung', 'menungguKonfirmasi', 'riwayat'
+            'pending',
+            'menungguMulai',
+            'berlangsung',
+            'menungguKonfirmasi',
+            'riwayat'
         ));
     }
 

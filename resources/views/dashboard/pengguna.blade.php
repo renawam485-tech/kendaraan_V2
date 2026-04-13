@@ -15,21 +15,28 @@
             {{-- STATS STRIP --}}
             @php
                 // Menggunakan Fully Qualified Class Name (FQCN) untuk menghindari ParseError scope
-                $total   = $permohonans->count();
-                $proses  = $permohonans->filter(fn($p) => $p->status_permohonan->isActive())->count();
-                $selesai = $permohonans->filter(fn($p) => $p->status_permohonan === \App\Enums\StatusPermohonan::SELESAI)->count();
-                $ditolak = $permohonans->filter(fn($p) => $p->status_permohonan === \App\Enums\StatusPermohonan::DITOLAK)->count();
+                $totalAktif = $permohonans->count();
+                $proses = $permohonans->filter(fn($p) => $p->status_permohonan->isActive())->count();
+                $selesai = $permohonans
+                    ->filter(fn($p) => $p->status_permohonan === \App\Enums\StatusPermohonan::SELESAI)
+                    ->count();
+                $ditolak = $permohonans
+                    ->filter(fn($p) => $p->status_permohonan === \App\Enums\StatusPermohonan::DITOLAK)
+                    ->count();
+                // TAMBAHKAN INI: Filter untuk tabel pengajuan aktif
+                $permohonanAktif = $permohonans->filter(function ($p) {
+                    return $p->status_permohonan !== \App\Enums\StatusPermohonan::SELESAI &&
+                        $p->status_permohonan !== \App\Enums\StatusPermohonan::DITOLAK;
+                });
+                $totalAktif = $permohonanAktif->count();
             @endphp
-            
+
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
-                @foreach ([
-                    ['Total Pengajuan',  $total,   'bi-journals',        'text-blue-600',   'bg-blue-50'],
-                    ['Dalam Proses',     $proses,  'bi-hourglass-split', 'text-amber-600',  'bg-amber-50'],
-                    ['Selesai',          $selesai, 'bi-patch-check-fill','text-emerald-600','bg-emerald-50'],
-                    ['Ditolak',          $ditolak, 'bi-x-octagon',       'text-red-500',    'bg-red-50'],
-                ] as [$lbl, $val, $icon, $tc, $bg])
-                    <div class="bg-white rounded-xl border border-gray-200 px-4 py-3.5 flex items-center gap-3 shadow-sm">
-                        <div class="w-10 h-10 rounded-lg {{ $bg }} flex items-center justify-center flex-shrink-0">
+                @foreach ([['Total Pengajuan', $totalAktif, 'bi-journals', 'text-blue-600', 'bg-blue-50'], ['Dalam Proses', $proses, 'bi-hourglass-split', 'text-amber-600', 'bg-amber-50'], ['Selesai', $selesai, 'bi-patch-check-fill', 'text-emerald-600', 'bg-emerald-50'], ['Ditolak', $ditolak, 'bi-x-octagon', 'text-red-500', 'bg-red-50']] as [$lbl, $val, $icon, $tc, $bg])
+                    <div
+                        class="bg-white rounded-xl border border-gray-200 px-4 py-3.5 flex items-center gap-3 shadow-sm">
+                        <div
+                            class="w-10 h-10 rounded-lg {{ $bg }} flex items-center justify-center flex-shrink-0">
                             <i class="bi {{ $icon }} {{ $tc }} text-lg"></i>
                         </div>
                         <div>
@@ -42,37 +49,52 @@
 
             {{-- TABEL --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div
+                    class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                        <i class="bi bi-clock-history text-blue-600"></i>
-                        Riwayat Pengajuan Saya
-                        <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full" id="countBadge">{{ $total }} data</span>
+                        <i class="bi bi-activity text-blue-600"></i>
+                        Pengajuan Aktif Saat Ini
+                        <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full"
+                            id="countBadge">
+                            {{ $totalAktif }} data
+                        </span>
                     </h3>
                     <div class="relative w-full sm:w-72">
-                        <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
-                        <input type="text" id="searchInput" placeholder="Cari tujuan, kode, status..."
-                            class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white">
+                        <i
+                            class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                        <form action="{{ route('dashboard') }}" method="GET" class="relative w-full sm:w-72">
+                            <i
+                                class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                            <input type="text" name="search" id="searchInput" value="{{ request('search') }}"
+                                placeholder="Cari & tekan Enter..."
+                                class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50">
+                        </form>
                     </div>
                 </div>
 
                 {{-- MOBILE CARDS --}}
                 <div class="block md:hidden divide-y divide-gray-100" id="mobileList">
-                    @forelse($permohonans as $i => $p)
+                    @forelse($permohonanAktif as $i => $p)
                         @php $sc = $p->status_permohonan->badgeClass(); @endphp
                         <div class="p-4 hover:bg-slate-50 transition-colors searchable-row"
                             data-search="{{ strtolower($p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . $p->status_permohonan->value) }}">
                             <div class="flex items-start justify-between gap-2">
                                 <div class="flex items-start gap-2 min-w-0">
-                                    <span class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-500 text-xs font-bold rounded-md flex items-center justify-center mt-0.5">{{ $i + 1 }}</span>
+                                    <span
+                                        class="flex-shrink-0 w-6 h-6 bg-slate-100 text-slate-500 text-xs font-bold rounded-md flex items-center justify-center mt-0.5">{{ $i + 1 }}</span>
                                     <div class="min-w-0">
                                         @if ($p->kode_permohonan)
-                                            <span class="text-[10px] font-black text-blue-700 tracking-widest bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded block w-fit mb-1">{{ $p->kode_permohonan }}</span>
+                                            <span
+                                                class="text-[10px] font-black text-blue-700 tracking-widest bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded block w-fit mb-1">{{ $p->kode_permohonan }}</span>
                                         @endif
                                         <p class="font-semibold text-sm text-gray-800 truncate">{{ $p->tujuan }}</p>
-                                        <p class="text-xs text-gray-500 mt-0.5"><i class="bi bi-calendar2-event mr-1"></i>{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y, H:i') }}</p>
+                                        <p class="text-xs text-gray-500 mt-0.5"><i
+                                                class="bi bi-calendar2-event mr-1"></i>{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y, H:i') }}
+                                        </p>
                                     </div>
                                 </div>
-                                <span class="text-[10px] font-bold px-2 py-1 rounded-md border whitespace-nowrap flex-shrink-0 {{ $sc }}">{{ $p->status_permohonan->value }}</span>
+                                <span
+                                    class="text-[10px] font-bold px-2 py-1 rounded-md border whitespace-nowrap flex-shrink-0 {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                             </div>
                             <div class="flex gap-2 mt-3 pl-8">
                                 <a href="{{ route('permohonan.show', $p->id) }}"
@@ -90,8 +112,10 @@
                     @empty
                         <div class="py-16 text-center text-gray-400">
                             <i class="bi bi-journal-x text-5xl block mb-3 text-gray-300"></i>
-                            <p class="font-medium text-gray-500">Belum ada riwayat pengajuan</p>
-                            <a href="{{ route('permohonan.create') }}" class="mt-3 inline-block text-sm text-blue-600 hover:underline font-bold">Buat pengajuan pertama →</a>
+                            <p class="font-medium text-gray-500">Belum ada pengajuan aktif</p>
+                            <a href="{{ route('permohonan.create') }}"
+                                class="mt-3 inline-block text-sm text-blue-600 hover:underline font-bold">Buat pengajuan
+                                pertama →</a>
                         </div>
                     @endforelse
                 </div>
@@ -101,49 +125,72 @@
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="bg-slate-50 border-b border-gray-200">
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">No</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kode</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Tujuan Kegiatan</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Jadwal</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kendaraan</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
-                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
+                                <th
+                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">
+                                    No</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Kode</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Tujuan Kegiatan</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Jadwal</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Kendaraan</th>
+                                <th
+                                    class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Status</th>
+                                <th
+                                    class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @forelse($permohonans as $i => $p)
+                            @forelse($permohonanAktif as $i => $p)
                                 @php $sc = $p->status_permohonan->badgeClass(); @endphp
                                 <tr class="hover:bg-blue-50/20 transition-colors searchable-row"
                                     data-search="{{ strtolower($p->tujuan . ' ' . ($p->kode_permohonan ?? '') . ' ' . $p->status_permohonan->value . ' ' . ($p->nama_pic ?? '')) }}">
-                                    <td class="px-4 py-3.5 text-center text-xs text-gray-400 font-semibold">{{ $i + 1 }}</td>
+                                    <td class="px-4 py-3.5 text-center text-xs text-gray-400 font-semibold">
+                                        {{ $i + 1 }}</td>
                                     <td class="px-4 py-3.5">
                                         @if ($p->kode_permohonan)
-                                            <span class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap">{{ $p->kode_permohonan }}</span>
+                                            <span
+                                                class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap">{{ $p->kode_permohonan }}</span>
                                         @else
                                             <span class="text-gray-300">—</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3.5">
                                         <p class="font-semibold text-gray-800">{{ $p->tujuan }}</p>
-                                        <p class="text-xs text-gray-400 mt-0.5"><i class="bi bi-geo-alt mr-0.5"></i>{{ $p->titik_jemput }}</p>
+                                        <p class="text-xs text-gray-400 mt-0.5"><i
+                                                class="bi bi-geo-alt mr-0.5"></i>{{ $p->titik_jemput }}</p>
                                     </td>
                                     <td class="px-4 py-3.5 whitespace-nowrap">
-                                        <p class="text-gray-700 font-medium">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y') }}</p>
-                                        <p class="text-xs text-gray-400">{{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('H:i') }} WIB</p>
+                                        <p class="text-gray-700 font-medium">
+                                            {{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d M Y') }}</p>
+                                        <p class="text-xs text-gray-400">
+                                            {{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('H:i') }} WIB</p>
                                     </td>
                                     <td class="px-4 py-3.5 text-gray-600 text-xs">
                                         @if ($p->kendaraan_id)
-                                            <p class="font-medium text-gray-700">{{ $p->kendaraan->nama_kendaraan }}</p>
+                                            <p class="font-medium text-gray-700">{{ $p->kendaraan->nama_kendaraan }}
+                                            </p>
                                             <p class="text-gray-400">{{ $p->kendaraan->plat_nomor }}</p>
                                         @elseif($p->kendaraanVendor)
-                                            <p class="font-medium text-gray-700">{{ $p->kendaraanVendor->nama_kendaraan }}</p>
-                                            <span class="text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded text-[10px] font-bold">VENDOR</span>
+                                            <p class="font-medium text-gray-700">
+                                                {{ $p->kendaraanVendor->nama_kendaraan }}</p>
+                                            <span
+                                                class="text-orange-600 bg-orange-50 border border-orange-200 px-1 rounded text-[10px] font-bold">VENDOR</span>
                                         @else
                                             <span class="text-gray-400 italic">Menunggu alokasi</span>
                                         @endif
                                     </td>
                                     <td class="px-4 py-3.5">
-                                        <span class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
+                                        <span
+                                            class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                                     </td>
                                     <td class="px-4 py-3.5">
                                         <div class="flex items-center justify-center gap-1.5">
@@ -164,8 +211,10 @@
                                 <tr>
                                     <td colspan="7" class="py-16 text-center">
                                         <i class="bi bi-journal-x text-5xl block mb-3 text-gray-300"></i>
-                                        <p class="font-medium text-gray-500">Belum ada riwayat pengajuan</p>
-                                        <a href="{{ route('permohonan.create') }}" class="mt-2 inline-block text-sm text-blue-600 hover:underline font-bold">Buat pengajuan pertama →</a>
+                                        <p class="font-medium text-gray-500">Belum ada pengajuan aktif</p>
+                                        <a href="{{ route('permohonan.create') }}"
+                                            class="mt-2 inline-block text-sm text-blue-600 hover:underline font-bold">Buat
+                                            pengajuan pertama →</a>
                                     </td>
                                 </tr>
                             @endforelse
@@ -174,25 +223,74 @@
                 </div>
 
                 <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
-                    <p class="text-xs text-gray-400" id="tableInfo">Menampilkan {{ $total }} data</p>
-                    <p class="text-xs text-gray-400">{{ now()->format('d M Y, H:i') }}</p>
+                    <p class="text-xs text-gray-400" id="tableInfo">Menampilkan {{ $totalAktif }} data</p>
+                    <div class="flex items-center gap-2">
+                        @if ($permohonans->onFirstPage())
+                            <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                <i class="bi bi-chevron-left"></i>
+                            </span>
+                        @else
+                            <a href="{{ $permohonans->previousPageUrl() }}"
+                                class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="bi bi-chevron-left"></i>
+                            </a>
+                        @endif
+
+                        {{-- Nomor Halaman (Hanya tampil di Desktop) --}}
+                        <div class="hidden md:flex items-center gap-1">
+                            @foreach ($permohonans->getUrlRange(max(1, $permohonans->currentPage() - 1), min($permohonans->lastPage(), $permohonans->currentPage() + 1)) as $page => $url)
+                                <a href="{{ $url }}"
+                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold transition-all {{ $page == $permohonans->currentPage() ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:bg-gray-100' }}">
+                                    {{ $page }}
+                                </a>
+                            @endforeach
+                        </div>
+
+                        @if ($permohonans->hasMorePages())
+                            <a href="{{ $permohonans->nextPageUrl() }}"
+                                class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                <i class="bi bi-chevron-right"></i>
+                            </a>
+                        @else
+                            <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                <i class="bi bi-chevron-right"></i>
+                            </span>
+                        @endif
+                    </div>
+                    <p class="text-xs text-gray-400" id="realtimeClock"></p>
                 </div>
             </div>
         </div>
     </div>
 
     <script>
-        document.getElementById('searchInput').addEventListener('input', function() {
-            const q = this.value.toLowerCase().trim();
-            let vis = 0;
-            document.querySelectorAll('.searchable-row').forEach(r => {
-                const show = !q || r.dataset.search.includes(q);
-                r.style.display = show ? '' : 'none';
-                if (show) vis++;
-            });
-            const total = {{ $total }};
-            document.getElementById('tableInfo').textContent = q ? `Menampilkan ${vis} dari ${total} data` : `Menampilkan ${total} data`;
-            document.getElementById('countBadge').textContent = q ? `${vis} data` : `${total} data`;
-        });
+        const searchInput = document.getElementById('searchInput');
+
+        // 1. LOGIKA INFO TEKS (Hanya menampilkan status pencarian)
+        if (searchInput.value.trim() !== "") {
+            // Jika ada kata kunci, beri tahu user bahwa ini hasil filter server
+            const total = {{ $permohonans->total() }};
+            document.getElementById('tableInfo').textContent =
+                `Ditemukan ${total} data untuk pencarian "${searchInput.value}"`;
+        }
+
+        // --- 2. LOGIKA JAM REAL-TIME (Tetap dipertahankan) ---
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const formatted = now.toLocaleString('id-ID', options).replace(/\./g, ':');
+            const clockElement = document.getElementById('realtimeClock');
+            if (clockElement) clockElement.textContent = formatted + " WIB";
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
     </script>
 </x-app-layout>
