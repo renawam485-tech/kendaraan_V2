@@ -6,15 +6,6 @@
     </x-slot>
 
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            @if (session('success'))
-                <div
-                    class="mb-5 bg-emerald-50 border border-emerald-200 text-emerald-800 px-4 py-3 rounded-xl flex items-center gap-3 shadow-sm">
-                    <i class="bi bi-check-circle-fill text-emerald-500 text-lg flex-shrink-0"></i>
-                    <p class="text-sm font-semibold">{{ session('success') }}</p>
-                </div>
-            @endif
 
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div

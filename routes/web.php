@@ -48,7 +48,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================
     Route::middleware(['role:spsi'])->group(function () {
         Route::get('/spsi/alokasi', [PermohonanController::class, 'spsiAlokasi'])->name('spsi.alokasi');
-        Route::get('/spsi/monitoring', [PermohonanController::class, 'spsiMonitoring'])->name('spsi.monitoring');
         Route::get('/spsi/serah-terima', [PermohonanController::class, 'spsiSerahTerima'])->name('spsi.serah_terima');
         Route::put('/permohonan/{id}/serah-terima-kunci', [PermohonanController::class, 'serahTerimaKunci'])->name('permohonan.serah_terima_kunci');
         Route::get('/permohonan/{id}/proses-spsi', [PermohonanController::class, 'prosesSpsiForm'])->name('permohonan.proses_spsi');

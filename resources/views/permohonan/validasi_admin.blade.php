@@ -119,11 +119,12 @@
 
                         <div class="flex items-center gap-3 pt-2">
                             <button type="submit" name="status_permohonan" value="Menunggu Proses SPSI"
+                                onclick="customConfirm({ title: 'Setujui Permohonan', message: 'Yakin menyetujui permohonan ini dan meneruskannya ke SPSI?', confirmText: 'Ya, Setujui' }, () => this.closest('form').submit())"
                                 class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition text-sm">
                                 <i class="bi bi-check2-circle"></i> Setujui & Teruskan ke SPSI
                             </button>
                             <button type="submit" name="status_permohonan" value="Ditolak"
-                                onclick="return confirm('Yakin ingin MENOLAK permohonan ini?')"
+                                onclick="customConfirm({ title: 'Tolak Pengajuan', message: 'Yakin ingin MENOLAK permohonan ini?', confirmText: 'Ya, Tolak', isDanger: true }, () => this.closest('form').submit())"
                                 class="inline-flex items-center gap-2 bg-white hover:bg-red-50 text-red-600 border border-red-300 font-bold py-2.5 px-6 rounded-lg transition text-sm">
                                 <i class="bi bi-x-circle"></i> Tolak Pengajuan
                             </button>

@@ -325,43 +325,56 @@ class PermohonanController extends Controller
     // SPSI — SERAH TERIMA
     // ─────────────────────────────────────────────────────────────
 
-    public function spsiSerahTerima()
+    public function spsiSerahTerima(Request $request)
     {
         $with = ['kendaraan', 'kendaraanVendor', 'pengemudi', 'user'];
+        $tab = $request->query('tab', 'pending');
+        $search = $request->query('search');
 
-        $pending = Permohonan::with($with)
-            ->where('status_permohonan', StatusPermohonan::DISETUJUI)
-            ->orderBy('waktu_berangkat', 'asc')->get();
-
-        $menungguMulai = Permohonan::with($with)
-            ->where('status_permohonan', StatusPermohonan::MENUNGGU_MULAI_PERJALANAN)
-            ->orderBy('waktu_serah_terima', 'desc')->get();
-
-        $berlangsung = Permohonan::with($with)
-            ->where('status_permohonan', StatusPermohonan::PERJALANAN_BERLANGSUNG)
-            ->orderBy('waktu_mulai_perjalanan', 'desc')->get();
-
-        $menungguKonfirmasi = Permohonan::with($with)
-            ->where('status_permohonan', StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI)
-            ->orderBy('waktu_kembali_aktual', 'desc')->get();
-
-        $riwayat = Permohonan::with($with)
+        $pendingQuery = Permohonan::with($with)->where('status_permohonan', StatusPermohonan::DISETUJUI);
+        $menungguMulaiQuery = Permohonan::with($with)->where('status_permohonan', StatusPermohonan::MENUNGGU_MULAI_PERJALANAN);
+        $berlangsungQuery = Permohonan::with($with)->where('status_permohonan', StatusPermohonan::PERJALANAN_BERLANGSUNG);
+        $menungguKonfirmasiQuery = Permohonan::with($with)->where('status_permohonan', StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI);
+        $riwayatQuery = Permohonan::with($with)
             ->whereIn('status_permohonan', StatusPermohonan::values(
                 StatusPermohonan::MENUNGGU_PENYELESAIAN,
                 StatusPermohonan::SELESAI,
                 StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
                 StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
             ))
-            ->whereNotNull('waktu_serah_terima')
-            ->orderBy('updated_at', 'desc')
-            ->take(20)->get();
+            ->whereNotNull('waktu_serah_terima');
+
+        if ($search) {
+            $searchTerm = '%' . $search . '%';
+            $searchCallback = function ($q) use ($searchTerm) {
+                $q->where('kode_permohonan', 'like', $searchTerm)
+                    ->orWhere('nama_pic', 'like', $searchTerm)
+                    ->orWhere('tujuan', 'like', $searchTerm);
+            };
+
+            match ($tab) {
+                'pending' => $pendingQuery->where($searchCallback),
+                'menunggu' => $menungguMulaiQuery->where($searchCallback),
+                'berlangsung' => $berlangsungQuery->where($searchCallback),
+                'konfirmasi' => $menungguKonfirmasiQuery->where($searchCallback),
+                'riwayat' => $riwayatQuery->where($searchCallback),
+                default => null,
+            };
+        }
+
+        $pending = $pendingQuery->orderBy('waktu_berangkat', 'asc')->paginate(10, ['*'], 'pending_page');
+        $menungguMulai = $menungguMulaiQuery->orderBy('waktu_serah_terima', 'desc')->paginate(10, ['*'], 'menunggu_page');
+        $berlangsung = $berlangsungQuery->orderBy('waktu_mulai_perjalanan', 'desc')->paginate(10, ['*'], 'berlangsung_page');
+        $menungguKonfirmasi = $menungguKonfirmasiQuery->orderBy('waktu_kembali_aktual', 'desc')->paginate(10, ['*'], 'konfirmasi_page');
+        $riwayat = $riwayatQuery->orderBy('updated_at', 'desc')->paginate(10, ['*'], 'riwayat_page');
 
         return view('permohonan.serah_terima', compact(
             'pending',
             'menungguMulai',
             'berlangsung',
             'menungguKonfirmasi',
-            'riwayat'
+            'riwayat',
+            'tab'
         ));
     }
 

@@ -492,8 +492,8 @@
                             <form action="{{ route('permohonan.mulai_perjalanan', $permohonan->id) }}"
                                 method="POST">
                                 @csrf @method('PUT')
-                                <button type="submit"
-                                    onclick="return confirm('Konfirmasi: kunci sudah dipegang dan siap berangkat?')"
+                                <button type="button"
+                                    onclick="customConfirm({ title: 'Mulai Perjalanan', message: 'Konfirmasi: kunci sudah dipegang dan siap berangkat?', confirmText: 'Ya, Mulai Perjalanan' }, () => this.closest('form').submit())"
                                     class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
                                     <i class="bi bi-play-fill"></i> Mulai Perjalanan Sekarang
                                 </button>
@@ -511,8 +511,8 @@
                             @endif
                             <form action="{{ route('permohonan.lapor_kembali', $permohonan->id) }}" method="POST">
                                 @csrf @method('PUT')
-                                <button type="submit"
-                                    onclick="return confirm('Konfirmasi: perjalanan selesai dan kendaraan sudah diserahkan kembali ke SPSI?')"
+                                <button type="button"
+                                    onclick="customConfirm({ title: 'Lapor Kembali', message: 'Konfirmasi: perjalanan selesai dan kendaraan sudah diserahkan kembali ke SPSI?', confirmText: 'Ya, Sudah Kembali' }, () => this.closest('form').submit())"
                                     class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
                                     <i class="bi bi-arrow-return-left"></i> Konfirmasi Saya Sudah Kembali
                                 </button>
@@ -531,8 +531,8 @@
                             <form action="{{ route('permohonan.konfirmasi_kembali', $permohonan->id) }}"
                                 method="POST">
                                 @csrf @method('PUT')
-                                <button type="submit"
-                                    onclick="return confirm('Konfirmasi kendaraan sudah kembali dan dalam kondisi baik?')"
+                                <button type="button"
+                                    onclick="customConfirm({ title: 'Konfirmasi Penerimaan', message: 'Konfirmasi kendaraan sudah kembali dan dalam kondisi baik?', confirmText: 'Ya, Konfirmasi' }, () => this.closest('form').submit())"
                                     class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
                                     <i class="bi bi-check2-circle"></i> Konfirmasi Kendaraan Sudah Kembali
                                 </button>
@@ -574,8 +574,8 @@
                                     </div>
                                 @endif
 
-                                <button type="submit"
-                                    onclick="return confirm('Yakin menutup tiket ini? Pastikan semua data sudah benar.')"
+                                <button type="button"
+                                    onclick="customConfirm({ title: 'Selesaikan Perjalanan', message: 'Yakin menutup tiket ini? Pastikan semua data sudah benar.', confirmText: 'Ya, Selesaikan', isDanger: true }, () => this.closest('form').submit())"
                                     class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
                                     <i class="bi bi-check2-square"></i> Selesaikan & Tutup Perjalanan
                                 </button>
@@ -636,7 +636,8 @@
                                 <form action="{{ route('permohonan.verifikasi_pengembalian', $permohonan->id) }}"
                                     method="POST">
                                     @csrf @method('PUT')
-                                    <button type="submit" onclick="return confirm('Verifikasi dan tutup tiket ini?')"
+                                    <button type="button"
+                                        onclick="customConfirm({ title: 'Verifikasi Pengembalian', message: 'Verifikasi dan tutup tiket ini? Pastikan bukti transfer sudah sesuai.', confirmText: 'Ya, Verifikasi' }, () => this.closest('form').submit())"
                                         class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm whitespace-nowrap">
                                         <i class="bi bi-check-all"></i> Verifikasi & Tutup Tiket
                                     </button>

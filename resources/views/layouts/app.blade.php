@@ -242,29 +242,109 @@
             </div>
         </div>
     @endauth
+    {{-- GLOBAL CONFIRM DIALOG --}}
+    <div x-data="{
+        open: false,
+        title: 'Konfirmasi',
+        message: '',
+        confirmText: 'Ya, Lanjutkan',
+        isDanger: false,
+        _cb: null,
+    }"
+        @open-confirm.window="
+        title       = $event.detail.title       ?? 'Konfirmasi';
+        message     = $event.detail.message     ?? 'Apakah Anda yakin?';
+        confirmText = $event.detail.confirmText ?? 'Ya, Lanjutkan';
+        isDanger    = $event.detail.isDanger    ?? false;
+        _cb         = $event.detail.callback    ?? null;
+        open        = true;
+    "
+        x-show="open" x-cloak class="fixed inset-0 z-[90] flex items-center justify-center px-4" style="display:none;">
+
+        <div class="absolute inset-0 bg-gray-900/60" @click="open = false"></div>
+
+        <div class="relative bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center"
+            x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95"
+            x-transition:enter-end="opacity-100 scale-100" x-transition:leave="transition ease-in duration-150"
+            x-transition:leave-start="opacity-100 scale-100" x-transition:leave-end="opacity-0 scale-95">
+
+            <div class="mx-auto flex items-center justify-center w-12 h-12 rounded-full mb-4"
+                :class="isDanger ? 'bg-red-100' : 'bg-blue-100'">
+                <i class="text-xl"
+                    :class="isDanger ? 'bi bi-exclamation-triangle-fill text-red-500' :
+                        'bi bi-question-circle-fill text-blue-500'"></i>
+            </div>
+
+            <h3 class="text-base font-bold text-gray-900 mb-2" x-text="title"></h3>
+            <p class="text-sm text-gray-600 mb-6 leading-relaxed" x-text="message"></p>
+
+            <div class="flex gap-3">
+                <button @click="open = false"
+                    class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2.5 rounded-lg text-sm transition">
+                    Batal
+                </button>
+                <button @click="if (_cb) _cb(); open = false;"
+                    class="flex-1 font-bold py-2.5 rounded-lg text-sm text-white transition"
+                    :class="isDanger ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'"
+                    x-text="confirmText">
+                </button>
+            </div>
+        </div>
+    </div>
 
     <div id="toast-container" class="fixed bottom-5 right-5 z-[80] flex flex-col gap-3"></div>
     <audio id="notif-sound" src="{{ asset('sounds/notif.mp3') }}" preload="auto"></audio>
 
     <script type="module">
-        window.showCompactToast = function(title, message) {
+        window.showCompactToast = function(title, message, type = 'info') {
+            const isError = type === 'error' || title === 'Gagal';
+            const iconClass = isError ? 'bi-exclamation-circle-fill' : 'bi-check-circle-fill';
+            const iconBg = isError ? 'bg-red-100' : 'bg-emerald-100';
+            const iconColor = isError ? 'text-red-600' : 'text-emerald-600';
+
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className =
                 'bg-white border border-gray-200 shadow-2xl rounded-lg p-3 w-[90vw] sm:w-80 max-w-sm transform transition-all duration-500 translate-x-[120%] flex items-start gap-3 relative';
-            toast.innerHTML =
-                `<div class='flex-shrink-0 mt-1 text-blue-600 bg-blue-100 p-2 rounded-full leading-none'><i class='bi bi-info-circle-fill text-lg'></i></div><div class='flex-1 pr-4'><p class='font-bold text-sm text-gray-800'>${title}</p><p class='text-xs text-gray-600 mt-1 leading-tight line-clamp-2'>${message}</p></div>`;
+            toast.innerHTML = `
+        <div class='flex-shrink-0 mt-1 ${iconColor} ${iconBg} p-2 rounded-full leading-none'>
+            <i class='bi ${iconClass} text-lg'></i>
+        </div>
+        <div class='flex-1 pr-4'>
+            <p class='font-bold text-sm text-gray-800'>${title}</p>
+            <p class='text-xs text-gray-600 mt-1 leading-tight line-clamp-2'>${message}</p>
+        </div>
+        <button onclick="this.closest('div[class*=translate]').remove()"
+            class='absolute top-2 right-2 text-gray-300 hover:text-gray-500 text-lg leading-none'>&times;</button>
+    `;
             container.appendChild(toast);
+
             const audio = document.getElementById('notif-sound');
-            if (audio) {
+            if (audio && !isError) {
                 audio.currentTime = 0;
                 audio.play().catch(() => {});
             }
+
             setTimeout(() => toast.classList.remove('translate-x-[120%]'), 50);
             setTimeout(() => {
                 toast.classList.add('translate-x-[120%]');
                 setTimeout(() => toast.remove(), 500);
-            }, 7000);
+            }, 5000);
+        };
+
+        window.customConfirm = function(opts, callback) {
+            const detail = typeof opts === 'string' ?
+                {
+                    message: opts,
+                    callback
+                } :
+                {
+                    ...opts,
+                    callback
+                };
+            window.dispatchEvent(new CustomEvent('open-confirm', {
+                detail
+            }));
         };
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -320,5 +400,17 @@
         });
     </script>
 </body>
+@if (session('success') || session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            @if (session('success'))
+                window.showCompactToast('Berhasil', @json(session('success')));
+            @endif
+            @if (session('error'))
+                window.showCompactToast('Gagal', @json(session('error')));
+            @endif
+        });
+    </script>
+@endif
 
 </html>
