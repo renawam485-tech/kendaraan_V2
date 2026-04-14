@@ -3,7 +3,7 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h2 class="font-semibold text-xl text-gray-800 flex items-center gap-2">
                 @if (Auth::user()->role === 'pengguna')
-                    Riwayat Pengajuan Saya
+                    Riwayat Pengajuan
                 @else
                     @php
                         $judul = match (Auth::user()->role) {
@@ -18,7 +18,7 @@
                 @endif
             </h2>
 
-            {{-- TOMBOL EXPORT (Hanya tampil untuk admin/staf, disembunyikan untuk pengguna) --}}
+            {{-- TOMBOL EXPORT (Hanya tampil untuk admin/staf) --}}
             @if (Auth::user()->role !== 'pengguna')
                 <div class="flex gap-2 w-full sm:w-auto">
                     <a href="{{ route('laporan.export.excel', request()->query()) }}"
@@ -35,12 +35,14 @@
     </x-slot>
 
     <div class="py-8 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="w-full px-4 sm:px-6 lg:px-8 space-y-6">
 
-            {{-- AREA KHUSUS ADMIN / STAF (Tampil Statistik & Filter) --}}
+            {{-- ========================================================== --}}
+            {{-- AREA KHUSUS ADMIN / STAF (Statistik & Filter)              --}}
+            {{-- ========================================================== --}}
             @if (Auth::user()->role !== 'pengguna')
 
-                {{-- STATS CARDS (Desain Clean Enterprise: Tanpa Border Warna Samping) --}}
+                {{-- STATS CARDS --}}
                 @if (isset($stats) && count($stats) > 0)
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                         @foreach ($stats as $label => $nilai)
@@ -81,7 +83,7 @@
                     </div>
                 @endif
 
-                {{-- FILTER PENCARIAN AUDIT --}}
+                {{-- FILTER PENCARIAN --}}
                 <div class="bg-white border border-gray-100 rounded-xl p-5 shadow-sm">
                     <div class="flex items-center gap-2 mb-4 border-b border-gray-100 pb-3">
                         <i class="bi bi-funnel text-blue-600 text-lg"></i>
@@ -104,7 +106,6 @@
                                 <select name="status"
                                     class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                                     <option value="">Semua Status</option>
-                                    {{-- PERBAIKAN: Menambahkan 'Dibatalkan' ke dalam pilihan filter --}}
                                     @foreach (['Menunggu Validasi Admin', 'Menunggu Proses SPSI', 'Menunggu Proses Keuangan', 'Menunggu Finalisasi', 'Disetujui', 'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai', 'Ditolak', 'Dibatalkan'] as $s)
                                         <option value="{{ $s }}"
                                             {{ ($request->status ?? '') === $s ? 'selected' : '' }}>
@@ -122,8 +123,8 @@
                                             {{ ($request->kategori ?? '') === 'Dinas SITH' ? 'selected' : '' }}>Dinas
                                             SITH</option>
                                         <option value="Non SITH"
-                                            {{ ($request->kategori ?? '') === 'Non SITH' ? 'selected' : '' }}>Non
-                                            SITH</option>
+                                            {{ ($request->kategori ?? '') === 'Non SITH' ? 'selected' : '' }}>Non SITH
+                                        </option>
                                     </select>
                                 </div>
                             @endif
@@ -141,31 +142,51 @@
                 </div>
             @endif
 
-            {{-- AREA TABEL / DAFTAR DATA --}}
+            {{-- ========================================================== --}}
+            {{-- AREA TABEL / DAFTAR DATA                                   --}}
+            {{-- ========================================================== --}}
             <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+
+                {{-- HEADER TABEL --}}
                 @if (Auth::user()->role !== 'pengguna')
                     <div class="p-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
                         <p class="text-sm text-gray-600">Ditemukan <strong
-                                class="text-blue-600 text-lg">{{ $data->count() }}</strong> data laporan.</p>
+                                class="text-blue-600 text-lg">{{ $data->total() }}</strong> data laporan.</p>
                     </div>
                 @else
-                    <div class="p-5 border-b border-gray-100 bg-white flex justify-between items-center">
-                        <h3 class="font-bold text-gray-800"><i class="bi bi-list-ul text-blue-600 mr-2"></i> Daftar
-                            Seluruh Pengajuan Anda</h3>
+                    <div
+                        class="p-5 border-b border-gray-100 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <h3 class="font-bold text-gray-800">
+                            <i class="bi bi-list-ul text-blue-600 mr-2"></i> Daftar Riwayat Pengajuan
+                        </h3>
+
+                        <form action="{{ route('laporan.index') }}" method="GET" class="relative w-full sm:w-80">
+                            <i
+                                class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                            <input type="text" name="search" value="{{ request('search') }}"
+                                placeholder="Cari kode atau tujuan..."
+                                class="w-full pl-9 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition bg-gray-50">
+                            @if (request('search'))
+                                <a href="{{ route('laporan.index') }}"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </a>
+                            @endif
+                        </form>
                     </div>
                 @endif
 
                 <div class="overflow-x-auto">
-                    {{-- ================================================================= --}}
-                    {{-- TAMPILAN KHUSUS PENGGUNA BIASA (Sederhana & Tanpa Filter)         --}}
-                    {{-- ================================================================= --}}
+
+                    {{-- ================================================== --}}
+                    {{-- TAMPILAN KHUSUS PENGGUNA (Dengan Pencarian)        --}}
+                    {{-- ================================================== --}}
                     @if (Auth::user()->role === 'pengguna')
 
-                        {{-- Mobile View Pengguna --}}
+                        {{-- MOBILE VIEW PENGGUNA --}}
                         <div class="block md:hidden space-y-3 p-4 bg-gray-50">
                             @forelse($data as $p)
                                 @php
-                                    // PERBAIKAN: Menambahkan Dibatalkan ke dalam Badge (Digabung dengan Ditolak)
                                     $badgeClass = match ($p->status_permohonan) {
                                         'Disetujui' => 'bg-blue-50 text-blue-700 border-blue-200',
                                         'Selesai' => 'bg-green-50 text-green-700 border-green-200',
@@ -179,9 +200,10 @@
                                 @endphp
                                 <div class="bg-white border border-gray-200 p-4 rounded-xl shadow-sm">
                                     <div class="flex justify-between items-start mb-3">
-                                        <span class="font-bold text-gray-800 text-sm leading-tight pr-2"><i
-                                                class="bi bi-geo-alt text-gray-400 mr-1"></i>
-                                            {{ $p->tujuan }}</span>
+                                        <span class="font-bold text-gray-800 text-sm leading-tight pr-2">
+                                            <i class="bi bi-geo-alt text-gray-400 mr-1"></i>
+                                            {{ $p->tujuan }}
+                                        </span>
                                         <span
                                             class="text-[10px] font-bold px-2 py-1 rounded border whitespace-nowrap text-center {{ $badgeClass }}">
                                             {{ $p->status_permohonan }}
@@ -196,43 +218,37 @@
                                             class="w-full text-center bg-blue-50 text-blue-700 border border-blue-100 font-bold py-2 rounded-lg text-sm hover:bg-blue-100 transition flex justify-center items-center gap-2">
                                             <i class="bi bi-search"></i> Lihat Detail
                                         </a>
-                                        @if (in_array($p->status_permohonan, [
-                                                'Disetujui',
-                                                'Menunggu Pengembalian Dana',
-                                                'Menunggu Verifikasi Pengembalian',
-                                                'Selesai',
-                                            ]))
-                                            <a href="{{ route('permohonan.cetak', $p->id) }}" target="_blank"
-                                                class="w-full text-center bg-gray-800 text-white font-bold py-2 rounded-lg text-sm hover:bg-gray-900 transition shadow-sm flex justify-center items-center gap-2">
-                                                <i class="bi bi-printer"></i> Cetak SPJ
-                                            </a>
-                                        @endif
                                     </div>
                                 </div>
                             @empty
                                 <div
-                                    class="text-center py-10 text-gray-500 text-sm border border-dashed border-gray-200 bg-white rounded-xl">
-                                    <i class="bi bi-journal-x text-4xl block mb-3 text-gray-300"></i>
-                                    Belum ada riwayat pengajuan.
+                                    class="text-center py-16 text-gray-500 text-sm border border-dashed border-gray-200 bg-white rounded-xl">
+                                    <i class="bi bi-journal-x text-5xl block mb-3 text-gray-300"></i>
+                                    <p class="font-medium text-gray-500">Belum ada riwayat pengajuan.</p>
+                                    <a href="{{ route('permohonan.create') }}"
+                                        class="mt-3 inline-block text-sm text-blue-600 hover:underline font-bold">Buat
+                                        pengajuan baru →</a>
                                 </div>
                             @endforelse
                         </div>
 
-                        {{-- Desktop View Pengguna --}}
-                        <div class="hidden md:block">
+                        {{-- DESKTOP VIEW PENGGUNA --}}
+                        <div class="hidden md:block overflow-x-auto">
                             <table class="w-full text-sm text-left text-gray-600">
                                 <thead class="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500">
                                     <tr>
-                                        <th class="px-6 py-4">Informasi Kegiatan</th>
+                                        <th class="px-6 py-4">No</th>
+                                        <th class="px-6 py-4">Kode</th>
+                                        <th class="px-6 py-4">Tujuan</th>
                                         <th class="px-6 py-4">Jadwal Keberangkatan</th>
-                                        <th class="px-6 py-4">Status Terkini</th>
-                                        <th class="px-6 py-4 text-center">Aksi Dokumen</th>
+                                        <th class="px-6 py-4">Kendaraan</th>
+                                        <th class="px-6 py-4">Status</th>
+                                        <th class="px-6 py-4 text-center">Aksi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @forelse($data as $p)
+                                    @forelse($data as $i => $p)
                                         @php
-                                            // PERBAIKAN: Menambahkan Dibatalkan ke dalam Badge (Digabung dengan Ditolak)
                                             $badgeClass = match ($p->status_permohonan) {
                                                 'Disetujui' => 'bg-blue-50 text-blue-700 border-blue-200',
                                                 'Selesai' => 'bg-green-50 text-green-700 border-green-200',
@@ -241,15 +257,21 @@
                                                     => 'bg-orange-50 text-orange-700 border-orange-200',
                                                 'Menunggu Verifikasi Pengembalian'
                                                     => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                                'Menunggu Mulai Perjalanan'
-                                                    => 'bg-yellow-50 text-yellow-700 border-yellow-200',
-                                                'Perjalanan Berlangsung' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                                'Menunggu Konfirmasi Kembali' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-'Menunggu Penyelesaian'       => 'bg-purple-50 text-purple-700 border-purple-200',
                                                 default => 'bg-gray-50 text-gray-700 border-gray-200',
                                             };
                                         @endphp
                                         <tr class="border-b border-gray-50 hover:bg-blue-50/20 transition">
+                                            <td class="px-6 py-4 text-gray-400">
+                                                {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                @if ($p->kode_permohonan)
+                                                    <span
+                                                        class="font-black text-blue-700 tracking-wider text-[11px] bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md whitespace-nowrap">{{ $p->kode_permohonan }}</span>
+                                                @else
+                                                    <span class="text-gray-300">—</span>
+                                                @endif
+                                            </td>
                                             <td class="px-6 py-4">
                                                 <strong class="text-gray-800 text-base block mb-1"><i
                                                         class="bi bi-geo-alt text-gray-400 mr-1"></i>{{ $p->tujuan }}</strong>
@@ -267,6 +289,19 @@
                                                 </div>
                                             </td>
                                             <td class="px-6 py-4">
+                                                @if ($p->kendaraan)
+                                                    <span
+                                                        class="text-sm font-medium">{{ $p->kendaraan->nama_kendaraan }}</span>
+                                                @elseif($p->kendaraanVendor)
+                                                    <span
+                                                        class="text-sm font-medium">{{ $p->kendaraanVendor->nama_kendaraan }}</span>
+                                                    <span
+                                                        class="text-orange-600 bg-orange-50 px-1 rounded text-[10px] font-bold ml-1">Vendor</span>
+                                                @else
+                                                    <span class="text-gray-400 italic">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="px-6 py-4">
                                                 <span
                                                     class="px-2.5 py-1 rounded text-xs font-bold border whitespace-nowrap {{ $badgeClass }}">{{ $p->status_permohonan }}</span>
                                             </td>
@@ -276,27 +311,18 @@
                                                         class="inline-flex items-center gap-1 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 px-3 py-1.5 rounded-lg text-xs font-bold transition">
                                                         <i class="bi bi-search"></i> Detail
                                                     </a>
-                                                    @if (in_array($p->status_permohonan, [
-                                                            'Disetujui',
-                                                            'Menunggu Pengembalian Dana',
-                                                            'Menunggu Verifikasi Pengembalian',
-                                                            'Selesai',
-                                                        ]))
-                                                        <a href="{{ route('permohonan.cetak', $p->id) }}"
-                                                            target="_blank"
-                                                            class="inline-flex items-center gap-1 text-white bg-gray-800 hover:bg-gray-900 px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-sm">
-                                                            <i class="bi bi-printer"></i> Cetak SPJ
-                                                        </a>
-                                                    @endif
                                                 </div>
                                             </td>
                                         </tr>
                                     @empty
                                         <tr>
-                                            <td colspan="4"
+                                            <td colspan="7"
                                                 class="text-center py-16 text-gray-400 border border-dashed border-gray-100">
                                                 <i class="bi bi-journal-x text-5xl block mb-3 text-gray-300"></i>
-                                                <p class="font-medium text-gray-500">Belum ada riwayat pengajuan.</p>
+                                                <p class="font-medium text-gray-500">Belum ada riwayat.</p>
+                                                <a href="{{ route('permohonan.create') }}"
+                                                    class="mt-2 inline-block text-sm text-blue-600 hover:underline font-bold">Buat
+                                                    pengajuan baru →</a>
                                             </td>
                                         </tr>
                                     @endforelse
@@ -304,9 +330,103 @@
                             </table>
                         </div>
 
-                        {{-- ================================================================= --}}
-                        {{-- TAMPILAN KHUSUS ADMIN / KEUANGAN / SPSI (Tabel Audit Lengkap)     --}}
-                        {{-- ================================================================= --}}
+                        {{-- PAGINATION PENGGUNA --}}
+                        @if ($data->hasPages())
+                            <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+                                <p class="text-xs text-gray-400">
+                                    Menampilkan {{ $data->firstItem() ?? 0 }} - {{ $data->lastItem() ?? 0 }}
+                                    dari {{ $data->total() }} data
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    @if ($data->onFirstPage())
+                                        <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </span>
+                                    @else
+                                        <a href="{{ $data->previousPageUrl() }}&search={{ request('search') }}"
+                                            class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    @endif
+
+                                    {{-- Nomor Halaman dengan Elipsis --}}
+                                    <div class="hidden md:flex items-center gap-1">
+                                        @php
+                                            $current = $data->currentPage();
+                                            $last = $data->lastPage();
+                                            $start = max(1, $current - 1);
+                                            $end = min($last, $current + 1);
+
+                                            if ($current <= 2) {
+                                                $start = 1;
+                                                $end = min(3, $last);
+                                            }
+                                            if ($current >= $last - 1) {
+                                                $start = max(1, $last - 2);
+                                                $end = $last;
+                                            }
+                                        @endphp
+
+                                        {{-- Halaman 1 --}}
+                                        @if ($start > 1)
+                                            <a href="{{ $data->url(1) }}&search={{ request('search') }}"
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                1
+                                            </a>
+                                            @if ($start > 2)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        {{-- Range halaman --}}
+                                        @for ($page = $start; $page <= $end; $page++)
+                                            @if ($page == $current)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm">
+                                                    {{ $page }}
+                                                </span>
+                                            @else
+                                                <a href="{{ $data->url($page) }}&search={{ request('search') }}"
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                    {{ $page }}
+                                                </a>
+                                            @endif
+                                        @endfor
+
+                                        {{-- Halaman terakhir --}}
+                                        @if ($end < $last)
+                                            @if ($end < $last - 1)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                            @endif
+                                            <a href="{{ $data->url($last) }}&search={{ request('search') }}"
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                {{ $last }}
+                                            </a>
+                                        @endif
+                                    </div>
+
+                                    {{-- Tombol Next --}}
+                                    @if ($data->hasMorePages())
+                                        <a href="{{ $data->nextPageUrl() }}&search={{ request('search') }}"
+                                            class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    @else
+                                        <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-400">
+                                    {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                            </div>
+                        @endif
+
+                        {{-- ================================================== --}}
+                        {{-- TAMPILAN KHUSUS ADMIN / KEUANGAN / SPSI             --}}
+                        {{-- ================================================== --}}
                     @else
                         <table class="w-full text-sm text-left text-gray-600">
                             <thead class="bg-gray-50 border-b border-gray-100 text-xs uppercase text-gray-500">
@@ -334,7 +454,6 @@
                                         <th class="px-4 py-4 text-center">Aksi</th>
                                     </tr>
                                 @else
-                                    {{-- Super Admin & Kepala Admin --}}
                                     <tr>
                                         <th class="px-4 py-4">No</th>
                                         <th class="px-4 py-4">Pemohon & Kategori</th>
@@ -349,12 +468,16 @@
                             </thead>
                             <tbody>
                                 @forelse($data as $i => $p)
-                                    <x-status-badge :status="$p->status_permohonan" />
+                                    @php
+                                        $sc = $p->status_permohonan->badgeClass() ?? '';
+                                    @endphp
 
                                     @if (Auth::user()->role === 'keuangan')
                                         @php $selisih = ($p->rab_disetujui ?? 0) - ($p->biaya_aktual ?? 0); @endphp
                                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
-                                            <td class="px-4 py-3 text-gray-400">{{ $i + 1 }}</td>
+                                            <td class="px-4 py-3 text-gray-400">
+                                                {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                            </td>
                                             <td class="px-4 py-3 font-bold text-gray-800">{{ $p->nama_pic }}</td>
                                             <td class="px-4 py-3">{{ $p->tujuan }}</td>
                                             <td class="px-4 py-3"><span
@@ -371,7 +494,7 @@
                                                 {{ $p->rab_disetujui ? 'Rp ' . number_format($selisih, 0, ',', '.') : '-' }}
                                             </td>
                                             <td class="px-4 py-3"><span
-                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan }}</span>
+                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                                             </td>
                                             <td class="px-4 py-3 text-center"><a
                                                     href="{{ route('permohonan.show', $p->id) }}"
@@ -380,13 +503,15 @@
                                         </tr>
                                     @elseif(Auth::user()->role === 'spsi')
                                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
-                                            <td class="px-4 py-3 text-gray-400">{{ $i + 1 }}</td>
+                                            <td class="px-4 py-3 text-gray-400">
+                                                {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                            </td>
                                             <td class="px-4 py-3">
                                                 <strong class="text-gray-800 block">{{ $p->nama_pic }}</strong>
                                                 <span class="text-xs text-gray-500">{{ $p->tujuan }}</span>
                                             </td>
                                             <td class="px-4 py-3 font-medium text-gray-800">
-                                                {{ $p->kendaraan?->nama_kendaraan ?? ($p->kendaraan_vendor ?? '-') }}
+                                                {{ $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-') }}
                                             </td>
                                             <td class="px-4 py-3 text-gray-600">
                                                 {{ $p->pengemudi?->nama_pengemudi ?? 'Tanpa Supir' }}</td>
@@ -397,7 +522,7 @@
                                                 {{ \Carbon\Carbon::parse($p->waktu_kembali)->format('d/m/Y H:i') }}
                                             </td>
                                             <td class="px-4 py-3"><span
-                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan }}</span>
+                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                                             </td>
                                             <td class="px-4 py-3 text-center"><a
                                                     href="{{ route('permohonan.show', $p->id) }}"
@@ -405,9 +530,10 @@
                                                         class="bi bi-search"></i> Detail</a></td>
                                         </tr>
                                     @else
-                                        {{-- Super Admin & Kepala Admin --}}
                                         <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
-                                            <td class="px-4 py-3 text-gray-400">{{ $i + 1 }}</td>
+                                            <td class="px-4 py-3 text-gray-400">
+                                                {{ ($data->currentPage() - 1) * $data->perPage() + $loop->iteration }}
+                                            </td>
                                             <td class="px-4 py-3">
                                                 <strong class="text-gray-800 block">{{ $p->nama_pic }}</strong>
                                                 <span
@@ -418,13 +544,13 @@
                                                 {{ \Carbon\Carbon::parse($p->waktu_berangkat)->format('d/m/Y H:i') }}
                                             </td>
                                             <td class="px-4 py-3 text-xs text-gray-800 font-medium">
-                                                {{ $p->kendaraan?->nama_kendaraan ?? ($p->kendaraan_vendor ?? '-') }}
+                                                {{ $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-') }}
                                             </td>
                                             <td class="px-4 py-3 text-right font-mono">
                                                 {{ $p->rab_disetujui ? 'Rp ' . number_format($p->rab_disetujui, 0, ',', '.') : '-' }}
                                             </td>
                                             <td class="px-4 py-3"><span
-                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan }}</span>
+                                                    class="px-2 py-0.5 rounded text-[10px] font-bold border {{ $sc }}">{{ $p->status_permohonan->value }}</span>
                                             </td>
                                             <td class="px-4 py-3 text-center"><a
                                                     href="{{ route('permohonan.show', $p->id) }}"
@@ -443,6 +569,95 @@
                                 @endforelse
                             </tbody>
                         </table>
+
+                        {{-- PAGINATION ADMIN --}}
+                        @if ($data->hasPages())
+                            <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+                                <p class="text-xs text-gray-400">
+                                    Menampilkan {{ $data->firstItem() ?? 0 }} - {{ $data->lastItem() ?? 0 }}
+                                    dari {{ $data->total() }} data
+                                </p>
+                                <div class="flex items-center gap-2">
+                                    @if ($data->onFirstPage())
+                                        <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </span>
+                                    @else
+                                        <a href="{{ $data->previousPageUrl() }}"
+                                            class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="bi bi-chevron-left"></i>
+                                        </a>
+                                    @endif
+
+                                    <div class="hidden md:flex items-center gap-1">
+                                        @php
+                                            $current = $data->currentPage();
+                                            $last = $data->lastPage();
+                                            $start = max(1, $current - 1);
+                                            $end = min($last, $current + 1);
+
+                                            if ($current <= 2) {
+                                                $start = 1;
+                                                $end = min(3, $last);
+                                            }
+                                            if ($current >= $last - 1) {
+                                                $start = max(1, $last - 2);
+                                                $end = $last;
+                                            }
+                                        @endphp
+
+                                        @if ($start > 1)
+                                            <a href="{{ $data->url(1) }}"
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                1
+                                            </a>
+                                            @if ($start > 2)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                            @endif
+                                        @endif
+
+                                        @for ($page = $start; $page <= $end; $page++)
+                                            @if ($page == $current)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold bg-blue-600 text-white shadow-sm">
+                                                    {{ $page }}
+                                                </span>
+                                            @else
+                                                <a href="{{ $data->url($page) }}"
+                                                    class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                    {{ $page }}
+                                                </a>
+                                            @endif
+                                        @endfor
+
+                                        @if ($end < $last)
+                                            @if ($end < $last - 1)
+                                                <span
+                                                    class="w-8 h-8 flex items-center justify-center text-gray-400">...</span>
+                                            @endif
+                                            <a href="{{ $data->url($last) }}"
+                                                class="w-8 h-8 flex items-center justify-center rounded-lg text-xs font-bold text-gray-500 hover:bg-gray-100">
+                                                {{ $last }}
+                                            </a>
+                                        @endif
+                                    </div>
+
+                                    @if ($data->hasMorePages())
+                                        <a href="{{ $data->nextPageUrl() }}"
+                                            class="px-3 py-2 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </a>
+                                    @else
+                                        <span class="px-3 py-2 text-xs font-bold text-gray-300 cursor-not-allowed">
+                                            <i class="bi bi-chevron-right"></i>
+                                        </span>
+                                    @endif
+                                </div>
+                                <p class="text-xs text-gray-400">
+                                    {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}</p>
+                            </div>
+                        @endif
                     @endif
                 </div>
             </div>

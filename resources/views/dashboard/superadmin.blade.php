@@ -8,7 +8,7 @@
     @use('App\Enums\StatusPermohonan')
 
     <div class="py-6 md:py-10 bg-gray-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8 space-y-8">
 
             @if (session('success'))
                 <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 rounded-lg shadow-sm flex items-center gap-3">

@@ -6,7 +6,6 @@
         $userRole = Auth::user()->role;
         $isOwner = Auth::id() === $permohonan->user_id;
 
-        // Resolusi satu action yang relevan untuk user+status saat ini
         $actionType = match (true) {
             $status === StatusPermohonan::MENUNGGU_MULAI_PERJALANAN && $isOwner => 'mulai',
             $status === StatusPermohonan::PERJALANAN_BERLANGSUNG && $isOwner => 'lapor_kembali',
@@ -17,7 +16,6 @@
             default => null,
         };
 
-        // Warna + ikon status header
         $statusMeta = match ($status) {
             StatusPermohonan::SELESAI => ['bg-emerald-50 border-emerald-200', 'bi-patch-check-fill text-emerald-500'],
             StatusPermohonan::DISETUJUI => ['bg-blue-50 border-blue-200', 'bi-check-circle-fill text-blue-500'],
@@ -53,102 +51,71 @@
     @endphp
 
     <x-slot name="header">
-        <div class="flex items-center justify-between gap-3">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div class="flex items-center gap-3">
-                <a href="{{ url()->previous() }}"
-                    class="text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-gray-100">
+                <a href="{{ url()->previous() !== url()->current() ? url()->previous() : route('dashboard') }}"
+                    class="text-gray-400 hover:text-gray-600 transition p-1 rounded-lg hover:bg-gray-100 flex-shrink-0">
                     <i class="bi bi-arrow-left text-lg"></i>
                 </a>
-                <div>
+                <div class="flex-1">
                     <h2 class="font-semibold text-xl text-gray-800 leading-tight">Detail Pengajuan</h2>
-                    <p class="text-sm text-gray-400 mt-0.5 truncate max-w-xs">{{ $permohonan->tujuan }}</p>
+                    @if ($permohonan->kode_permohonan)
+                        <span class="font-black text-blue-700">
+                            {{ $permohonan->kode_permohonan }}
+                        </span>
+                    @endif
                 </div>
             </div>
-            <div class="flex items-center gap-2 flex-shrink-0">
-                @if ($status->canPrint())
-                    <a href="{{ route('permohonan.cetak', $permohonan->id) }}" target="_blank"
-                        class="hidden sm:inline-flex items-center gap-1.5 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-3 py-2 rounded-lg transition shadow-sm">
-                        <i class="bi bi-printer"></i> Cetak SPJ
-                    </a>
-                @endif
-                @if ($permohonan->kode_permohonan)
-                    <span
-                        class="font-black text-blue-700 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-lg text-sm tracking-widest">
-                        {{ $permohonan->kode_permohonan }}
-                    </span>
-                @endif
-            </div>
+
         </div>
     </x-slot>
 
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+        <div class="w-full px-4 sm:px-6 lg:px-8 space-y-5">
 
             {{-- ── STATUS HEADER ── --}}
-            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div class="flex items-center gap-3">
                         <div
-                            class="w-11 h-11 rounded-xl border flex items-center justify-center flex-shrink-0 {{ $statusMeta[0] }}">
-                            <i class="bi {{ $statusMeta[1] }} text-xl"></i>
+                            class="w-10 h-10 sm:w-11 sm:h-11 rounded-xl border flex items-center justify-center flex-shrink-0 {{ $statusMeta[0] }}">
+                            <i class="bi {{ $statusMeta[1] }} text-lg sm:text-xl"></i>
                         </div>
                         <div>
                             <p class="text-xs text-gray-400 font-medium uppercase tracking-wider">Status Permohonan</p>
-                            <p class="font-black text-gray-900 text-base mt-0.5">{{ $status->value }}</p>
+                            <p class="font-black text-gray-900 text-sm sm:text-base mt-0.5">{{ $status->value }}</p>
                         </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-x-5 gap-y-1 text-xs text-gray-400">
                         <span class="flex items-center gap-1">
                             <i class="bi bi-clock-history"></i>
-                            Diajukan {{ $permohonan->created_at->diffForHumans() }}
+                            Diajukan <span class="relative-time-created font-semibold"
+                                data-created="{{ $permohonan->created_at->toISOString() }}">{{ $permohonan->created_at->diffForHumans() }}</span>
                         </span>
-                        <span class="hidden sm:inline-flex items-center gap-1">
+                        <span class="flex items-center gap-1">
                             <i class="bi bi-arrow-repeat"></i>
-                            Update {{ $permohonan->updated_at->diffForHumans() }}
+                            Update <span class="relative-time-updated font-semibold"
+                                data-updated="{{ $permohonan->updated_at->toISOString() }}">{{ $permohonan->updated_at->diffForHumans() }}</span>
                         </span>
-                        @if ($status->canPrint())
-                            <a href="{{ route('permohonan.cetak', $permohonan->id) }}" target="_blank"
-                                class="sm:hidden inline-flex items-center gap-1 text-gray-700 font-bold bg-white border border-gray-300 px-3 py-1.5 rounded-lg hover:bg-gray-50 transition">
-                                <i class="bi bi-printer"></i> Cetak SPJ
-                            </a>
-                        @endif
                     </div>
                 </div>
             </div>
 
-            {{-- ── INFORMASI UTAMA  ── --}}
-            <div
-                class="grid grid-cols-1 {{ $permohonan->kendaraan_id ? 'md:grid-cols-4' : 'md:grid-cols-3' }} gap-6 mb-8">
-
+            {{-- ── INFORMASI UTAMA (GRID RESPONSIF) ── --}}
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
                 {{-- Pemohon --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <i class="bi bi-person-fill text-blue-400"></i> Pemohon
                     </p>
-                    <p class="font-bold text-gray-800">{{ $permohonan->nama_pic }}</p>
-                    <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $permohonan->kontak_pic) }}" target="_blank"
-                        class="text-sm text-blue-600 hover:underline flex items-center gap-1 mt-1">
-                        <i class="bi bi-whatsapp text-green-500"></i>{{ $permohonan->kontak_pic }}
-                    </a>
-                    @if ($permohonan->kategori_kegiatan)
-                        <span
-                            class="inline-block mt-2 text-xs font-bold px-2 py-0.5 rounded-md border
-                            {{ $permohonan->kategori_kegiatan === 'Dinas SITH'
-                                ? 'bg-green-50 text-green-700 border-green-200'
-                                : 'bg-gray-50 text-gray-600 border-gray-200' }}">
-                            {{ $permohonan->kategori_kegiatan }}
-                        </span>
-                    @endif
-                    @if ($permohonan->user)
-                        <p class="text-xs text-gray-400 mt-2 flex items-center gap-1">
-                            <i class="bi bi-person-circle"></i>
-                            Akun: {{ $permohonan->user->name }}
-                        </p>
-                    @endif
+                    <p class="font-bold text-gray-800 text-sm sm:text-base">{{ $permohonan->nama_pic }}</p>
+                    <div class="text-xs sm:text-sm text-gray-600 flex items-center gap-1 mt-1 break-all">
+                        {{ $permohonan->kontak_pic }}
+                    </div>
                 </div>
 
                 {{-- Rute --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <i class="bi bi-signpost-split-fill text-blue-400"></i> Rute Perjalanan
                     </p>
@@ -158,9 +125,10 @@
                                 class="w-5 h-5 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <i class="bi bi-circle-fill text-[6px] text-blue-500"></i>
                             </div>
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <p class="text-[10px] text-gray-400 font-semibold uppercase">Dari</p>
-                                <p class="text-sm font-semibold text-gray-800">{{ $permohonan->titik_jemput }}</p>
+                                <p class="text-sm font-semibold text-gray-800 break-words">
+                                    {{ $permohonan->titik_jemput }}</p>
                             </div>
                         </div>
                         <div class="ml-2.5 w-px h-4 bg-gray-200"></div>
@@ -169,21 +137,23 @@
                                 class="w-5 h-5 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                                 <i class="bi bi-geo-alt-fill text-[9px] text-red-500"></i>
                             </div>
-                            <div>
+                            <div class="min-w-0 flex-1">
                                 <p class="text-[10px] text-gray-400 font-semibold uppercase">Tujuan</p>
-                                <p class="text-sm font-semibold text-gray-800">{{ $permohonan->tujuan }}</p>
+                                <p class="text-sm font-semibold text-gray-800 break-words">{{ $permohonan->tujuan }}
+                                </p>
                             </div>
                         </div>
                     </div>
-                    <div class="mt-3 pt-3 border-t border-gray-100 flex items-center gap-3 text-xs text-gray-500">
+                    <div
+                        class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                         <span><i class="bi bi-people mr-0.5"></i>{{ $permohonan->jumlah_penumpang }} orang</span>
                         <span>·</span>
-                        <span>{{ $permohonan->kendaraan_dibutuhkan }}</span>
+                        <span class="break-words">{{ $permohonan->kendaraan_dibutuhkan }}</span>
                     </div>
                 </div>
 
                 {{-- Jadwal --}}
-                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                     <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                         <i class="bi bi-calendar-event-fill text-blue-400"></i> Jadwal
                     </p>
@@ -221,10 +191,8 @@
                         </span>
                     </div>
                 </div>
-
-                {{-- 4. Alokasi Armada (Muncul setelah diproses SPSI) --}}
                 @if ($hasAllocation || $permohonan->rekomendasi_admin)
-                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                         <p
                             class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                             <i class="bi bi-truck-front-fill text-blue-400"></i> Armada Dialokasikan
@@ -243,8 +211,7 @@
                             <p class="text-xs text-gray-500 mt-0.5">{{ $permohonan->kendaraanVendor->nama_vendor }}</p>
                             @if ($permohonan->kendaraanVendor->plat_nomor)
                                 <p class="text-xs font-mono text-gray-400">
-                                    {{ $permohonan->kendaraanVendor->plat_nomor }}
-                                </p>
+                                    {{ $permohonan->kendaraanVendor->plat_nomor }}</p>
                             @endif
                             <span
                                 class="inline-block mt-1.5 text-[10px] font-bold text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded">
@@ -261,7 +228,7 @@
                                     {{ $permohonan->pengemudi->nama_pengemudi }}</p>
                                 <a href="https://wa.me/{{ preg_replace('/[^0-9]/', '', $permohonan->pengemudi->kontak) }}"
                                     target="_blank"
-                                    class="text-xs text-green-600 hover:underline flex items-center gap-1 mt-0.5">
+                                    class="text-xs text-green-600 hover:underline flex items-center gap-1 mt-0.5 break-all">
                                     <i class="bi bi-whatsapp"></i>{{ $permohonan->pengemudi->kontak }}
                                 </a>
                             @else
@@ -269,34 +236,73 @@
                             @endif
                         </div>
                     </div>
+                @else
+                    {{-- Jika belum ada alokasi, tampilkan card placeholder kosong agar grid tetap 4 --}}
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
+                        <p
+                            class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                            <i class="bi bi-truck-front-fill text-blue-400"></i> Armada Dialokasikan
+                        </p>
+                        <div class="flex items-center justify-center h-32">
+                            <p class="text-sm text-gray-400 italic text-center">Menunggu alokasi armada dari SPSI</p>
+                        </div>
+                    </div>
                 @endif
             </div>
 
-            {{-- ── ANGGARAN, CATATAN & DOKUMEN ── --}}
-            @if ($permohonan->anggaran_diajukan || $permohonan->catatan_pemohon || $permohonan->file_surat_penugasan)
+            {{-- ── ANGGARAN, CATATAN & DOKUMEN (dengan Kategori Kegiatan di bawah Perkiraan Anggaran) ── --}}
+            @if (
+                $permohonan->anggaran_diajukan ||
+                    $permohonan->catatan_pemohon ||
+                    $permohonan->file_surat_penugasan ||
+                    $permohonan->kategori_kegiatan)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                    <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <i class="bi bi-card-list text-blue-600"></i>
                         <h4 class="font-bold text-gray-800 text-sm">Informasi Tambahan</h4>
                     </div>
-                    <div class="p-5 grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    <div class="p-4 sm:p-5 space-y-5">
                         <div>
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Perkiraan Anggaran
                             </p>
                             @if ($permohonan->anggaran_diajukan)
-                                <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                                    {{ $permohonan->anggaran_diajukan }}</p>
+                                <p class="text-sm text-gray-700 leading-relaxed whitespace-pre-line break-words">
+                                    {{ $permohonan->anggaran_diajukan }}
+                                </p>
                             @else
                                 <p class="text-sm text-gray-400 italic">Tidak diisi (Non-Dinas / ditanggung pribadi)
                                 </p>
                             @endif
                         </div>
-                        <div>
+
+                        {{-- KATEGORI KEGIATAN (dipindahkan ke sini) --}}
+                        <div class="pt-3 border-t border-gray-100">
+                            <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Kategori Kegiatan
+                            </p>
+                            @if ($permohonan->kategori_kegiatan)
+                                <span
+                                    class="inline-block text-sm font-bold px-3 py-1.5 rounded-lg border
+                                    {{ $permohonan->kategori_kegiatan === 'Dinas SITH'
+                                        ? 'bg-green-50 text-green-700 border-green-200'
+                                        : 'bg-gray-50 text-gray-600 border-gray-200' }}">
+                                    {{ $permohonan->kategori_kegiatan }}
+                                </span>
+                                @if ($permohonan->kategori_kegiatan === 'Non SITH')
+                                    <p class="text-xs text-gray-500 mt-1">Biaya ditanggung pribadi pemohon</p>
+                                @else
+                                    <p class="text-xs text-gray-500 mt-1">Biaya ditanggung instansi</p>
+                                @endif
+                            @else
+                                <p class="text-sm text-gray-400 italic">Belum ditentukan</p>
+                            @endif
+                        </div>
+
+                        <div class="pt-3 border-t border-gray-100">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Catatan Pemohon
                             </p>
                             @if ($permohonan->catatan_pemohon)
                                 <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                                    <p class="text-sm text-amber-800 leading-relaxed">
+                                    <p class="text-sm text-amber-800 leading-relaxed break-words">
                                         {{ $permohonan->catatan_pemohon }}
                                     </p>
                                 </div>
@@ -304,7 +310,7 @@
                                 <p class="text-sm text-gray-400 italic">Tidak ada catatan</p>
                             @endif
                         </div>
-                        <div>
+                        <div class="pt-3 border-t border-gray-100">
                             <p class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Surat Penugasan
                             </p>
                             @if ($permohonan->file_surat_penugasan)
@@ -323,86 +329,104 @@
             {{-- ── KEUANGAN & LPJ (tampil jika ada data keuangan) ── --}}
             @if ($hasFinanceData)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                    <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <i class="bi bi-cash-stack text-blue-600"></i>
                         <h4 class="font-bold text-gray-800 text-sm">Rekapitulasi Keuangan</h4>
                     </div>
-                    <div class="p-5 grid grid-cols-2 sm:grid-cols-4 gap-4">
-                        <div>
-                            <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">RAB Disetujui
-                            </p>
-                            <p class="font-black text-gray-800 text-lg">
-                                Rp {{ number_format($permohonan->rab_disetujui ?? 0, 0, ',', '.') }}
-                            </p>
-                            @if ($permohonan->mekanisme_pembayaran)
-                                <span
-                                    class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">
-                                    {{ $permohonan->mekanisme_pembayaran }}
-                                </span>
-                            @endif
-                        </div>
-                        @if ($permohonan->biaya_aktual !== null)
-                            @php $selisih = ($permohonan->rab_disetujui ?? 0) - $permohonan->biaya_aktual; @endphp
+                    <div class="p-4 sm:p-5">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
-                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">Biaya
-                                    Aktual
+                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">RAB
+                                    Disetujui</p>
+                                <p class="font-black text-gray-800 text-base sm:text-lg">
+                                    Rp {{ number_format($permohonan->rab_disetujui ?? 0, 0, ',', '.') }}
                                 </p>
-                                <p class="font-black text-gray-800 text-lg">
-                                    Rp {{ number_format($permohonan->biaya_aktual, 0, ',', '.') }}
-                                </p>
+                                @if ($permohonan->mekanisme_pembayaran)
+                                    <span
+                                        class="text-[10px] font-bold text-gray-500 bg-gray-100 px-2 py-0.5 rounded mt-1 inline-block">
+                                        {{ $permohonan->mekanisme_pembayaran }}
+                                    </span>
+                                @endif
                             </div>
-                            <div>
-                                <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">Selisih
-                                </p>
-                                <p
-                                    class="font-black text-lg {{ $selisih > 0 ? 'text-orange-600' : ($selisih < 0 ? 'text-red-600' : 'text-emerald-600') }}">
-                                    Rp {{ number_format(abs($selisih), 0, ',', '.') }}
-                                </p>
-                                <p
-                                    class="text-[10px] {{ $selisih > 0 ? 'text-orange-500' : ($selisih < 0 ? 'text-red-500' : 'text-emerald-500') }} font-semibold">
-                                    {{ $selisih > 0 ? 'Harus dikembalikan' : ($selisih < 0 ? 'Kelebihan pakai' : 'Pas / Sesuai') }}
-                                </p>
+                            @if ($permohonan->biaya_aktual !== null)
+                                @php $selisih = ($permohonan->rab_disetujui ?? 0) - $permohonan->biaya_aktual; @endphp
+                                <div>
+                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">Biaya
+                                        Aktual</p>
+                                    <p class="font-black text-gray-800 text-base sm:text-lg">
+                                        Rp {{ number_format($permohonan->biaya_aktual, 0, ',', '.') }}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">
+                                        Selisih</p>
+                                    <p
+                                        class="font-black text-base sm:text-lg {{ $selisih > 0 ? 'text-orange-600' : ($selisih < 0 ? 'text-red-600' : 'text-emerald-600') }}">
+                                        Rp {{ number_format(abs($selisih), 0, ',', '.') }}
+                                    </p>
+                                    <p
+                                        class="text-[10px] {{ $selisih > 0 ? 'text-orange-500' : ($selisih < 0 ? 'text-red-500' : 'text-emerald-500') }} font-semibold">
+                                        {{ $selisih > 0 ? 'Harus dikembalikan' : ($selisih < 0 ? 'Kelebihan pakai' : 'Pas / Sesuai') }}
+                                    </p>
+                                </div>
+                            @endif
+                            <div class="flex flex-col gap-2">
+                                @if ($permohonan->bukti_lpj)
+                                    <a href="{{ asset('storage/' . $permohonan->bukti_lpj) }}" target="_blank"
+                                        class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-2 rounded-lg transition">
+                                        <i class="bi bi-receipt"></i> Bukti LPJ
+                                    </a>
+                                @endif
+                                @if ($permohonan->bukti_pengembalian)
+                                    <a href="{{ asset('storage/' . $permohonan->bukti_pengembalian) }}"
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-2 rounded-lg transition">
+                                        <i class="bi bi-cash-coin"></i> Bukti Pengembalian
+                                    </a>
+                                @endif
                             </div>
-                        @endif
-                        <div class="flex flex-col gap-2 justify-center">
-                            @if ($permohonan->bukti_lpj)
-                                <a href="{{ asset('storage/' . $permohonan->bukti_lpj) }}" target="_blank"
-                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-2 rounded-lg transition">
-                                    <i class="bi bi-receipt"></i> Bukti LPJ
-                                </a>
-                            @endif
-                            @if ($permohonan->bukti_pengembalian)
-                                <a href="{{ asset('storage/' . $permohonan->bukti_pengembalian) }}" target="_blank"
-                                    class="inline-flex items-center gap-1.5 text-xs font-bold text-orange-700 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-3 py-2 rounded-lg transition">
-                                    <i class="bi bi-cash-coin"></i> Bukti Pengembalian
-                                </a>
-                            @endif
                         </div>
                     </div>
                 </div>
             @endif
 
-            {{-- ── TIMELINE PERJALANAN (tampil jika ada data waktu aktual) ── --}}
             @if ($hasTravelTime)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                    <div class="px-5 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                    <div class="px-4 sm:px-5 py-3 sm:py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
                         <i class="bi bi-clock-history text-blue-600"></i>
                         <h4 class="font-bold text-gray-800 text-sm">Timeline Perjalanan</h4>
                     </div>
-                    <div class="p-5">
-                        <ol class="relative border-l-2 border-gray-200 ml-3 space-y-0">
-                            @foreach ([[$permohonan->waktu_serah_terima, 'Serah Terima Kunci oleh SPSI', 'bi-key-fill', 'bg-yellow-100 text-yellow-600'], [$permohonan->waktu_mulai_perjalanan, 'Perjalanan Dimulai', 'bi-play-fill', 'bg-teal-100 text-teal-600'], [$permohonan->waktu_kembali_aktual, 'Dilaporkan Sudah Kembali', 'bi-arrow-return-left', 'bg-indigo-100 text-indigo-600']] as [$waktu, $label, $icon, $style])
+                    <div class="p-4 sm:p-5">
+                        <ol class="relative border-l-2 border-gray-200 ml-3 space-y-4 sm:space-y-0">
+                            @foreach ([$permohonan->waktu_serah_terima, $permohonan->waktu_mulai_perjalanan, $permohonan->waktu_kembali_aktual] as $index => $waktu)
+                                @php
+                                    $labels = [
+                                        'Serah Terima Kunci oleh SPSI',
+                                        'Perjalanan Dimulai',
+                                        'Dilaporkan Sudah Kembali',
+                                    ];
+                                    $icons = ['bi-key-fill', 'bi-play-fill', 'bi-arrow-return-left'];
+                                    $styles = [
+                                        'bg-yellow-100 text-yellow-600',
+                                        'bg-teal-100 text-teal-600',
+                                        'bg-indigo-100 text-indigo-600',
+                                    ];
+                                    $dataKeys = ['serah-terima', 'mulai', 'kembali'];
+                                @endphp
                                 @if ($waktu)
                                     <li class="ml-6 pb-5 last:pb-0">
                                         <span
-                                            class="absolute -left-[13px] w-6 h-6 rounded-full {{ $style }} flex items-center justify-center ring-4 ring-white">
-                                            <i class="bi {{ $icon }} text-xs"></i>
+                                            class="absolute -left-[13px] w-6 h-6 rounded-full {{ $styles[$index] }} flex items-center justify-center ring-4 ring-white">
+                                            <i class="bi {{ $icons[$index] }} text-xs"></i>
                                         </span>
-                                        <p class="text-sm font-semibold text-gray-700">{{ $label }}</p>
+                                        <p class="text-sm font-semibold text-gray-700">{{ $labels[$index] }}</p>
                                         <p class="text-xs text-gray-400 mt-0.5">
                                             {{ \Carbon\Carbon::parse($waktu)->translatedFormat('l, d M Y — H:i') }} WIB
-                                            <span
-                                                class="ml-1">({{ \Carbon\Carbon::parse($waktu)->diffForHumans() }})</span>
+                                            <span class="block sm:inline sm:ml-1">
+                                                (<span class="timeline-relative-time"
+                                                    data-timeline-date="{{ $waktu }}"
+                                                    data-timeline-key="{{ $dataKeys[$index] }}">{{ \Carbon\Carbon::parse($waktu)->diffForHumans() }}</span>)
+                                            </span>
                                         </p>
                                     </li>
                                 @endif
@@ -425,7 +449,7 @@
 
                     {{-- Header action --}}
                     <div
-                        class="px-5 py-4 flex items-center gap-3
+                        class="px-4 sm:px-5 py-3 sm:py-4 flex items-start sm:items-center gap-3
                         @if ($actionType === 'mulai') bg-yellow-50
                         @elseif($actionType === 'lapor_kembali')   bg-teal-50
                         @elseif($actionType === 'konfirmasi_kembali') bg-indigo-50
@@ -433,14 +457,14 @@
                         @elseif($actionType === 'pengembalian')   bg-orange-50
                         @elseif($actionType === 'verifikasi')     bg-blue-50 @endif">
                         <i
-                            class="bi text-xl
+                            class="bi text-xl flex-shrink-0
                             @if ($actionType === 'mulai') bi-play-circle-fill text-yellow-500
                             @elseif($actionType === 'lapor_kembali')   bi-arrow-return-left text-teal-500
                             @elseif($actionType === 'konfirmasi_kembali') bi-check2-circle text-indigo-500
                             @elseif($actionType === 'selesaikan')     bi-clipboard2-check text-purple-500
                             @elseif($actionType === 'pengembalian')   bi-cash-coin text-orange-500
                             @elseif($actionType === 'verifikasi')     bi-patch-check-fill text-blue-500 @endif"></i>
-                        <div>
+                        <div class="flex-1">
                             <h4 class="font-bold text-gray-800 text-sm">
                                 @if ($actionType === 'mulai')
                                     Kunci Sudah Diterima — Mulai Perjalanan
@@ -478,15 +502,18 @@
                     </div>
 
                     {{-- Body action --}}
-                    <div class="p-5">
+                    <div class="p-4 sm:p-5">
 
                         {{-- MULAI PERJALANAN --}}
                         @if ($actionType === 'mulai')
-                            @if ($permohonan->waktu_serah_terima)
+                            @ @if ($permohonan->waktu_serah_terima)
                                 <p class="text-xs text-gray-500 mb-4 flex items-center gap-1.5">
                                     <i class="bi bi-clock text-gray-400"></i>
                                     Kunci diserahkan:
                                     <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->format('d M Y, H:i') }}</strong>
+                                    <span class="text-gray-400">(<span class="action-relative-time"
+                                            data-action-date="{{ $permohonan->waktu_serah_terima }}"
+                                            data-action-key="serah-terima">{{ \Carbon\Carbon::parse($permohonan->waktu_serah_terima)->diffForHumans() }}</span>)</span>
                                 </p>
                             @endif
                             <form action="{{ route('permohonan.mulai_perjalanan', $permohonan->id) }}"
@@ -494,7 +521,7 @@
                                 @csrf @method('PUT')
                                 <button type="button"
                                     onclick="customConfirm({ title: 'Mulai Perjalanan', message: 'Konfirmasi: kunci sudah dipegang dan siap berangkat?', confirmText: 'Ya, Mulai Perjalanan' }, () => this.closest('form').submit())"
-                                    class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
+                                    class="inline-flex items-center gap-2 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2.5 px-5 sm:px-6 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center">
                                     <i class="bi bi-play-fill"></i> Mulai Perjalanan Sekarang
                                 </button>
                             </form>
@@ -506,14 +533,16 @@
                                     <i class="bi bi-play-circle text-teal-400"></i>
                                     Dimulai:
                                     <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->format('d M Y, H:i') }}</strong>
-                                    ({{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() }})
+                                    <span class="text-gray-400">(<span class="action-relative-time"
+                                            data-action-date="{{ $permohonan->waktu_mulai_perjalanan }}"
+                                            data-action-key="mulai">{{ \Carbon\Carbon::parse($permohonan->waktu_mulai_perjalanan)->diffForHumans() }}</span>)</span>
                                 </p>
                             @endif
                             <form action="{{ route('permohonan.lapor_kembali', $permohonan->id) }}" method="POST">
                                 @csrf @method('PUT')
                                 <button type="button"
                                     onclick="customConfirm({ title: 'Lapor Kembali', message: 'Konfirmasi: perjalanan selesai dan kendaraan sudah diserahkan kembali ke SPSI?', confirmText: 'Ya, Sudah Kembali' }, () => this.closest('form').submit())"
-                                    class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
+                                    class="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white font-bold py-2.5 px-5 sm:px-6 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center">
                                     <i class="bi bi-arrow-return-left"></i> Konfirmasi Saya Sudah Kembali
                                 </button>
                             </form>
@@ -525,7 +554,9 @@
                                     <i class="bi bi-clock text-indigo-400"></i>
                                     Dilaporkan:
                                     <strong>{{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->format('d M Y, H:i') }}</strong>
-                                    ({{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->diffForHumans() }})
+                                    <span class="text-gray-400">(<span class="action-relative-time"
+                                            data-action-date="{{ $permohonan->waktu_kembali_aktual }}"
+                                            data-action-key="kembali">{{ \Carbon\Carbon::parse($permohonan->waktu_kembali_aktual)->diffForHumans() }}</span>)</span>
                                 </p>
                             @endif
                             <form action="{{ route('permohonan.konfirmasi_kembali', $permohonan->id) }}"
@@ -533,7 +564,7 @@
                                 @csrf @method('PUT')
                                 <button type="button"
                                     onclick="customConfirm({ title: 'Konfirmasi Penerimaan', message: 'Konfirmasi kendaraan sudah kembali dan dalam kondisi baik?', confirmText: 'Ya, Konfirmasi' }, () => this.closest('form').submit())"
-                                    class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
+                                    class="inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 px-5 sm:px-6 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center">
                                     <i class="bi bi-check2-circle"></i> Konfirmasi Kendaraan Sudah Kembali
                                 </button>
                             </form>
@@ -545,7 +576,7 @@
                                 @csrf @method('PUT')
 
                                 @if ($permohonan->kategori_kegiatan !== 'Non SITH')
-                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+                                    <div class="space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 gap-4 mb-5">
                                         <div>
                                             <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                                                 Total Biaya Aktual (Rp) <span class="text-red-500">*</span>
@@ -569,14 +600,14 @@
                                     <div
                                         class="bg-slate-50 border border-slate-200 rounded-lg p-4 mb-5 flex items-start gap-2">
                                         <i class="bi bi-info-circle text-blue-500 flex-shrink-0 mt-0.5"></i>
-                                        <p class="text-sm text-gray-600">Kegiatan Non-Dinas — tidak perlu mengisi biaya
-                                            atau mengunggah LPJ. Klik tombol di bawah untuk menutup tiket.</p>
+                                        <p class="text-sm text-gray-600">Klik tombol di bawah ini untuk menutup
+                                            perjalanan.</p>
                                     </div>
                                 @endif
 
                                 <button type="button"
                                     onclick="customConfirm({ title: 'Selesaikan Perjalanan', message: 'Yakin menutup tiket ini? Pastikan semua data sudah benar.', confirmText: 'Ya, Selesaikan', isDanger: true }, () => this.closest('form').submit())"
-                                    class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm">
+                                    class="inline-flex items-center gap-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-2.5 px-5 sm:px-6 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center">
                                     <i class="bi bi-check2-square"></i> Selesaikan & Tutup Perjalanan
                                 </button>
                             </form>
@@ -585,7 +616,7 @@
                         @elseif($actionType === 'pengembalian')
                             @php $sisaDana = ($permohonan->rab_disetujui ?? 0) - ($permohonan->biaya_aktual ?? 0); @endphp
                             <div
-                                class="grid grid-cols-3 gap-3 bg-orange-50 border border-orange-200 rounded-lg p-4 mb-5 text-center text-sm">
+                                class="grid grid-cols-1 sm:grid-cols-3 gap-3 bg-orange-50 border border-orange-200 rounded-lg p-4 mb-5 text-center text-sm">
                                 <div>
                                     <p class="text-xs text-gray-500">RAB Diberikan</p>
                                     <p class="font-black text-gray-800">Rp
@@ -604,9 +635,9 @@
                             </div>
                             <form action="{{ route('permohonan.submit_pengembalian', $permohonan->id) }}"
                                 method="POST" enctype="multipart/form-data"
-                                class="flex flex-col sm:flex-row items-start gap-3">
+                                class="flex flex-col sm:flex-row items-stretch sm:items-start gap-3">
                                 @csrf @method('PUT')
-                                <div class="flex-1 w-full">
+                                <div class="flex-1">
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
                                         Bukti Transfer / Tanda Terima <span class="text-red-500">*</span>
                                     </label>
@@ -615,7 +646,7 @@
                                 </div>
                                 <div class="sm:mt-7">
                                     <button type="submit"
-                                        class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-5 rounded-xl transition shadow-sm text-sm whitespace-nowrap">
+                                        class="inline-flex items-center gap-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-2.5 px-5 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center whitespace-nowrap">
                                         <i class="bi bi-upload"></i> Kirim Bukti
                                     </button>
                                 </div>
@@ -638,7 +669,7 @@
                                     @csrf @method('PUT')
                                     <button type="button"
                                         onclick="customConfirm({ title: 'Verifikasi Pengembalian', message: 'Verifikasi dan tutup tiket ini? Pastikan bukti transfer sudah sesuai.', confirmText: 'Ya, Verifikasi' }, () => this.closest('form').submit())"
-                                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-xl transition shadow-sm text-sm whitespace-nowrap">
+                                        class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-5 sm:px-6 rounded-xl transition shadow-sm text-sm w-full sm:w-auto justify-center whitespace-nowrap">
                                         <i class="bi bi-check-all"></i> Verifikasi & Tutup Tiket
                                     </button>
                                 </form>
@@ -670,7 +701,121 @@
                     @endif
                 </div>
             @endif
-
         </div>
     </div>
+
+    <script>
+        function updateAllRelativeTimes() {
+            document.querySelectorAll('.relative-time-created').forEach(element => {
+                const date = new Date(element.dataset.created);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                const diffInDays = Math.floor(diffInHours / 24);
+                const diffInMonths = Math.floor(diffInDays / 30);
+                const diffInYears = Math.floor(diffInDays / 365);
+
+                let relativeText = '';
+                if (diffInSeconds < 60) {
+                    relativeText = 'baru saja';
+                } else if (diffInMinutes < 60) {
+                    relativeText = diffInMinutes + ' menit yang lalu';
+                } else if (diffInHours < 24) {
+                    relativeText = diffInHours + ' jam yang lalu';
+                } else if (diffInDays < 30) {
+                    relativeText = diffInDays + ' hari yang lalu';
+                } else if (diffInMonths < 12) {
+                    relativeText = diffInMonths + ' bulan yang lalu';
+                } else {
+                    relativeText = diffInYears + ' tahun yang lalu';
+                }
+                element.textContent = relativeText;
+            });
+
+            document.querySelectorAll('.relative-time-updated').forEach(element => {
+                const date = new Date(element.dataset.updated);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                const diffInDays = Math.floor(diffInHours / 24);
+                const diffInMonths = Math.floor(diffInDays / 30);
+                const diffInYears = Math.floor(diffInDays / 365);
+
+                let relativeText = '';
+                if (diffInSeconds < 60) {
+                    relativeText = 'baru saja';
+                } else if (diffInMinutes < 60) {
+                    relativeText = diffInMinutes + ' menit yang lalu';
+                } else if (diffInHours < 24) {
+                    relativeText = diffInHours + ' jam yang lalu';
+                } else if (diffInDays < 30) {
+                    relativeText = diffInDays + ' hari yang lalu';
+                } else if (diffInMonths < 12) {
+                    relativeText = diffInMonths + ' bulan yang lalu';
+                } else {
+                    relativeText = diffInYears + ' tahun yang lalu';
+                }
+                element.textContent = relativeText;
+            });
+
+            document.querySelectorAll('.timeline-relative-time').forEach(element => {
+                const date = new Date(element.dataset.timelineDate);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                const diffInDays = Math.floor(diffInHours / 24);
+                const diffInMonths = Math.floor(diffInDays / 30);
+                const diffInYears = Math.floor(diffInDays / 365);
+
+                let relativeText = '';
+                if (diffInSeconds < 60) {
+                    relativeText = 'baru saja';
+                } else if (diffInMinutes < 60) {
+                    relativeText = diffInMinutes + ' menit yang lalu';
+                } else if (diffInHours < 24) {
+                    relativeText = diffInHours + ' jam yang lalu';
+                } else if (diffInDays < 30) {
+                    relativeText = diffInDays + ' hari yang lalu';
+                } else if (diffInMonths < 12) {
+                    relativeText = diffInMonths + ' bulan yang lalu';
+                } else {
+                    relativeText = diffInYears + ' tahun yang lalu';
+                }
+                element.textContent = relativeText;
+            });
+
+            document.querySelectorAll('.action-relative-time').forEach(element => {
+                const date = new Date(element.dataset.actionDate);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - date) / 1000);
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                const diffInDays = Math.floor(diffInHours / 24);
+                const diffInMonths = Math.floor(diffInDays / 30);
+                const diffInYears = Math.floor(diffInDays / 365);
+
+                let relativeText = '';
+                if (diffInSeconds < 60) {
+                    relativeText = 'baru saja';
+                } else if (diffInMinutes < 60) {
+                    relativeText = diffInMinutes + ' menit yang lalu';
+                } else if (diffInHours < 24) {
+                    relativeText = diffInHours + ' jam yang lalu';
+                } else if (diffInDays < 30) {
+                    relativeText = diffInDays + ' hari yang lalu';
+                } else if (diffInMonths < 12) {
+                    relativeText = diffInMonths + ' bulan yang lalu';
+                } else {
+                    relativeText = diffInYears + ' tahun yang lalu';
+                }
+                element.textContent = relativeText;
+            });
+        }
+
+        setInterval(updateAllRelativeTimes, 60000);
+        updateAllRelativeTimes();
+    </script>
 </x-app-layout>

@@ -76,7 +76,7 @@ class SpsiCrudController extends Controller
         
         Kendaraan::create($request->only(['nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan']));
         
-        return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
+        return redirect()->route('spsi.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
     }
     
     public function kendaraanEdit($id)
@@ -97,7 +97,7 @@ class SpsiCrudController extends Controller
         
         $kendaraan->update($request->only(['nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan']));
         
-        return redirect()->route('crud.kendaraan.index')->with('success', 'Data kendaraan berhasil diperbarui.');
+        return redirect()->route('spsi.kendaraan.index')->with('success', 'Data kendaraan berhasil diperbarui.');
     }
     
     public function kendaraanDestroy($id)
@@ -105,12 +105,12 @@ class SpsiCrudController extends Controller
         $kendaraan = Kendaraan::findOrFail($id);
         
         if ($kendaraan->status_kendaraan === 'Dipinjam') {
-            return redirect()->route('crud.kendaraan.index')
+            return redirect()->route('spsi.kendaraan.index')
                 ->with('error', 'Kendaraan sedang Dipinjam dan tidak dapat dihapus.');
         }
         
         $kendaraan->delete();
-        return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil dihapus.');
+        return redirect()->route('spsi.kendaraan.index')->with('success', 'Kendaraan berhasil dihapus.');
     }
     
     // =========================================================
@@ -153,7 +153,7 @@ class SpsiCrudController extends Controller
             'nama_vendor', 'nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan'
         ]));
         
-        return redirect()->route('crud.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil ditambahkan.');
+        return redirect()->route('spsi.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil ditambahkan.');
     }
     
     public function kendaraanVendorEdit($id)
@@ -177,7 +177,7 @@ class SpsiCrudController extends Controller
             'nama_vendor', 'nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan'
         ]));
         
-        return redirect()->route('crud.kendaraan_vendor.index')->with('success', 'Data kendaraan vendor berhasil diperbarui.');
+        return redirect()->route('spsi.kendaraan_vendor.index')->with('success', 'Data kendaraan vendor berhasil diperbarui.');
     }
     
     public function kendaraanVendorDestroy($id)
@@ -190,12 +190,12 @@ class SpsiCrudController extends Controller
             ->exists();
         
         if ($isUsed) {
-            return redirect()->route('crud.kendaraan_vendor.index')
+            return redirect()->route('spsi.kendaraan_vendor.index')
                 ->with('error', 'Kendaraan vendor sedang digunakan dan tidak dapat dihapus.');
         }
         
         $vendor->delete();
-        return redirect()->route('crud.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil dihapus.');
+        return redirect()->route('spsi.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil dihapus.');
     }
     
     // =========================================================
@@ -233,7 +233,7 @@ class SpsiCrudController extends Controller
         
         Pengemudi::create($request->only(['nama_pengemudi', 'kontak', 'status_pengemudi']));
         
-        return redirect()->route('crud.pengemudi.index')->with('success', 'Pengemudi berhasil ditambahkan.');
+        return redirect()->route('spsi.pengemudi.index')->with('success', 'Pengemudi berhasil ditambahkan.');
     }
     
     public function pengemudiEdit($id)
@@ -253,7 +253,7 @@ class SpsiCrudController extends Controller
         
         $pengemudi->update($request->only(['nama_pengemudi', 'kontak', 'status_pengemudi']));
         
-        return redirect()->route('crud.pengemudi.index')->with('success', 'Data pengemudi berhasil diperbarui.');
+        return redirect()->route('spsi.pengemudi.index')->with('success', 'Data pengemudi berhasil diperbarui.');
     }
     
     public function pengemudiDestroy($id)
@@ -261,11 +261,11 @@ class SpsiCrudController extends Controller
         $pengemudi = Pengemudi::findOrFail($id);
         
         if ($pengemudi->status_pengemudi === 'Bertugas') {
-            return redirect()->route('crud.pengemudi.index')
+            return redirect()->route('spsi.pengemudi.index')
                 ->with('error', 'Pengemudi sedang Bertugas dan tidak dapat dihapus.');
         }
         
         $pengemudi->delete();
-        return redirect()->route('crud.pengemudi.index')->with('success', 'Pengemudi berhasil dihapus.');
+        return redirect()->route('spsi.pengemudi.index')->with('success', 'Pengemudi berhasil dihapus.');
     }
 }

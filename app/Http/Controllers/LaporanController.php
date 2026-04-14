@@ -58,6 +58,7 @@ class LaporanController extends Controller
     private function getData(Request $request, string $role)
     {
         $query = Permohonan::with(['user', 'kendaraan', 'pengemudi']);
+        $perPage = 15; 
 
         if ($request->filled('dari')) {
             $query->whereDate('created_at', '>=', $request->dari);
@@ -74,7 +75,7 @@ class LaporanController extends Controller
                 if ($request->filled('kategori')) {
                     $query->where('kategori_kegiatan', $request->kategori);
                 }
-                return $query->orderBy('created_at', 'desc')->get();
+                return $query->orderBy('created_at', 'desc')->paginate($perPage);
 
             case 'kepala_admin':
                 if ($request->filled('status')) {
@@ -82,28 +83,47 @@ class LaporanController extends Controller
                 } else {
                     $query->where('status_permohonan', '!=', StatusPermohonan::MENUNGGU_VALIDASI_ADMIN->value);
                 }
-                return $query->orderBy('updated_at', 'desc')->get();
+                return $query->orderBy('updated_at', 'desc')->paginate($perPage);
 
             case 'spsi':
-                $query->whereNotNull('kendaraan_id')->orWhereNotNull('kendaraan_vendor_id');
+                $query->where(function ($q) {
+                    $q->whereNotNull('kendaraan_id')->orWhereNotNull('kendaraan_vendor_id');
+                });
                 if ($request->filled('kendaraan')) {
                     $query->where('kendaraan_id', $request->kendaraan);
                 }
-                return $query->orderBy('waktu_berangkat', 'desc')->get();
+                return $query->orderBy('waktu_berangkat', 'desc')->paginate($perPage);
 
             case 'keuangan':
                 $query->whereNotNull('rab_disetujui');
                 if ($request->filled('status')) {
                     $query->where('status_permohonan', $request->status);
                 }
-                return $query->orderBy('updated_at', 'desc')->get();
+                return $query->orderBy('updated_at', 'desc')->paginate($perPage);
 
             case 'pengguna':
-                return $query->where('user_id', Auth::id())
-                    ->orderBy('created_at', 'desc')->get();
-        }
+                $search = $request->query('search');
+                $perPageUser = 10;
 
-        return collect();
+                $query->where('user_id', Auth::id())
+                    ->where('status_permohonan', StatusPermohonan::SELESAI->value);
+
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('tujuan', 'like', "%{$search}%")
+                            ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                            ->orWhere('titik_jemput', 'like', "%{$search}%")
+                            ->orWhere('nama_pic', 'like', "%{$search}%");
+                    });
+                }
+
+                return $query->orderBy('updated_at', 'desc')
+                    ->paginate($perPageUser)
+                    ->appends(['search' => $search]);
+
+            default:
+                return collect();
+        }
     }
 
     private function getStats(string $role): array
@@ -116,7 +136,8 @@ class LaporanController extends Controller
                     'selesai'   => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
                     'ditolak'   => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
                     'total_rab' => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI,
+                        StatusPermohonan::DISETUJUI,
+                        StatusPermohonan::SELESAI,
                     ))->sum('rab_disetujui'),
                 ];
 
@@ -124,11 +145,14 @@ class LaporanController extends Controller
                 return [
                     'total'     => Permohonan::count(),
                     'disetujui' => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI,
+                        StatusPermohonan::DISETUJUI,
+                        StatusPermohonan::SELESAI,
                     ))->count(),
                     'ditolak'   => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
                     'proses'    => Permohonan::whereNotIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI, StatusPermohonan::DITOLAK,
+                        StatusPermohonan::DISETUJUI,
+                        StatusPermohonan::SELESAI,
+                        StatusPermohonan::DITOLAK,
                     ))->count(),
                 ];
 
@@ -157,12 +181,16 @@ class LaporanController extends Controller
                 return [
                     'total'     => (clone $mine)->count(),
                     'disetujui' => (clone $mine)->whereIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI,
+                        StatusPermohonan::DISETUJUI,
+                        StatusPermohonan::SELESAI,
                     ))->count(),
                     'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
                     'proses'    => (clone $mine)->whereNotIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI, StatusPermohonan::DITOLAK,
+                        StatusPermohonan::DISETUJUI,
+                        StatusPermohonan::SELESAI,
+                        StatusPermohonan::DITOLAK,
                     ))->count(),
+                    'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
                 ];
         }
 
@@ -173,7 +201,7 @@ class LaporanController extends Controller
     {
         $base = ['No', 'Nama PIC', 'Tujuan', 'Tgl Berangkat', 'Tgl Kembali', 'Kategori', 'Status'];
 
-        return match($role) {
+        return match ($role) {
             'super_admin', 'kepala_admin' => array_merge($base, ['Armada', 'RAB (Rp)', 'Dibuat Oleh']),
             'spsi'     => ['No', 'Nama PIC', 'Tujuan', 'Tgl Berangkat', 'Tgl Kembali', 'Kendaraan', 'Plat', 'Pengemudi', 'Est. Biaya (Rp)', 'Status'],
             'keuangan' => ['No', 'Nama PIC', 'Tujuan', 'Kategori', 'RAB Disetujui (Rp)', 'Biaya Aktual (Rp)', 'Selisih (Rp)', 'Mekanisme', 'Status'],
@@ -255,7 +283,7 @@ class LaporanController extends Controller
 
     private function getJudul(string $role): string
     {
-        return match($role) {
+        return match ($role) {
             'super_admin'  => 'Laporan Rekap Seluruh Permohonan',
             'kepala_admin' => 'Laporan Aktivitas Validasi & Persetujuan',
             'spsi'         => 'Laporan Penggunaan Armada Kendaraan',

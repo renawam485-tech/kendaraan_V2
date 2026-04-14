@@ -2,14 +2,14 @@
     $userRole = Auth::user()->role;
     $isSuperAdmin = $userRole === 'super_admin';
     $isSpsi = $userRole === 'spsi';
-    $canModify = $isSuperAdmin || $isSpsi; // SPSI dan Super Admin bisa modify
+    $canModify = $isSuperAdmin || $isSpsi;
 @endphp
 
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800">
-                Manajemen Kendaraan Internal
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+                <i class="bi bi-car-front text-blue-600 mr-2"></i> Manajemen Kendaraan Internal
                 @if($isSpsi)
                     <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
                 @endif
@@ -23,7 +23,7 @@
         </div>
     </x-slot>
 
-    <div class="py-8 bg-gray-50 min-h-screen">
+    <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
             @if(session('success'))
@@ -39,22 +39,96 @@
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-xl border border-gray-100">
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left text-sm text-gray-600">
-                        <thead class="bg-gray-50 text-gray-500 uppercase text-xs border-b border-gray-100">
-                            <tr>
-                                <th class="px-6 py-4">Nama Kendaraan</th>
-                                <th class="px-6 py-4">Plat Nomor</th>
-                                <th class="px-6 py-4">Kapasitas</th>
-                                <th class="px-6 py-4">Status</th>
+            <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
+                        <i class="bi bi-car-front-fill text-blue-600"></i>
+                        Daftar Kendaraan Internal
+                        <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                            {{ $kendaraans->total() }} data
+                        </span>
+                    </h3>
+                    <div class="relative w-full sm:w-72">
+                        <form action="{{ url()->current() }}" method="GET" class="relative">
+                            <i class="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none"></i>
+                            <input type="text" name="search" value="{{ request('search') }}" 
+                                   placeholder="Cari nama kendaraan atau plat nomor..."
+                                   autocomplete="off"
+                                   class="w-full pl-9 pr-9 py-2 text-sm border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition bg-gray-50 focus:bg-white">
+                            @if(request('search'))
+                                <a href="{{ url()->current() }}" 
+                                   class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500 transition">
+                                    <i class="bi bi-x-circle-fill"></i>
+                                </a>
+                            @endif
+                        </form>
+                    </div>
+                </div>
+
+                {{-- MOBILE VIEW --}}
+                <div class="block md:hidden divide-y divide-gray-100">
+                    @forelse($kendaraans as $k)
+                        @php
+                            $sc = match($k->status_kendaraan) {
+                                'Tersedia'    => 'bg-green-50 text-green-700 border-green-200',
+                                'Dipinjam'    => 'bg-blue-50 text-blue-700 border-blue-200',
+                                'Maintenance' => 'bg-orange-50 text-orange-700 border-orange-200',
+                                default       => 'bg-gray-50 text-gray-700 border-gray-200',
+                            };
+                        @endphp
+                        <div class="p-4 hover:bg-slate-50 transition">
+                            <div class="flex items-start justify-between gap-2">
+                                <div>
+                                    <p class="font-semibold text-sm text-gray-800">
+                                        <i class="bi bi-car-front text-gray-400 mr-1"></i> {{ $k->nama_kendaraan }}
+                                    </p>
+                                    <p class="text-xs font-mono text-gray-500 mt-0.5">{{ $k->plat_nomor }}</p>
+                                    <p class="text-xs text-gray-400 mt-0.5"><i class="bi bi-people mr-0.5"></i>{{ $k->kapasitas_penumpang }} Orang</p>
+                                </div>
+                                <span class="text-[10px] font-bold px-2 py-1 rounded-md border {{ $sc }}">{{ $k->status_kendaraan }}</span>
+                            </div>
+                            @if($canModify)
+                                <div class="mt-3 flex items-center gap-2 justify-end">
+                                    <a href="{{ $isSuperAdmin ? route('superadmin.kendaraan.edit', $k->id) : route('spsi.kendaraan.edit', $k->id) }}" 
+                                       class="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center gap-1">
+                                        <i class="bi bi-pencil-square"></i> Edit
+                                    </a>
+                                    <span class="text-gray-300">|</span>
+                                    <form action="{{ $isSuperAdmin ? route('superadmin.kendaraan.destroy', $k->id) : route('spsi.kendaraan.destroy', $k->id) }}" 
+                                          method="POST" onsubmit="return confirm('Yakin ingin menghapus kendaraan ini?')" class="inline">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold flex items-center gap-1">
+                                            <i class="bi bi-trash"></i> Hapus
+                                        </button>
+                                    </form>
+                                </div>
+                            @endif
+                        </div>
+                    @empty
+                        <div class="py-16 text-center text-gray-400">
+                            <i class="bi bi-car-front text-5xl block mb-3 text-gray-300"></i>
+                            <p class="font-medium text-gray-500">Belum ada data kendaraan internal</p>
+                        </div>
+                    @endforelse
+                </div>
+
+                {{-- DESKTOP TABLE --}}
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="bg-slate-50 border-b border-gray-200">
+                                <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider w-12">No</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Nama Kendaraan</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Plat Nomor</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Kapasitas</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
                                 @if($canModify)
-                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-500 uppercase tracking-wider">Aksi</th>
                                 @endif
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($kendaraans as $k)
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($kendaraans as $i => $k)
                                 @php
                                     $sc = match($k->status_kendaraan) {
                                         'Tersedia'    => 'bg-green-50 text-green-700 border-green-200',
@@ -63,23 +137,28 @@
                                         default       => 'bg-gray-50 text-gray-700 border-gray-200',
                                     };
                                 @endphp
-                                <tr class="border-b border-gray-50 hover:bg-blue-50/30 transition">
-                                    <td class="px-6 py-4 font-bold text-gray-800"><i class="bi bi-car-front text-gray-400 mr-2"></i> {{ $k->nama_kendaraan }}</td>
-                                    <td class="px-6 py-4 font-mono">{{ $k->plat_nomor }}</td>
-                                    <td class="px-6 py-4">{{ $k->kapasitas_penumpang }} Orang</td>
-                                    <td class="px-6 py-4"><span class="px-2.5 py-1 rounded-full text-[11px] font-bold border {{ $sc }}">{{ $k->status_kendaraan }}</span></td>
+                                <tr class="hover:bg-blue-50/20 transition-colors">
+                                    <td class="px-4 py-3.5 text-center text-xs text-gray-400 font-semibold">
+                                        {{ ($kendaraans->currentPage() - 1) * $kendaraans->perPage() + $loop->iteration }}
+                                    </td>
+                                    <td class="px-4 py-3.5 font-semibold text-gray-800">{{ $k->nama_kendaraan }}</td>
+                                    <td class="px-4 py-3.5 font-mono text-xs">{{ $k->plat_nomor }}</td>
+                                    <td class="px-4 py-3.5 text-xs">{{ $k->kapasitas_penumpang }} Orang</td>
+                                    <td class="px-4 py-3.5">
+                                        <span class="inline-block text-[11px] font-bold px-2.5 py-1 rounded-md border {{ $sc }}">{{ $k->status_kendaraan }}</span>
+                                    </td>
                                     @if($canModify)
-                                        <td class="px-6 py-4 text-center">
-                                            <div class="flex justify-center items-center gap-3">
+                                        <td class="px-4 py-3.5 text-center">
+                                            <div class="flex items-center justify-center gap-2">
                                                 <a href="{{ $isSuperAdmin ? route('superadmin.kendaraan.edit', $k->id) : route('spsi.kendaraan.edit', $k->id) }}" 
-                                                   class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline flex items-center gap-1">
+                                                   class="text-blue-600 hover:text-blue-800 text-xs font-bold flex items-center gap-1">
                                                     <i class="bi bi-pencil-square"></i> Edit
                                                 </a>
                                                 <span class="text-gray-300">|</span>
                                                 <form action="{{ $isSuperAdmin ? route('superadmin.kendaraan.destroy', $k->id) : route('spsi.kendaraan.destroy', $k->id) }}" 
-                                                      method="POST" onsubmit="return confirm('Yakin ingin menghapus kendaraan ini?')">
+                                                      method="POST" onsubmit="return confirm('Yakin ingin menghapus kendaraan ini?')" class="inline">
                                                     @csrf @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-xs hover:underline flex items-center gap-1">
+                                                    <button type="submit" class="text-red-600 hover:text-red-800 text-xs font-bold flex items-center gap-1">
                                                         <i class="bi bi-trash"></i> Hapus
                                                     </button>
                                                 </form>
@@ -89,23 +168,54 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="{{ $canModify ? 5 : 4 }}" class="text-center py-12 text-gray-400">
-                                        <i class="bi bi-car-front text-4xl block mb-3 text-gray-300"></i>
-                                        <p>Belum ada data kendaraan internal.</p>
+                                    <td colspan="{{ $canModify ? 6 : 5 }}" class="py-16 text-center">
+                                        <i class="bi bi-car-front text-5xl block mb-3 text-gray-300"></i>
+                                        <p class="font-medium text-gray-500">Belum ada data kendaraan internal</p>
                                     </td>
                                 </tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
+
+                {{-- PAGINATION --}}
                 @if($kendaraans->hasPages())
-                    <div class="p-4 border-t border-gray-100 bg-gray-50">{{ $kendaraans->links() }}</div>
+                    <div class="px-5 py-3 border-t border-gray-100 flex items-center justify-between">
+                        <p class="text-xs text-gray-400">
+                            Menampilkan {{ $kendaraans->firstItem() ?? 0 }} - {{ $kendaraans->lastItem() ?? 0 }}
+                            dari {{ $kendaraans->total() }} data
+                        </p>
+                        <div class="flex items-center gap-2">
+                            {{ $kendaraans->withQueryString()->links() }}
+                        </div>
+                        <p class="text-xs text-gray-400" id="realtimeClock"></p>
+                    </div>
                 @endif
             </div>
+
             <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-700 flex gap-3">
                 <i class="bi bi-info-circle-fill text-lg"></i>
                 <p><strong>Catatan:</strong> Status kendaraan dikelola otomatis oleh sistem saat SPSI mengalokasikan armada. Anda dapat mengubahnya manual via tombol Edit (misal untuk set ke Maintenance).</p>
             </div>
         </div>
     </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            const formatted = now.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }).replace(/\./g, ':');
+            const el = document.getElementById('realtimeClock');
+            if (el) el.textContent = formatted + ' WIB';
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+    </script>
 </x-app-layout>

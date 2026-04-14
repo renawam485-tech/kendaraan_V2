@@ -1,6 +1,6 @@
 <x-app-layout>
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
 
             <div class="flex items-center gap-2 text-sm text-gray-500 mb-5">
                 <a href="{{ route('keuangan.rab') }}" class="hover:text-blue-600 transition flex items-center gap-1">

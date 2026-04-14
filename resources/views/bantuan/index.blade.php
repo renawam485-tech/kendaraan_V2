@@ -6,14 +6,11 @@
     </x-slot>
 
     <div class="py-8 bg-gray-50 min-h-screen">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+        <div class="w-full px-4 sm:px-6 lg:px-8 space-y-6">
 
             {{-- HERO CARD --}}
             <div
                 class="bg-white rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-600 p-6 sm:p-8 flex items-center gap-5">
-                <div class="hidden sm:flex p-4 bg-blue-50 rounded-full text-blue-600">
-                    <i class="bi bi-person-raised-up text-4xl"></i>
-                </div>
                 <div>
                     <h3 class="text-2xl font-black text-gray-800 mb-1">Halo, {{ Auth::user()->name }}!</h3>
                     <p class="text-gray-600 text-sm">Anda masuk sebagai <strong
@@ -30,120 +27,117 @@
             @if ($role === 'pengguna')
 
                 {{-- ALUR PENGAJUAN --}}
-                <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 flex items-center gap-2">
-                        <i class="bi bi-map text-blue-600 text-lg"></i>
-                        <h3 class="font-bold text-gray-800">Alur Pengajuan Kendaraan</h3>
-                    </div>
-                    <div class="p-6">
-                        <p class="text-sm text-gray-500 mb-5">Berikut adalah tahapan yang akan dilalui pengajuan Anda
-                            dari awal hingga perjalanan selesai.</p>
-                        <ol class="relative border-l-2 border-blue-200 space-y-0 ml-3">
+                {{-- ALUR PENGAJUAN --}}
+<div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-100 bg-blue-50 flex items-center gap-2">
+        <i class="bi bi-map text-blue-600 text-lg"></i>
+        <h3 class="font-bold text-gray-800">Alur Pengajuan Kendaraan</h3>
+    </div>
+    <div class="p-6">
+        <p class="text-sm text-gray-500 mb-5">Berikut adalah tahapan yang akan dilalui pengajuan Anda
+            dari awal hingga perjalanan selesai.</p>
+        <ol class="relative border-l-2 border-blue-200 space-y-0 ml-3">
 
-                            @foreach ([
-        ['Buat Pengajuan', 'Isi form pengajuan kendaraan: nama PIC, kontak, kendaraan yang dibutuhkan, titik jemput, tujuan, jadwal keberangkatan & kembali, jumlah penumpang, estimasi anggaran, serta unggah Surat Penugasan (PDF/gambar, maks. 2MB). Kode permohonan akan digenerate otomatis.', 'bi-pencil-square', 'blue', 'Menunggu Validasi Admin'],
-        ['Validasi Admin', 'Kepala Admin akan memeriksa kelengkapan dan mengategorikan kegiatan Anda sebagai Dinas SITH (ditanggung instansi) atau Non SITH (biaya pribadi). Admin juga dapat memberikan instruksi khusus untuk tim SPSI.', 'bi-shield-check', 'indigo', 'Menunggu Proses SPSI'],
-        ['Alokasi Armada (SPSI)', 'Tim SPSI mengalokasikan kendaraan (aset kampus atau vendor) dan pengemudi sesuai kebutuhan. Untuk kegiatan Dinas SITH, estimasi biaya operasional juga diisi di tahap ini.', 'bi-truck-front', 'violet', 'Menunggu Proses Keuangan / Menunggu Finalisasi'],
-        ['Persetujuan Anggaran (Keuangan)', 'Khusus kegiatan Dinas SITH — Tim Keuangan meninjau estimasi biaya dan menetapkan RAB resmi beserta mekanisme pembayaran (Cash, Cashless, atau Reimburse). Kegiatan Non SITH melewati tahap ini.', 'bi-cash-coin', 'emerald', 'Menunggu Finalisasi'],
-        ['Finalisasi & Penerbitan Surat', 'Kepala Admin melakukan pengecekan akhir lalu menerbitkan surat izin perjalanan. Status berubah menjadi Disetujui dan Anda menerima notifikasi.', 'bi-patch-check', 'green', 'Disetujui'],
-        ['Cetak Dokumen & Laksanakan Perjalanan', 'Setelah status Disetujui, Anda dapat mencetak Bukti Persetujuan Perjalanan dari halaman detail permohonan. Gunakan dokumen ini sebagai surat jalan resmi.', 'bi-printer', 'teal', ''],
-        ['Selesaikan & Laporan Perjalanan', 'Setelah perjalanan usai, klik tombol Selesaikan Perjalanan di halaman detail. Untuk Dinas SITH, wajib mengisi biaya aktual dan mengunggah bukti LPJ. Mekanisme Reimburse langsung Selesai; Cash/Cashless akan dicek sisa dana.', 'bi-check2-circle', 'cyan', 'Selesai / Menunggu Pengembalian Dana'],
-        ['Pengembalian Dana (jika ada)', 'Jika biaya aktual lebih kecil dari RAB yang disetujui dan mekanisme Cash/Cashless, Anda wajib mengunggah bukti pengembalian sisa dana. Tim Keuangan akan memverifikasi dan tiket resmi ditutup.', 'bi-cash-stack', 'amber', 'Selesai'],
-    ] as $i => [$judul, $deskripsi, $icon, $warna, $status])
-                                @php
-                                    $colors = [
-                                        'blue' => [
-                                            'dot' => 'bg-blue-500',
-                                            'icon' => 'text-blue-600',
-                                            'badge' => 'bg-blue-50 text-blue-700 border-blue-200',
-                                        ],
-                                        'indigo' => [
-                                            'dot' => 'bg-indigo-500',
-                                            'icon' => 'text-indigo-600',
-                                            'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
-                                        ],
-                                        'violet' => [
-                                            'dot' => 'bg-violet-500',
-                                            'icon' => 'text-violet-600',
-                                            'badge' => 'bg-violet-50 text-violet-700 border-violet-200',
-                                        ],
-                                        'emerald' => [
-                                            'dot' => 'bg-emerald-500',
-                                            'icon' => 'text-emerald-600',
-                                            'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                        ],
-                                        'green' => [
-                                            'dot' => 'bg-green-500',
-                                            'icon' => 'text-green-600',
-                                            'badge' => 'bg-green-50 text-green-700 border-green-200',
-                                        ],
-                                        'teal' => [
-                                            'dot' => 'bg-teal-500',
-                                            'icon' => 'text-teal-600',
-                                            'badge' => 'bg-teal-50 text-teal-700 border-teal-200',
-                                        ],
-                                        'cyan' => [
-                                            'dot' => 'bg-cyan-500',
-                                            'icon' => 'text-cyan-600',
-                                            'badge' => 'bg-cyan-50 text-cyan-700 border-cyan-200',
-                                        ],
-                                        'amber' => [
-                                            'dot' => 'bg-amber-500',
-                                            'icon' => 'text-amber-600',
-                                            'badge' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                        ],
-                                    ];
-                                    $c = $colors[$warna];
-                                @endphp
-                                <li class="ml-6 pb-7 last:pb-0">
-                                    <span
-                                        class="absolute -left-[9px] flex items-center justify-center w-4 h-4 rounded-full {{ $c['dot'] }} ring-4 ring-white"></span>
-                                    <div class="flex flex-wrap items-start justify-between gap-2">
-                                        <h4 class="font-bold text-gray-800 text-sm flex items-center gap-1.5">
-                                            <i class="bi {{ $icon }} {{ $c['icon'] }}"></i>
-                                            {{ $i + 1 }}. {{ $judul }}
-                                        </h4>
-                                        @if ($status)
-                                            <span
-                                                class="text-[10px] font-bold px-2 py-0.5 rounded-full border {{ $c['badge'] }}">{{ $status }}</span>
-                                        @endif
-                                    </div>
-                                    <p class="mt-1 text-sm text-gray-500 leading-relaxed">{{ $deskripsi }}</p>
-                                </li>
-                            @endforeach
-                        </ol>
+            @foreach ([
+                ['Buat Pengajuan', 'Isi form pengajuan kendaraan: nama PIC, kontak, kendaraan yang dibutuhkan, titik jemput, tujuan, jadwal keberangkatan & kembali, jumlah penumpang, estimasi anggaran, serta unggah Surat Penugasan (PDF/gambar, maks. 2MB). Kode permohonan akan digenerate otomatis.', 'bi-pencil-square', 'blue'],
+                ['Validasi Admin', 'Kepala Admin akan memeriksa kelengkapan dan mengategorikan kegiatan Anda sebagai Dinas SITH (ditanggung instansi) atau Non SITH (biaya pribadi). Admin juga dapat memberikan instruksi khusus untuk tim SPSI.', 'bi-shield-check', 'indigo'],
+                ['Alokasi Armada (SPSI)', 'Tim SPSI mengalokasikan kendaraan (aset kampus atau vendor) dan pengemudi sesuai kebutuhan. Untuk kegiatan Dinas SITH, estimasi biaya operasional juga diisi di tahap ini.', 'bi-truck-front', 'violet'],
+                ['Persetujuan Anggaran (Keuangan)', 'Khusus kegiatan Dinas SITH — Tim Keuangan meninjau estimasi biaya dan menetapkan RAB resmi beserta mekanisme pembayaran (Cash, Cashless, atau Reimburse). Kegiatan Non SITH melewati tahap ini.', 'bi-cash-coin', 'emerald'],
+                ['Finalisasi & Penerbitan Surat', 'Kepala Admin melakukan pengecekan akhir lalu menerbitkan surat izin perjalanan. Status berubah menjadi Disetujui dan Anda menerima notifikasi.', 'bi-patch-check', 'green'],
+                ['Cetak Dokumen & Laksanakan Perjalanan', 'Setelah status Disetujui, Anda dapat mencetak Bukti Persetujuan Perjalanan dari halaman detail permohonan. Gunakan dokumen ini sebagai surat jalan resmi.', 'bi-printer', 'teal'],
+                ['Selesaikan & Laporan Perjalanan', 'Setelah perjalanan usai, klik tombol Selesaikan Perjalanan di halaman detail. Untuk Dinas SITH, wajib mengisi biaya aktual dan mengunggah bukti LPJ. Mekanisme Reimburse langsung Selesai; Cash/Cashless akan dicek sisa dana.', 'bi-check2-circle', 'cyan'],
+                ['Pengembalian Dana (jika ada)', 'Jika biaya aktual lebih kecil dari RAB yang disetujui dan mekanisme Cash/Cashless, Anda wajib mengunggah bukti pengembalian sisa dana. Tim Keuangan akan memverifikasi dan tiket resmi ditutup.', 'bi-cash-stack', 'amber'],
+            ] as $i => [$judul, $deskripsi, $icon, $warna])
+                @php
+                    $colors = [
+                        'blue' => [
+                            'dot' => 'bg-blue-500',
+                            'icon' => 'text-blue-600',
+                            'badge' => 'bg-blue-50 text-blue-700 border-blue-200',
+                        ],
+                        'indigo' => [
+                            'dot' => 'bg-indigo-500',
+                            'icon' => 'text-indigo-600',
+                            'badge' => 'bg-indigo-50 text-indigo-700 border-indigo-200',
+                        ],
+                        'violet' => [
+                            'dot' => 'bg-violet-500',
+                            'icon' => 'text-violet-600',
+                            'badge' => 'bg-violet-50 text-violet-700 border-violet-200',
+                        ],
+                        'emerald' => [
+                            'dot' => 'bg-emerald-500',
+                            'icon' => 'text-emerald-600',
+                            'badge' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                        ],
+                        'green' => [
+                            'dot' => 'bg-green-500',
+                            'icon' => 'text-green-600',
+                            'badge' => 'bg-green-50 text-green-700 border-green-200',
+                        ],
+                        'teal' => [
+                            'dot' => 'bg-teal-500',
+                            'icon' => 'text-teal-600',
+                            'badge' => 'bg-teal-50 text-teal-700 border-teal-200',
+                        ],
+                        'cyan' => [
+                            'dot' => 'bg-cyan-500',
+                            'icon' => 'text-cyan-600',
+                            'badge' => 'bg-cyan-50 text-cyan-700 border-cyan-200',
+                        ],
+                        'amber' => [
+                            'dot' => 'bg-amber-500',
+                            'icon' => 'text-amber-600',
+                            'badge' => 'bg-amber-50 text-amber-700 border-amber-200',
+                        ],
+                    ];
+                    $c = $colors[$warna];
+                @endphp
+                <li class="ml-6 pb-7 last:pb-0">
+                    <span class="absolute -left-[9px] flex items-center justify-center w-4 h-4 rounded-full {{ $c['dot'] }} ring-4 ring-white"></span>
+                    <div class="flex flex-wrap items-start justify-between gap-2">
+                        <h4 class="font-bold text-gray-800 text-sm flex items-center gap-1.5">
+                            <i class="bi {{ $icon }} {{ $c['icon'] }}"></i>
+                            {{ $i + 1 }}. {{ $judul }}
+                        </h4>
+                        {{-- BADGE STATUS TELAH DIHAPUS --}}
                     </div>
-                </div>
+                    <p class="mt-1 text-sm text-gray-500 leading-relaxed">{{ $deskripsi }}</p>
+                </li>
+            @endforeach
+        </ol>
+    </div>
+</div>
 
                 {{-- STATUS PERMOHONAN --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                    <div class="px-6 py-4 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
-                        <i class="bi bi-tags text-blue-600"></i>
-                        <h3 class="font-bold text-gray-800">Arti Setiap Status Permohonan</h3>
-                    </div>
-                    <div class="divide-y divide-gray-100">
-                        @foreach ([
-        ['Menunggu Validasi Admin', 'bg-yellow-50 text-yellow-700 border-yellow-200', 'Pengajuan Anda sudah diterima dan sedang antre untuk ditinjau oleh Kepala Admin.'],
-        ['Menunggu Proses SPSI', 'bg-amber-50 text-amber-700 border-amber-200', 'Admin telah menyetujui. Tim SPSI sedang mengalokasikan kendaraan dan pengemudi.'],
-        ['Menunggu Proses Keuangan', 'bg-orange-50 text-orange-700 border-orange-200', 'Armada sudah dialokasikan. Tim Keuangan sedang menetapkan RAB dan mekanisme pembayaran.'],
-        ['Menunggu Finalisasi', 'bg-purple-50 text-purple-700 border-purple-200', 'Semua proses selesai. Kepala Admin sedang melakukan pengecekan akhir sebelum menerbitkan surat izin.'],
-        ['Disetujui', 'bg-blue-50 text-blue-700 border-blue-200', 'Permohonan resmi disetujui! Anda bisa mencetak surat izin perjalanan dan melaksanakan perjalanan.'],
-        ['Menunggu Mulai Perjalanan', 'bg-yellow-50 text-yellow-700 border-yellow-200', 'Kunci kendaraan sudah diserahkan oleh SPSI. Segera klik tombol "Mulai Perjalanan" di halaman detail untuk memulai perjalanan secara resmi.'],
-
-        ['Perjalanan Berlangsung', 'bg-teal-50 text-teal-700 border-teal-200', 'Perjalanan sedang berjalan. Setelah selesai, klik "Selesaikan Perjalanan" di halaman detail dan unggah LPJ jika kegiatan Dinas SITH.'],
-        ['Menunggu Pengembalian Dana', 'bg-rose-50 text-rose-700 border-rose-200', 'Perjalanan selesai namun ada sisa dana yang harus dikembalikan. Unggah bukti pengembalian segera.'],
-        ['Menunggu Verifikasi Pengembalian', 'bg-pink-50 text-pink-700 border-pink-200', 'Bukti pengembalian dana sudah diunggah dan sedang diverifikasi oleh Tim Keuangan.'],
-        ['Selesai', 'bg-emerald-50 text-emerald-700 border-emerald-200', 'Seluruh proses perjalanan dan administrasi telah selesai. Tiket ditutup.'],
-        ['Ditolak', 'bg-red-50 text-red-700 border-red-200', 'Permohonan tidak disetujui oleh Admin. Anda dapat mengajukan permohonan baru jika diperlukan.'],
-    ] as [$status, $sc, $desc])
-                            <div class="px-6 py-3.5 flex items-start gap-3">
-                                <span
-                                    class="mt-0.5 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 {{ $sc }}">{{ $status }}</span>
-                                <p class="text-sm text-gray-600">{{ $desc }}</p>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
+    <div class="px-6 py-4 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
+        <i class="bi bi-tags text-blue-600"></i>
+        <h3 class="font-bold text-gray-800">Arti Setiap Status Permohonan</h3>
+    </div>
+    <div class="divide-y divide-gray-100">
+        @foreach ([
+            ['Menunggu Validasi Admin', 'bg-yellow-50 text-yellow-700 border-yellow-200', 'Pengajuan Anda sudah diterima dan sedang antre untuk ditinjau oleh Kepala Admin.'],
+            ['Menunggu Proses SPSI', 'bg-amber-50 text-amber-700 border-amber-200', 'Admin telah menyetujui. Tim SPSI sedang mengalokasikan kendaraan dan pengemudi.'],
+            ['Menunggu Proses Keuangan', 'bg-orange-50 text-orange-700 border-orange-200', 'Armada sudah dialokasikan. Tim Keuangan sedang menetapkan RAB dan mekanisme pembayaran.'],
+            ['Menunggu Finalisasi', 'bg-purple-50 text-purple-700 border-purple-200', 'Semua proses selesai. Kepala Admin sedang melakukan pengecekan akhir sebelum menerbitkan surat izin.'],
+            ['Disetujui', 'bg-blue-50 text-blue-700 border-blue-200', 'Permohonan resmi disetujui! Anda bisa mencetak surat izin perjalanan dan melaksanakan perjalanan.'],
+            ['Menunggu Mulai Perjalanan', 'bg-yellow-50 text-yellow-700 border-yellow-200', 'Kunci kendaraan sudah diserahkan oleh SPSI. Segera klik tombol "Mulai Perjalanan" di halaman detail untuk memulai perjalanan secara resmi.'],
+            ['Perjalanan Berlangsung', 'bg-teal-50 text-teal-700 border-teal-200', 'Perjalanan sedang berjalan. Setelah selesai, klik "Selesaikan Perjalanan" di halaman detail dan unggah LPJ jika kegiatan Dinas SITH.'],
+            ['Menunggu Pengembalian Dana', 'bg-rose-50 text-rose-700 border-rose-200', 'Perjalanan selesai namun ada sisa dana yang harus dikembalikan. Unggah bukti pengembalian segera.'],
+            ['Menunggu Verifikasi Pengembalian', 'bg-pink-50 text-pink-700 border-pink-200', 'Bukti pengembalian dana sudah diunggah dan sedang diverifikasi oleh Tim Keuangan.'],
+            ['Selesai', 'bg-emerald-50 text-emerald-700 border-emerald-200', 'Seluruh proses perjalanan dan administrasi telah selesai. Tiket ditutup.'],
+            ['Ditolak', 'bg-red-50 text-red-700 border-red-200', 'Permohonan tidak disetujui oleh Admin. Anda dapat mengajukan permohonan baru jika diperlukan.'],
+        ] as [$status, $sc, $desc])
+            <div class="px-6 py-3.5 flex items-start gap-3">
+                <span class="mt-0.5 inline-block text-[10px] font-bold px-2 py-0.5 rounded-full border whitespace-nowrap flex-shrink-0 {{ $sc }}">
+                    {{ $status }}
+                </span>
+                <p class="text-sm text-gray-600">{{ $desc }}</p>
+            </div>
+        @endforeach
+    </div>
+</div>
 
                 {{-- FAQ PENGGUNA --}}
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -341,7 +335,8 @@
                         </div>
                         <div class="p-5 space-y-3 text-sm text-gray-600">
                             <p>Saat armada dialokasikan, sistem otomatis mengubah status kendaraan menjadi
-                                <strong>"Dipinjam"</strong> dan pengemudi menjadi <strong>"Bertugas"</strong>.</p>
+                                <strong>"Dipinjam"</strong> dan pengemudi menjadi <strong>"Bertugas"</strong>.
+                            </p>
                             <p>Status kendaraan dan pengemudi akan kembali menjadi <strong>"Tersedia"</strong> secara
                                 otomatis ketika pemohon mengklik <em>"Selesaikan Perjalanan"</em>.</p>
                             <p>Hanya kendaraan dengan status <strong>"Tersedia"</strong> yang tampil di dropdown

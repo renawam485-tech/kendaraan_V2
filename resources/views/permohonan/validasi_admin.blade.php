@@ -1,69 +1,106 @@
 <x-app-layout>
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
 
-            {{-- BREADCRUMB --}}
-            <div class="flex items-center gap-2 text-sm text-gray-500 mb-5">
-                <a href="{{ route('admin.validasi') }}" class="hover:text-blue-600 transition flex items-center gap-1">
+            {{-- Tombol Kembali --}}
+            <div class="mb-5">
+                <a href="{{ route('admin.validasi') }}" class="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-blue-600 transition bg-white border border-gray-200 px-3 py-2 rounded-lg shadow-sm">
                     <i class="bi bi-arrow-left"></i> Kembali
                 </a>
-                <span class="text-gray-300">/</span>
-                <span class="text-gray-700 font-medium">Validasi Permohonan</span>
-                @if($permohonan->kode_permohonan)
-                    <span class="text-gray-300">/</span>
-                    <span class="font-black text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md text-xs tracking-widest">{{ $permohonan->kode_permohonan }}</span>
-                @endif
             </div>
 
-            {{-- DATA PEMOHON --}}
+            {{-- DATA PEMOHON  --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden mb-5">
-                <div class="px-6 py-4 border-b border-gray-100 bg-slate-50 flex items-center justify-between">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <i class="bi bi-person-lines-fill text-blue-600"></i> Data Permohonan
-                    </h3>
-                    <span class="text-xs text-gray-400">Diajukan {{ $permohonan->created_at->diffForHumans() }}</span>
+                <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-gradient-to-r from-blue-50 to-indigo-50 flex items-center justify-between flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                        <i class="bi bi-person-lines-fill text-blue-600"></i>
+                        <h3 class="font-bold text-gray-800">Data Permohonan</h3>
+                    </div>
+                    <div class="flex items-center gap-3 flex-wrap">
+                        {{-- Waktu diajukan REAL TIME --}}
+                        <span class="text-xs text-gray-400" id="diajukan-time" data-created="{{ $permohonan->created_at->toISOString() }}">
+                            <i class="bi bi-clock-history"></i> <span class="font-semibold" id="relative-time">{{ $permohonan->created_at->diffForHumans() }}</span>
+                        </span>
+                    </div>
                 </div>
-                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Nama PIC</p>
-                        <p class="font-semibold text-gray-800">{{ $permohonan->nama_pic }}</p>
+                <div class="divide-y divide-gray-100">
+                    {{-- Kode Permohonan --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-upc-scan text-gray-400"></i>Kode Pengajuan
+                        </span>
+                        <p class="text-sm font-black text-blue-700 break-words">
+                            {{ $permohonan->kode_permohonan ?? '—' }}
+                        </p>
+                    </div>
+
+                    {{-- Pemohon --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-person text-gray-400"></i>Nama PIC
+                        </span>
+                        <p class="text-sm font-semibold text-gray-800 break-words">{{ $permohonan->nama_pic }}</p>
                         <p class="text-xs text-gray-500 mt-0.5">{{ $permohonan->kontak_pic }}</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Kebutuhan Kendaraan</p>
-                        <p class="font-semibold text-gray-800">{{ $permohonan->kendaraan_dibutuhkan }}</p>
-                        <p class="text-xs text-gray-500"><i class="bi bi-people mr-0.5"></i>{{ $permohonan->jumlah_penumpang }} orang</p>
+
+                    {{-- Kebutuhan Kendaraan --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-truck text-gray-400"></i>Kebutuhan Kendaraan
+                        </span>
+                        <p class="text-sm font-semibold text-gray-800 break-words">{{ $permohonan->kendaraan_dibutuhkan }}</p>
+                        <p class="text-xs text-gray-500 mt-0.5"><i class="bi bi-people mr-0.5"></i>{{ $permohonan->jumlah_penumpang }} orang</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Rute</p>
-                        <p class="text-sm text-gray-700">{{ $permohonan->titik_jemput }}</p>
-                        <p class="text-sm text-gray-500"><i class="bi bi-arrow-right mr-0.5"></i>{{ $permohonan->tujuan }}</p>
+
+                    {{-- Rute --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-signpost-split text-gray-400"></i>Rute Perjalanan
+                        </span>
+                        <p class="text-sm text-gray-700 break-words">Dari: {{ $permohonan->titik_jemput }}</p>
+                        <p class="text-sm text-gray-700 break-words">Tujuan: {{ $permohonan->tujuan }}</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Jadwal</p>
-                        <p class="text-sm font-medium text-gray-700">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->format('d M Y, H:i') }}</p>
-                        <p class="text-xs text-gray-500">s/d {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->format('d M Y, H:i') }}</p>
+
+                    {{-- Jadwal --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-calendar-event text-gray-400"></i>Jadwal Perjalanan
+                        </span>
+                        <p class="text-sm font-medium text-gray-700">{{ \Carbon\Carbon::parse($permohonan->waktu_berangkat)->translatedFormat('l, d M Y H:i') }} WIB</p>
+                        <p class="text-xs text-gray-500">s/d {{ \Carbon\Carbon::parse($permohonan->waktu_kembali)->translatedFormat('l, d M Y H:i') }} WIB</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Anggaran Diajukan</p>
-                        <p class="font-semibold text-gray-800">{{ $permohonan->anggaran_diajukan ?: '—' }}</p>
+
+                    {{-- Anggaran Diajukan --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-wallet text-gray-400"></i>Anggaran Digunakan
+                        </span>
+                        <p class="text-sm font-semibold text-gray-800 break-words">{{ $permohonan->anggaran_diajukan ?: '—' }}</p>
                     </div>
-                    <div>
-                        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Surat Penugasan</p>
+
+                    {{-- Surat Penugasan --}}
+                    <div class="px-4 sm:px-6 py-3.5">
+                        <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                            <i class="bi bi-file-earmark-pdf text-gray-400"></i>Surat Penugasan
+                        </span>
                         @if($permohonan->file_surat_penugasan)
                             <a href="{{ asset('storage/'.$permohonan->file_surat_penugasan) }}" target="_blank"
                                class="inline-flex items-center gap-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition">
                                 <i class="bi bi-file-earmark-pdf"></i> Lihat Dokumen
                             </a>
                         @else
-                            <span class="text-gray-400 italic text-sm">Tidak ada</span>
+                            <p class="text-sm text-gray-400 italic">Tidak ada</p>
                         @endif
                     </div>
+
+                    {{-- Catatan Pemohon --}}
                     @if($permohonan->catatan_pemohon)
-                        <div class="sm:col-span-2 lg:col-span-3">
-                            <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Catatan dari Pemohon</p>
-                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800">
-                                <i class="bi bi-chat-quote mr-1"></i>{{ $permohonan->catatan_pemohon }}
+                        <div class="px-4 sm:px-6 py-3.5">
+                            <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
+                                <i class="bi bi-chat-quote text-gray-400"></i>Catatan dari Pemohon
+                            </span>
+                            <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 text-sm text-amber-800 break-words">
+                                {{ $permohonan->catatan_pemohon }}
                             </div>
                         </div>
                     @endif
@@ -72,11 +109,11 @@
 
             {{-- FORM VALIDASI --}}
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
+                <div class="px-4 sm:px-6 py-4 border-b border-gray-100 bg-slate-50 flex items-center gap-2">
                     <i class="bi bi-pencil-square text-blue-600"></i>
                     <h3 class="font-bold text-gray-800">Keputusan Admin</h3>
                 </div>
-                <div class="p-6">
+                <div class="p-4 sm:p-6">
                     <form action="{{ route('permohonan.validasi_admin_proses', $permohonan->id) }}" method="POST" class="space-y-5">
                         @csrf @method('PUT')
 
@@ -117,15 +154,15 @@
                                 class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm transition">{{ old('rekomendasi_admin') }}</textarea>
                         </div>
 
-                        <div class="flex items-center gap-3 pt-2">
+                        <div class="flex flex-col sm:flex-row items-center gap-3 pt-2">
                             <button type="submit" name="status_permohonan" value="Menunggu Proses SPSI"
                                 onclick="customConfirm({ title: 'Setujui Permohonan', message: 'Yakin menyetujui permohonan ini dan meneruskannya ke SPSI?', confirmText: 'Ya, Setujui' }, () => this.closest('form').submit())"
-                                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition text-sm">
-                                <i class="bi bi-check2-circle"></i> Setujui & Teruskan ke SPSI
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition text-sm">
+                                <i class="bi bi-check2-circle"></i> Setujui
                             </button>
                             <button type="submit" name="status_permohonan" value="Ditolak"
                                 onclick="customConfirm({ title: 'Tolak Pengajuan', message: 'Yakin ingin MENOLAK permohonan ini?', confirmText: 'Ya, Tolak', isDanger: true }, () => this.closest('form').submit())"
-                                class="inline-flex items-center gap-2 bg-white hover:bg-red-50 text-red-600 border border-red-300 font-bold py-2.5 px-6 rounded-lg transition text-sm">
+                                class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-white hover:bg-red-50 text-red-600 border border-red-300 font-bold py-2.5 px-6 rounded-lg transition text-sm">
                                 <i class="bi bi-x-circle"></i> Tolak Pengajuan
                             </button>
                         </div>
@@ -134,4 +171,34 @@
             </div>
         </div>
     </div>
+
+    <script>
+        function updateRelativeTime() {
+            const element = document.getElementById('relative-time');
+            const container = document.getElementById('diajukan-time');
+            if (element && container) {
+                const createdDate = new Date(container.dataset.created);
+                const now = new Date();
+                const diffInSeconds = Math.floor((now - createdDate) / 1000);
+                const diffInMinutes = Math.floor(diffInSeconds / 60);
+                const diffInHours = Math.floor(diffInMinutes / 60);
+                const diffInDays = Math.floor(diffInHours / 24);
+
+                let relativeText = '';
+                if (diffInSeconds < 60) {
+                    relativeText = 'baru saja';
+                } else if (diffInMinutes < 60) {
+                    relativeText = diffInMinutes + ' menit yang lalu';
+                } else if (diffInHours < 24) {
+                    relativeText = diffInHours + ' jam yang lalu';
+                } else {
+                    relativeText = diffInDays + ' hari yang lalu';
+                }
+                element.textContent = relativeText;
+            }
+        }
+
+        setInterval(updateRelativeTime, 60000);
+        updateRelativeTime();
+    </script>
 </x-app-layout>

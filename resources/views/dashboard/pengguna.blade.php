@@ -1,16 +1,17 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex items-center justify-between">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Dashboard Pengguna</h2>
-            <a href="{{ route('permohonan.create') }}"
-                class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2 px-4 rounded-lg shadow-sm transition-all duration-150 active:scale-95">
-                <i class="bi bi-plus-lg"></i> Buat Pengajuan
-            </a>
+    <div class="w-full px-4 sm:px-6 lg:px-8 mb-5">
+        <div class="bg-white rounded-xl border border-gray-200 px-5 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <i class="bi bi-emoji-wink text-2xl text-blue-500"></i>
+                <span class="font-semibold text-gray-700">Halo, {{ Auth::user()->name ?? 'User' }}!</span>
+            </div>
+            <div class="text-sm text-gray-500">
+                {{ \Carbon\Carbon::now()->translatedFormat('l, d M Y') }}
+            </div>
         </div>
-    </x-slot>
-
+    </div>
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-5">
+        <div class="px-4 sm:px-6 lg:px-8 space-y-5">
 
             {{-- STATS STRIP — nilai dari controller (DB query), bukan filter per halaman --}}
             <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -86,7 +87,7 @@
                                     class="flex-1 text-center py-1.5 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg transition">
                                     <i class="bi bi-eye mr-1"></i>Detail
                                 </a>
-                                @if ($p->status_permohonan->canPrint())
+                                @if ($p->status_permohonan !== \App\Enums\StatusPermohonan::SELESAI)
                                     <a href="{{ route('permohonan.cetak', $p->id) }}" target="_blank"
                                         class="flex-1 text-center py-1.5 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition">
                                         <i class="bi bi-printer mr-1"></i>Cetak SPJ
@@ -118,7 +119,7 @@
                                     Kode</th>
                                 <th
                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                    Tujuan Kegiatan</th>
+                                    Tujuan</th>
                                 <th
                                     class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                     Jadwal</th>
@@ -184,10 +185,10 @@
                                                 class="inline-flex items-center gap-1 text-xs font-bold text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-2.5 py-1.5 rounded-lg transition">
                                                 <i class="bi bi-eye"></i> Detail
                                             </a>
-                                            @if ($p->status_permohonan->canPrint())
+                                            @if ($p->status_permohonan !== \App\Enums\StatusPermohonan::SELESAI)
                                                 <a href="{{ route('permohonan.cetak', $p->id) }}" target="_blank"
-                                                    class="inline-flex items-center gap-1 text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 px-2.5 py-1.5 rounded-lg transition">
-                                                    <i class="bi bi-printer"></i> Cetak
+                                                    class="flex-1 text-center py-1.5 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition">
+                                                    <i class="bi bi-printer mr-1"></i>Cetak SPJ
                                                 </a>
                                             @endif
                                         </div>
@@ -296,7 +297,9 @@
                             </span>
                         @endif
                     </div>
-                    <p class="text-xs text-gray-400" id="realtimeClock"></p>
+                    <p class="text-xs text-gray-400">
+                        {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }}
+                    </p>
                 </div>
             </div>
         </div>
@@ -310,22 +313,5 @@
                 `Ditemukan ${total} data untuk "${searchInput.value}"`;
             document.getElementById('countBadge').textContent = `${total} data`;
         }
-
-        function updateClock() {
-            const now = new Date();
-            const formatted = now.toLocaleString('id-ID', {
-                day: '2-digit',
-                month: 'short',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            }).replace(/\./g, ':');
-            const el = document.getElementById('realtimeClock');
-            if (el) el.textContent = formatted + ' WIB';
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
     </script>
 </x-app-layout>

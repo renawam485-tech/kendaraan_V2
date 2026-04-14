@@ -9,11 +9,12 @@ export default defineConfig({
         }),
     ],
     server: {
-        host: '0.0.0.0',     // Mengizinkan akses dari jaringan mana pun
-        port: 5173,           // Pastikan portnya sesuai
-        strictPort: true,     // Memaksa menggunakan port 5173
+        host: '0.0.0.0', 
+        port: 5173,        
+        strictPort: true,  
+        cors: true, 
         hmr: {
-            host: 'localhost', // Hot Module Replacement tetap berjalan di local
+            host: '192.168.1.2', 
         },
     },
 });

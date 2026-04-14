@@ -6,7 +6,7 @@
     </x-slot>
 
     <div class="py-6 bg-slate-50 min-h-screen">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
 
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div

@@ -27,7 +27,7 @@
     </style>
 
     <div class="py-8 bg-slate-50 min-h-screen">
-        <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="w-full px-4 sm:px-6 lg:px-8">
 
             @if ($errors->any())
                 <div class="mb-6 bg-red-50 border border-red-200 rounded-xl p-4 flex gap-3 items-start shadow-sm">
@@ -159,17 +159,16 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div>
+                                <div class="sm:col-span-2">
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Jumlah Rombongan <span class="text-red-500">*</span>
+                                        Jumlah Penumpang <span class="text-red-500">*</span>
                                     </label>
                                     <input type="number" name="jumlah_penumpang"
                                         value="{{ old('jumlah_penumpang') }}"
                                         min="1" max="60" required
-                                        placeholder="Maks. 60 orang"
+                                        placeholder="Termasuk sopir jika membawa supir sendiri"
                                         oninput="if(this.value > 60) this.value = 60"
                                         class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition">
-                                    <p class="text-xs text-gray-400 mt-1">Termasuk pengemudi jika membawa supir sendiri</p>
                                 </div>
                             </div>
                         </div>
@@ -186,14 +185,13 @@
                             <div class="p-5 space-y-4">
                                 <div>
                                     <label class="block text-sm font-semibold text-gray-700 mb-1.5">
-                                        Perkiraan Anggaran yang Dibutuhkan
-                                        <span class="text-gray-400 font-normal">(opsional)</span>
+                                        Anggaran Digunakan
                                     </label>
                                     <textarea name="anggaran_diajukan" rows="3" maxlength="500"
                                         placeholder="cth: BBM Rp 200.000, Tol Rp 75.000, Parkir Rp 25.000 → Estimasi total Rp 300.000"
                                         class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition resize-none">{{ old('anggaran_diajukan') }}</textarea>
                                     <p class="text-xs text-gray-400 mt-1">
-                                        Kosongkan jika kegiatan Non-Dinas atau biaya ditanggung pribadi. Rincian membantu proses RAB lebih cepat.
+                                        <span class="text-red-500 font-bold">*</span> Kosongkan jika bukan kegiatan Dinas SITH atau biaya ditanggung pribadi. Rincian membantu proses RAB lebih cepat.
                                     </p>
                                 </div>
                                 <div>
@@ -202,7 +200,7 @@
                                         <span class="text-gray-400 font-normal">(opsional)</span>
                                     </label>
                                     <textarea id="catatan_pemohon" name="catatan_pemohon" rows="3" maxlength="500"
-                                        placeholder="Instruksi khusus: preferensi rute, kebutuhan khusus penumpang, dll."
+                                        placeholder="Instruksi khusus: dengan supir, dll."
                                         class="w-full border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-lg shadow-sm text-sm transition resize-none">{{ old('catatan_pemohon') }}</textarea>
                                     <div class="flex justify-end mt-1">
                                         <span class="text-xs text-gray-400"><span id="char_count">0</span>/500 karakter</span>
@@ -338,7 +336,7 @@
     {{-- Alert Modal --}}
     <div id="customAlertModal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-gray-900 bg-opacity-60 px-4">
         <div class="bg-white rounded-xl shadow-2xl max-w-sm w-full p-6 text-center">
-            <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+            <div class="w-full flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
                 <i class="bi bi-exclamation-triangle-fill text-red-500 text-xl"></i>
             </div>
             <h3 class="text-base font-bold text-gray-900 mb-2">Jadwal Tidak Valid</h3>

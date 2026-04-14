@@ -278,32 +278,40 @@ class PermohonanController extends Controller
     public function prosesSpsiSubmit(Request $request, $id)
     {
         $permohonan = Permohonan::findOrFail($id);
-        $isVendor   = $request->sumber_armada === 'Vendor';
 
-        $request->validate([
-            'kendaraan_id'               => $isVendor ? 'nullable' : 'required|exists:kendaraans,id',
-            'kendaraan_vendor_id'        => $isVendor ? 'required|exists:kendaraan_vendors,id' : 'nullable',
+        // Fix #1: validasi sumber_armada dulu, baru gunakan nilainya
+        $validated = $request->validate([
+            'sumber_armada'              => 'required|in:Kampus,Vendor',
+            'kendaraan_id'               => 'required_if:sumber_armada,Kampus|nullable|exists:kendaraans,id',
+            'kendaraan_vendor_id'        => 'required_if:sumber_armada,Vendor|nullable|exists:kendaraan_vendors,id',
             'pengemudi_id'               => 'nullable|exists:pengemudis,id',
             'estimasi_biaya_operasional' => 'required|numeric|min:0',
         ]);
 
-        $statusLanjut = ($permohonan->kategori_kegiatan !== 'Non SITH')
+        $isVendor = $validated['sumber_armada'] === 'Vendor';
+
+        $this->bebaskanArmada($permohonan);
+
+        $statusLanjut = $permohonan->kategori_kegiatan !== 'Non SITH'
             ? StatusPermohonan::MENUNGGU_PROSES_KEUANGAN
             : StatusPermohonan::MENUNGGU_FINALISASI;
 
         $permohonan->update([
-            'kendaraan_id'               => $isVendor ? null : $request->kendaraan_id,
-            'kendaraan_vendor_id'        => $isVendor ? $request->kendaraan_vendor_id : null,
-            'pengemudi_id'               => $request->pengemudi_id ?: null,
-            'estimasi_biaya_operasional' => $request->estimasi_biaya_operasional,
+            'kendaraan_id'               => $isVendor ? null : $validated['kendaraan_id'],
+            'kendaraan_vendor_id'        => $isVendor ? $validated['kendaraan_vendor_id'] : null,
+            'pengemudi_id'               => $validated['pengemudi_id'] ?? null,
+            'estimasi_biaya_operasional' => $validated['estimasi_biaya_operasional'],
             'status_permohonan'          => $statusLanjut,
+            'sumber_armada'              => $validated['sumber_armada'],
         ]);
 
-        if (!$isVendor && $request->kendaraan_id) {
-            Kendaraan::find($request->kendaraan_id)->update(['status_kendaraan' => 'Dipinjam']);
+        if (!$isVendor && $validated['kendaraan_id']) {
+            Kendaraan::findOrFail($validated['kendaraan_id'])
+                ->update(['status_kendaraan' => 'Dipinjam']);
         }
-        if ($request->pengemudi_id) {
-            Pengemudi::find($request->pengemudi_id)->update(['status_pengemudi' => 'Bertugas']);
+        if ($validated['pengemudi_id']) {
+            Pengemudi::findOrFail($validated['pengemudi_id'])
+                ->update(['status_pengemudi' => 'Bertugas']);
         }
 
         if ($statusLanjut === StatusPermohonan::MENUNGGU_PROSES_KEUANGAN) {
@@ -383,7 +391,10 @@ class PermohonanController extends Controller
         $permohonan = Permohonan::findOrFail($id);
 
         if ($permohonan->status_permohonan !== StatusPermohonan::DISETUJUI) {
-            return redirect()->back()->with('error', 'Status tidak valid untuk serah terima kunci.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Status tidak valid untuk serah terima kunci.'
+            ]);
         }
 
         $permohonan->update([
@@ -396,8 +407,10 @@ class PermohonanController extends Controller
             'Kunci kendaraan sudah diserahkan! Silakan klik "Mulai Perjalanan" di halaman detail untuk memulai perjalanan secara resmi.'
         ));
 
-        return redirect()->route('spsi.serah_terima')
-            ->with('success', 'Serah terima kunci berhasil dicatat untuk ' . $permohonan->nama_pic . '.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Serah terima kunci berhasil dicatat untuk ' . $permohonan->nama_pic . '.'
+        ]);
     }
 
     public function konfirmasiKembali($id)
@@ -405,7 +418,10 @@ class PermohonanController extends Controller
         $permohonan = Permohonan::findOrFail($id);
 
         if ($permohonan->status_permohonan !== StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI) {
-            return redirect()->back()->with('error', 'Status tidak valid untuk konfirmasi kembali.');
+            return response()->json([
+                'success' => false,
+                'message' => 'Status tidak valid untuk konfirmasi kembali.'
+            ]);
         }
 
         $permohonan->update(['status_permohonan' => StatusPermohonan::MENUNGGU_PENYELESAIAN]);
@@ -418,8 +434,10 @@ class PermohonanController extends Controller
             'SPSI telah mengkonfirmasi kendaraan sudah diterima kembali. Silakan lengkapi laporan perjalanan untuk menutup tiket.'
         ));
 
-        return redirect()->route('spsi.serah_terima')
-            ->with('success', 'Kendaraan dikonfirmasi sudah kembali.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Kendaraan dikonfirmasi sudah kembali.'
+        ]);
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -806,10 +824,12 @@ class PermohonanController extends Controller
     private function bebaskanArmada(Permohonan $permohonan): void
     {
         if ($permohonan->kendaraan_id) {
-            Kendaraan::find($permohonan->kendaraan_id)?->update(['status_kendaraan' => 'Tersedia']);
+            Kendaraan::find($permohonan->kendaraan_id)
+                ?->update(['status_kendaraan' => 'Tersedia']);
         }
         if ($permohonan->pengemudi_id) {
-            Pengemudi::find($permohonan->pengemudi_id)?->update(['status_pengemudi' => 'Tersedia']);
+            Pengemudi::find($permohonan->pengemudi_id)
+                ?->update(['status_pengemudi' => 'Tersedia']);
         }
     }
 
