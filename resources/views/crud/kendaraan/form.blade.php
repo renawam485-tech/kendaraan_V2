@@ -1,7 +1,20 @@
+@php
+    $userRole = Auth::user()->role;
+    $isSuperAdmin = $userRole === 'super_admin';
+    $isSpsi = $userRole === 'spsi';
+    $isReadOnly = false; // SPSI bisa edit/create, jadi tidak read-only
+    $actionRoute = $kendaraan 
+        ? ($isSuperAdmin ? route('superadmin.kendaraan.update', $kendaraan->id) : route('spsi.kendaraan.update', $kendaraan->id))
+        : ($isSuperAdmin ? route('superadmin.kendaraan.store') : route('spsi.kendaraan.store'));
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800">
             {{ $kendaraan ? 'Edit Kendaraan: ' . $kendaraan->nama_kendaraan : 'Tambah Kendaraan Baru' }}
+            @if($isSpsi)
+                <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
+            @endif
         </h2>
     </x-slot>
 
@@ -21,7 +34,7 @@
                     </div>
                 @endif
 
-                <form action="{{ $kendaraan ? route('superadmin.kendaraan.update', $kendaraan->id) : route('superadmin.kendaraan.store') }}" method="POST" class="space-y-6">
+                <form action="{{ $actionRoute }}" method="POST" class="space-y-6">
                     @csrf
                     @if($kendaraan) @method('PUT') @endif
 
@@ -54,7 +67,8 @@
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition flex items-center gap-2">
                             <i class="bi bi-save"></i> {{ $kendaraan ? 'Simpan Perubahan' : 'Tambah Kendaraan' }}
                         </button>
-                        <a href="{{ route('superadmin.kendaraan.index') }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-6 rounded-lg transition">Batal</a>
+                        <a href="{{ $isSuperAdmin ? route('superadmin.kendaraan.index') : route('spsi.kendaraan.index') }}" 
+                           class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-6 rounded-lg transition">Batal</a>
                     </div>
                 </form>
             </div>

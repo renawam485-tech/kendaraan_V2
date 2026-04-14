@@ -6,6 +6,7 @@ use App\Http\Controllers\PermohonanController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\KendaraanVendorController;
+use App\Http\Controllers\SpsiCrudController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -46,6 +47,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================
     // 3. SPSI
     // =========================================================
+    // =========================================================
+    // 3. SPSI — CRUD Routes (gunakan SpsiCrudController)
+    // =========================================================
     Route::middleware(['role:spsi'])->group(function () {
         Route::get('/spsi/alokasi', [PermohonanController::class, 'spsiAlokasi'])->name('spsi.alokasi');
         Route::get('/spsi/serah-terima', [PermohonanController::class, 'spsiSerahTerima'])->name('spsi.serah_terima');
@@ -53,6 +57,30 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/permohonan/{id}/proses-spsi', [PermohonanController::class, 'prosesSpsiForm'])->name('permohonan.proses_spsi');
         Route::put('/permohonan/{id}/proses-spsi', [PermohonanController::class, 'prosesSpsiSubmit'])->name('permohonan.proses_spsi_submit');
         Route::put('/permohonan/{id}/konfirmasi-kembali', [PermohonanController::class, 'konfirmasiKembali'])->name('permohonan.konfirmasi_kembali');
+
+        Route::get('/spsi/kendaraan', [SpsiCrudController::class, 'kendaraanIndex'])->name('spsi.kendaraan.index');
+        Route::get('/spsi/kendaraan/tambah', [SpsiCrudController::class, 'kendaraanCreate'])->name('spsi.kendaraan.create');
+        Route::post('/spsi/kendaraan', [SpsiCrudController::class, 'kendaraanStore'])->name('spsi.kendaraan.store');
+        Route::get('/spsi/kendaraan/{id}/edit', [SpsiCrudController::class, 'kendaraanEdit'])->name('spsi.kendaraan.edit');
+        Route::put('/spsi/kendaraan/{id}', [SpsiCrudController::class, 'kendaraanUpdate'])->name('spsi.kendaraan.update');
+        Route::delete('/spsi/kendaraan/{id}', [SpsiCrudController::class, 'kendaraanDestroy'])->name('spsi.kendaraan.destroy');
+
+        Route::get('/spsi/kendaraan-vendor', [SpsiCrudController::class, 'kendaraanVendorIndex'])->name('spsi.kendaraan_vendor.index');
+        Route::get('/spsi/kendaraan-vendor/tambah', [SpsiCrudController::class, 'kendaraanVendorCreate'])->name('spsi.kendaraan_vendor.create');
+        Route::post('/spsi/kendaraan-vendor', [SpsiCrudController::class, 'kendaraanVendorStore'])->name('spsi.kendaraan_vendor.store');
+        Route::get('/spsi/kendaraan-vendor/{id}/edit', [SpsiCrudController::class, 'kendaraanVendorEdit'])->name('spsi.kendaraan_vendor.edit');
+        Route::put('/spsi/kendaraan-vendor/{id}', [SpsiCrudController::class, 'kendaraanVendorUpdate'])->name('spsi.kendaraan_vendor.update');
+        Route::delete('/spsi/kendaraan-vendor/{id}', [SpsiCrudController::class, 'kendaraanVendorDestroy'])->name('spsi.kendaraan_vendor.destroy');
+
+        Route::get('/spsi/pengemudi', [SpsiCrudController::class, 'pengemudiIndex'])->name('spsi.pengemudi.index');
+        Route::get('/spsi/pengemudi/tambah', [SpsiCrudController::class, 'pengemudiCreate'])->name('spsi.pengemudi.create');
+        Route::post('/spsi/pengemudi', [SpsiCrudController::class, 'pengemudiStore'])->name('spsi.pengemudi.store');
+        Route::get('/spsi/pengemudi/{id}/edit', [SpsiCrudController::class, 'pengemudiEdit'])->name('spsi.pengemudi.edit');
+        Route::put('/spsi/pengemudi/{id}', [SpsiCrudController::class, 'pengemudiUpdate'])->name('spsi.pengemudi.update');
+        Route::delete('/spsi/pengemudi/{id}', [SpsiCrudController::class, 'pengemudiDestroy'])->name('spsi.pengemudi.destroy');
+
+        Route::get('/spsi/users', [SpsiCrudController::class, 'usersIndex'])->name('spsi.users.index');
+        Route::get('/spsi/users/{id}', [SpsiCrudController::class, 'usersShow'])->name('spsi.users.show');
     });
 
     // =========================================================
@@ -71,7 +99,6 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // 5. SUPER ADMIN — Master Data & Manajemen Sistem
     // =========================================================
     Route::middleware(['role:super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
-        // Dashboard
         Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
         // CRUD Kendaraan Internal
@@ -82,8 +109,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanUpdate'])->name('kendaraan.update');
         Route::delete('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanDestroy'])->name('kendaraan.destroy');
 
-        // CRUD Kendaraan Vendor — SINGLE resource route, named correctly via prefix
-        Route::resource('kendaraan_vendor', KendaraanVendorController::class);
+        // CRUD Kendaraan Vendor (pindah ke sini)
+        Route::get('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorIndex'])->name('kendaraan_vendor.index');
+        Route::get('/kendaraan-vendor/tambah', [SuperAdminController::class, 'kendaraanVendorCreate'])->name('kendaraan_vendor.create');
+        Route::post('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorStore'])->name('kendaraan_vendor.store');
+        Route::get('/kendaraan-vendor/{id}/edit', [SuperAdminController::class, 'kendaraanVendorEdit'])->name('kendaraan_vendor.edit');
+        Route::put('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorUpdate'])->name('kendaraan_vendor.update');
+        Route::delete('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorDestroy'])->name('kendaraan_vendor.destroy');
 
         // CRUD Pengemudi
         Route::get('/pengemudi', [SuperAdminController::class, 'pengemudiIndex'])->name('pengemudi.index');
@@ -93,7 +125,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::put('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiUpdate'])->name('pengemudi.update');
         Route::delete('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiDestroy'])->name('pengemudi.destroy');
 
-        // CRUD Pengguna & Role
+        // CRUD Pengguna
         Route::get('/users', [SuperAdminController::class, 'usersIndex'])->name('users.index');
         Route::get('/users/tambah', [SuperAdminController::class, 'usersCreate'])->name('users.create');
         Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');

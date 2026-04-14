@@ -1,10 +1,26 @@
+@php
+    $userRole = Auth::user()->role;
+    $isSuperAdmin = $userRole === 'super_admin';
+    $isSpsi = $userRole === 'spsi';
+    $canModify = $isSuperAdmin; // HANYA Super Admin yang bisa modify users
+    $isReadOnly = $isSpsi; // SPSI hanya bisa melihat
+@endphp
+
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800">Manajemen Pengguna & Hak Akses</h2>
-            <a href="{{ route('superadmin.users.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
-                <i class="bi bi-plus-circle"></i> Tambah Pengguna
-            </a>
+            <h2 class="font-semibold text-xl text-gray-800">
+                Manajemen Pengguna & Hak Akses
+                @if($isSpsi)
+                    <span class="text-sm text-gray-500 font-normal ml-2">(View Only - Tidak Dapat Edit/Hapus)</span>
+                @endif
+            </h2>
+            @if($canModify)
+                <a href="{{ route('superadmin.users.create') }}" 
+                   class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
+                    <i class="bi bi-plus-circle"></i> Tambah Pengguna
+                </a>
+            @endif
         </div>
     </x-slot>
 
@@ -26,17 +42,26 @@
 
             {{-- FILTER PENCARIAN --}}
             <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row justify-between items-center gap-4">
-                <form action="{{ route('superadmin.users.index') }}" method="GET" class="w-full md:w-1/2 flex gap-2">
-                    <div class="relative w-full">
+                <form action="{{ $isSuperAdmin ? route('superadmin.users.index') : route('spsi.users.index') }}" method="GET" class="w-full md:w-2/3 flex flex-wrap gap-2">
+                    <div class="relative flex-1 min-w-[200px]">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="bi bi-search text-gray-400"></i>
                         </div>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau email..." 
                                class="pl-10 w-full border-gray-300 rounded-lg text-sm focus:border-blue-500 focus:ring-blue-500 bg-gray-50">
                     </div>
-                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Cari</button>
-                    @if(request('search'))
-                        <a href="{{ route('superadmin.users.index') }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition">Reset</a>
+                    <select name="role" class="border border-gray-300 rounded-lg px-4 py-2 text-sm bg-gray-50">
+                        <option value="">Semua Role</option>
+                        <option value="pengguna" {{ request('role') == 'pengguna' ? 'selected' : '' }}>Pengguna</option>
+                        <option value="kepala_admin" {{ request('role') == 'kepala_admin' ? 'selected' : '' }}>Kepala Admin</option>
+                        <option value="spsi" {{ request('role') == 'spsi' ? 'selected' : '' }}>SPSI</option>
+                        <option value="keuangan" {{ request('role') == 'keuangan' ? 'selected' : '' }}>Keuangan</option>
+                        <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
+                    </select>
+                    <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold transition">Filter</button>
+                    @if(request('search') || request('role'))
+                        <a href="{{ $isSuperAdmin ? route('superadmin.users.index') : route('spsi.users.index') }}" 
+                           class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-bold transition">Reset</a>
                     @endif
                 </form>
             </div>
@@ -50,7 +75,11 @@
                                 <th class="px-6 py-4">Email / Kontak</th>
                                 <th class="px-6 py-4">Hak Akses (Role)</th>
                                 <th class="px-6 py-4">Tanggal Terdaftar</th>
-                                <th class="px-6 py-4 text-center">Aksi</th>
+                                @if($canModify)
+                                    <th class="px-6 py-4 text-center">Aksi</th>
+                                @else
+                                    <th class="px-6 py-4 text-center">Detail</th>
+                                @endif
                             </tr>
                         </thead>
                         <tbody>
@@ -80,26 +109,37 @@
                                         </span>
                                     </td>
                                     <td class="px-6 py-4 text-xs">{{ $u->created_at->format('d M Y') }}</td>
-                                    <td class="px-6 py-4 text-center">
-                                        <div class="flex justify-center items-center gap-3">
-                                            <a href="{{ route('superadmin.users.edit', $u->id) }}" class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline flex items-center gap-1">
-                                                <i class="bi bi-pencil-square"></i> Edit
+                                    @if($canModify)
+                                        <td class="px-6 py-4 text-center">
+                                            <div class="flex justify-center items-center gap-3">
+                                                <a href="{{ route('superadmin.users.edit', $u->id) }}" 
+                                                   class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline flex items-center gap-1">
+                                                    <i class="bi bi-pencil-square"></i> Edit
+                                                </a>
+                                                @if($u->id !== auth()->id())
+                                                    <span class="text-gray-300">|</span>
+                                                    <form action="{{ route('superadmin.users.destroy', $u->id) }}" method="POST" 
+                                                          onsubmit="return confirm('Yakin ingin menghapus akun ini? Semua permohonan terkait juga akan ikut terhapus.')">
+                                                        @csrf @method('DELETE')
+                                                        <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-xs hover:underline flex items-center gap-1">
+                                                            <i class="bi bi-trash"></i> Hapus
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    @else
+                                        <td class="px-6 py-4 text-center">
+                                            <a href="{{ route('spsi.users.show', $u->id) }}" 
+                                               class="text-blue-600 hover:text-blue-800 font-bold text-xs hover:underline flex items-center gap-1 justify-center">
+                                                <i class="bi bi-eye"></i> Detail
                                             </a>
-                                            @if($u->id !== auth()->id())
-                                                <span class="text-gray-300">|</span>
-                                                <form action="{{ route('superadmin.users.destroy', $u->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus akun ini? Semua permohonan terkait juga akan ikut terhapus.')">
-                                                    @csrf @method('DELETE')
-                                                    <button type="submit" class="text-red-600 hover:text-red-800 font-bold text-xs hover:underline flex items-center gap-1">
-                                                        <i class="bi bi-trash"></i> Hapus
-                                                    </button>
-                                                </form>
-                                            @endif
-                                        </div>
-                                    </td>
+                                        </td>
+                                    @endif
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="text-center py-12 text-gray-400">
+                                    <td colspan="{{ $canModify ? 5 : 5 }}" class="text-center py-12 text-gray-400">
                                         <i class="bi bi-people text-4xl block mb-3 text-gray-300"></i>
                                         Tidak ada pengguna ditemukan.
                                     </td>
@@ -109,7 +149,7 @@
                     </table>
                 </div>
                 @if($users->hasPages())
-                    <div class="p-4 border-t border-gray-100 bg-gray-50">{{ $users->links() }}</div>
+                    <div class="p-4 border-t border-gray-100 bg-gray-50">{{ $users->withQueryString()->links() }}</div>
                 @endif
             </div>
         </div>

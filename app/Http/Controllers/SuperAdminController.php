@@ -6,6 +6,7 @@ use App\Enums\StatusPermohonan;
 use App\Models\Kendaraan;
 use App\Models\Pengemudi;
 use App\Models\Permohonan;
+use App\Models\KendaraanVendor;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -39,7 +40,8 @@ class SuperAdminController extends Controller
             'permohonan_selesai'    => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
             'permohonan_ditolak'    => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
             'total_rab'             => Permohonan::whereIn('status_permohonan', StatusPermohonan::values(
-                StatusPermohonan::DISETUJUI, StatusPermohonan::SELESAI,
+                StatusPermohonan::DISETUJUI,
+                StatusPermohonan::SELESAI,
             ))->sum('rab_disetujui'),
         ];
 
@@ -73,7 +75,7 @@ class SuperAdminController extends Controller
             'status_kendaraan'    => 'required|in:Tersedia,Maintenance,Dipinjam',
         ]);
 
-        Kendaraan::create($request->only(['nama_kendaraan','plat_nomor','kapasitas_penumpang','status_kendaraan']));
+        Kendaraan::create($request->only(['nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan']));
 
         return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
     }
@@ -93,7 +95,7 @@ class SuperAdminController extends Controller
             'status_kendaraan'    => 'required|in:Tersedia,Maintenance,Dipinjam',
         ]);
 
-        $kendaraan->update($request->only(['nama_kendaraan','plat_nomor','kapasitas_penumpang','status_kendaraan']));
+        $kendaraan->update($request->only(['nama_kendaraan', 'plat_nomor', 'kapasitas_penumpang', 'status_kendaraan']));
 
         return redirect()->route('crud.kendaraan.index')->with('success', 'Data kendaraan berhasil diperbarui.');
     }
@@ -107,6 +109,98 @@ class SuperAdminController extends Controller
         }
         $kendaraan->delete();
         return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil dihapus.');
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // CRUD KENDARAAN VENDOR (ditambahkan ke SuperAdminController)
+    // ─────────────────────────────────────────────────────────────
+
+    public function kendaraanVendorIndex(Request $request)
+    {
+        $query = KendaraanVendor::query();
+
+        if ($search = $request->query('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_kendaraan', 'like', "%{$search}%")
+                    ->orWhere('plat_nomor', 'like', "%{$search}%")
+                    ->orWhere('nama_vendor', 'like', "%{$search}%");
+            });
+        }
+
+        $vendors = $query->orderBy('nama_vendor')->paginate(15)->withQueryString();
+
+        return view('crud.kendaraan_vendor.index', compact('vendors'));
+    }
+
+    public function kendaraanVendorCreate()
+    {
+        return view('crud.kendaraan_vendor.form', ['vendor' => null]);
+    }
+
+    public function kendaraanVendorStore(Request $request)
+    {
+        $request->validate([
+            'nama_vendor'         => 'required|string|max:100',
+            'nama_kendaraan'      => 'required|string|max:100',
+            'plat_nomor'          => 'required|string|max:15|unique:kendaraan_vendors,plat_nomor',
+            'kapasitas_penumpang' => 'required|integer|min:1|max:80',
+            'status_kendaraan'    => 'required|in:Tersedia,Tidak Tersedia',
+        ]);
+
+        KendaraanVendor::create($request->only([
+            'nama_vendor',
+            'nama_kendaraan',
+            'plat_nomor',
+            'kapasitas_penumpang',
+            'status_kendaraan'
+        ]));
+
+        return redirect()->route('superadmin.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil ditambahkan.');
+    }
+
+    public function kendaraanVendorEdit($id)
+    {
+        return view('crud.kendaraan_vendor.form', ['vendor' => KendaraanVendor::findOrFail($id)]);
+    }
+
+    public function kendaraanVendorUpdate(Request $request, $id)
+    {
+        $vendor = KendaraanVendor::findOrFail($id);
+
+        $request->validate([
+            'nama_vendor'         => 'required|string|max:100',
+            'nama_kendaraan'      => 'required|string|max:100',
+            'plat_nomor'          => 'required|string|max:15|unique:kendaraan_vendors,plat_nomor,' . $id,
+            'kapasitas_penumpang' => 'required|integer|min:1|max:80',
+            'status_kendaraan'    => 'required|in:Tersedia,Tidak Tersedia',
+        ]);
+
+        $vendor->update($request->only([
+            'nama_vendor',
+            'nama_kendaraan',
+            'plat_nomor',
+            'kapasitas_penumpang',
+            'status_kendaraan'
+        ]));
+
+        return redirect()->route('superadmin.kendaraan_vendor.index')->with('success', 'Data kendaraan vendor berhasil diperbarui.');
+    }
+
+    public function kendaraanVendorDestroy($id)
+    {
+        $vendor = KendaraanVendor::findOrFail($id);
+
+        $isUsed = Permohonan::where('kendaraan_vendor_id', $id)
+            ->whereNotIn('status_permohonan', ['selesai', 'ditolak'])
+            ->exists();
+
+        if ($isUsed) {
+            return redirect()->route('superadmin.kendaraan_vendor.index')
+                ->with('error', 'Kendaraan vendor sedang digunakan dan tidak dapat dihapus.');
+        }
+
+        $vendor->delete();
+        return redirect()->route('superadmin.kendaraan_vendor.index')->with('success', 'Kendaraan vendor berhasil dihapus.');
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -128,11 +222,11 @@ class SuperAdminController extends Controller
     {
         $request->validate([
             'nama_pengemudi'   => 'required|string|max:100',
-            'kontak'           => ['required','string','regex:/^\+62[0-9]{8,15}$/'],
+            'kontak'           => ['required', 'string', 'regex:/^\+62[0-9]{8,15}$/'],
             'status_pengemudi' => 'required|in:Tersedia,Bertugas',
         ], ['kontak.regex' => 'Format kontak harus diawali +62 dan berisi 8-15 angka.']);
 
-        Pengemudi::create($request->only(['nama_pengemudi','kontak','status_pengemudi']));
+        Pengemudi::create($request->only(['nama_pengemudi', 'kontak', 'status_pengemudi']));
 
         return redirect()->route('crud.pengemudi.index')->with('success', 'Pengemudi berhasil ditambahkan.');
     }
@@ -147,11 +241,11 @@ class SuperAdminController extends Controller
         $pengemudi = Pengemudi::findOrFail($id);
         $request->validate([
             'nama_pengemudi'   => 'required|string|max:100',
-            'kontak'           => ['required','string','regex:/^\+62[0-9]{8,15}$/'],
+            'kontak'           => ['required', 'string', 'regex:/^\+62[0-9]{8,15}$/'],
             'status_pengemudi' => 'required|in:Tersedia,Bertugas',
         ], ['kontak.regex' => 'Format kontak harus diawali +62 dan berisi 8-15 angka.']);
 
-        $pengemudi->update($request->only(['nama_pengemudi','kontak','status_pengemudi']));
+        $pengemudi->update($request->only(['nama_pengemudi', 'kontak', 'status_pengemudi']));
 
         return redirect()->route('crud.pengemudi.index')->with('success', 'Data pengemudi berhasil diperbarui.');
     }
@@ -174,7 +268,9 @@ class SuperAdminController extends Controller
     public function usersIndex(Request $request)
     {
         $query = User::query();
-        if ($request->filled('role'))   { $query->where('role', $request->role); }
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
         if ($request->filled('search')) {
             $query->where(fn($q) => $q
                 ->where('name',  'like', '%' . $request->search . '%')
