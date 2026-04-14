@@ -46,7 +46,7 @@ class SuperAdminController extends Controller
         $permohonanTerbaru = Permohonan::with('user')->latest()->take(8)->get();
         $kendaraanList     = Kendaraan::orderBy('status_kendaraan')->get();
 
-        return view('superadmin.dashboard', compact('stats', 'permohonanTerbaru', 'kendaraanList'));
+        return view('dashboard.superadmin', compact('stats', 'permohonanTerbaru', 'kendaraanList'));
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -56,12 +56,12 @@ class SuperAdminController extends Controller
     public function kendaraanIndex()
     {
         $kendaraans = Kendaraan::orderBy('nama_kendaraan')->paginate(15);
-        return view('superadmin.kendaraan.index', compact('kendaraans'));
+        return view('crud.kendaraan.index', compact('kendaraans'));
     }
 
     public function kendaraanCreate()
     {
-        return view('superadmin.kendaraan.form', ['kendaraan' => null]);
+        return view('crud.kendaraan.form', ['kendaraan' => null]);
     }
 
     public function kendaraanStore(Request $request)
@@ -75,12 +75,12 @@ class SuperAdminController extends Controller
 
         Kendaraan::create($request->only(['nama_kendaraan','plat_nomor','kapasitas_penumpang','status_kendaraan']));
 
-        return redirect()->route('superadmin.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
+        return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil ditambahkan.');
     }
 
     public function kendaraanEdit($id)
     {
-        return view('superadmin.kendaraan.form', ['kendaraan' => Kendaraan::findOrFail($id)]);
+        return view('crud.kendaraan.form', ['kendaraan' => Kendaraan::findOrFail($id)]);
     }
 
     public function kendaraanUpdate(Request $request, $id)
@@ -95,18 +95,18 @@ class SuperAdminController extends Controller
 
         $kendaraan->update($request->only(['nama_kendaraan','plat_nomor','kapasitas_penumpang','status_kendaraan']));
 
-        return redirect()->route('superadmin.kendaraan.index')->with('success', 'Data kendaraan berhasil diperbarui.');
+        return redirect()->route('crud.kendaraan.index')->with('success', 'Data kendaraan berhasil diperbarui.');
     }
 
     public function kendaraanDestroy($id)
     {
         $kendaraan = Kendaraan::findOrFail($id);
         if ($kendaraan->status_kendaraan === 'Dipinjam') {
-            return redirect()->route('superadmin.kendaraan.index')
+            return redirect()->route('crud.kendaraan.index')
                 ->with('error', 'Kendaraan sedang Dipinjam dan tidak dapat dihapus.');
         }
         $kendaraan->delete();
-        return redirect()->route('superadmin.kendaraan.index')->with('success', 'Kendaraan berhasil dihapus.');
+        return redirect()->route('crud.kendaraan.index')->with('success', 'Kendaraan berhasil dihapus.');
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -116,12 +116,12 @@ class SuperAdminController extends Controller
     public function pengemudiIndex()
     {
         $pengemudis = Pengemudi::orderBy('nama_pengemudi')->paginate(15);
-        return view('superadmin.pengemudi.index', compact('pengemudis'));
+        return view('crud.pengemudi.index', compact('pengemudis'));
     }
 
     public function pengemudiCreate()
     {
-        return view('superadmin.pengemudi.form', ['pengemudi' => null]);
+        return view('crud.pengemudi.form', ['pengemudi' => null]);
     }
 
     public function pengemudiStore(Request $request)
@@ -134,12 +134,12 @@ class SuperAdminController extends Controller
 
         Pengemudi::create($request->only(['nama_pengemudi','kontak','status_pengemudi']));
 
-        return redirect()->route('superadmin.pengemudi.index')->with('success', 'Pengemudi berhasil ditambahkan.');
+        return redirect()->route('crud.pengemudi.index')->with('success', 'Pengemudi berhasil ditambahkan.');
     }
 
     public function pengemudiEdit($id)
     {
-        return view('superadmin.pengemudi.form', ['pengemudi' => Pengemudi::findOrFail($id)]);
+        return view('crud.pengemudi.form', ['pengemudi' => Pengemudi::findOrFail($id)]);
     }
 
     public function pengemudiUpdate(Request $request, $id)
@@ -153,18 +153,18 @@ class SuperAdminController extends Controller
 
         $pengemudi->update($request->only(['nama_pengemudi','kontak','status_pengemudi']));
 
-        return redirect()->route('superadmin.pengemudi.index')->with('success', 'Data pengemudi berhasil diperbarui.');
+        return redirect()->route('crud.pengemudi.index')->with('success', 'Data pengemudi berhasil diperbarui.');
     }
 
     public function pengemudiDestroy($id)
     {
         $pengemudi = Pengemudi::findOrFail($id);
         if ($pengemudi->status_pengemudi === 'Bertugas') {
-            return redirect()->route('superadmin.pengemudi.index')
+            return redirect()->route('crud.pengemudi.index')
                 ->with('error', 'Pengemudi sedang Bertugas dan tidak dapat dihapus.');
         }
         $pengemudi->delete();
-        return redirect()->route('superadmin.pengemudi.index')->with('success', 'Pengemudi berhasil dihapus.');
+        return redirect()->route('crud.pengemudi.index')->with('success', 'Pengemudi berhasil dihapus.');
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -181,12 +181,12 @@ class SuperAdminController extends Controller
                 ->orWhere('email', 'like', '%' . $request->search . '%'));
         }
         $users = $query->orderBy('role')->orderBy('name')->paginate(15)->withQueryString();
-        return view('superadmin.users.index', compact('users'));
+        return view('crud.users.index', compact('users'));
     }
 
     public function usersCreate()
     {
-        return view('superadmin.users.form', ['user' => null]);
+        return view('crud.users.form', ['user' => null]);
     }
 
     public function usersStore(Request $request)
@@ -205,12 +205,12 @@ class SuperAdminController extends Controller
             'role'     => $request->role,
         ]);
 
-        return redirect()->route('superadmin.users.index')->with('success', 'Pengguna berhasil dibuat.');
+        return redirect()->route('crud.users.index')->with('success', 'Pengguna berhasil dibuat.');
     }
 
     public function usersEdit($id)
     {
-        return view('superadmin.users.form', ['user' => User::findOrFail($id)]);
+        return view('crud.users.form', ['user' => User::findOrFail($id)]);
     }
 
     public function usersUpdate(Request $request, $id)
@@ -229,17 +229,17 @@ class SuperAdminController extends Controller
         }
         $user->update($data);
 
-        return redirect()->route('superadmin.users.index')->with('success', 'Data pengguna berhasil diperbarui.');
+        return redirect()->route('crud.users.index')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function usersDestroy($id)
     {
         $user = User::findOrFail($id);
         if ($user->id === auth()->id()) {
-            return redirect()->route('superadmin.users.index')
+            return redirect()->route('crud.users.index')
                 ->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
         $user->delete();
-        return redirect()->route('superadmin.users.index')->with('success', 'Pengguna berhasil dihapus.');
+        return redirect()->route('crud.users.index')->with('success', 'Pengguna berhasil dihapus.');
     }
 }
