@@ -1,17 +1,15 @@
 <x-app-layout>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            <i class="bi bi-wallet2 text-blue-600 mr-2"></i>Tugas Kasubag Keuangan
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">Tugas Anda
         </h2>
     </x-slot>
 
     <div class="py-6 bg-slate-50 min-h-screen">
-
+        <div class="w-full px-4 sm:px-6 lg:px-8">
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div
                     class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                        <i class="bi bi-currency-dollar text-blue-600"></i>
                         {{ $judul ?? 'Daftar Persetujuan Anggaran' }}
                         <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                             {{ $permohonans->total() }} data
@@ -62,8 +60,6 @@
                                         @endif
                                     </div>
                                 </div>
-                                <span
-                                    class="text-[10px] font-bold px-2 py-1 rounded-md border whitespace-nowrap {{ $sc }}">{{ $p->status_permohonan->value }}</i>
                             </div>
                             <div class="mt-3 pl-8">
                                 @if ($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_PROSES_KEUANGAN)

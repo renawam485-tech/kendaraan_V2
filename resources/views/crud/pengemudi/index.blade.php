@@ -8,16 +8,12 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                <i class="bi bi-person-vcard text-blue-600 mr-2"></i> Manajemen Pengemudi
-                @if($isSpsi)
-                    <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
-                @endif
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manajemen Pengemudi
             </h2>
             @if($canModify)
                 <a href="{{ $isSuperAdmin ? route('superadmin.pengemudi.create') : route('spsi.pengemudi.create') }}" 
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
-                    <i class="bi bi-plus-circle"></i> Tambah Pengemudi
+                    <i class="bi bi-plus-circle"></i> Tambah
                 </a>
             @endif
         </div>
@@ -25,13 +21,6 @@
 
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
-                    <i class="bi bi-check-circle-fill text-xl"></i>
-                    <p class="text-sm font-bold">{{ session('success') }}</p>
-                </div>
-            @endif
             @if(session('error'))
                 <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
                     <i class="bi bi-exclamation-triangle-fill text-xl"></i>
@@ -42,7 +31,6 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                        <i class="bi bi-person-vcard-fill text-blue-600"></i>
                         Daftar Pengemudi
                         <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                             {{ $pengemudis->total() }} data

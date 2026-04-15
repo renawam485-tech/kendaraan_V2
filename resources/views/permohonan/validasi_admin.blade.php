@@ -73,7 +73,7 @@
                     {{-- Anggaran Diajukan --}}
                     <div class="px-4 sm:px-6 py-3.5">
                         <span class="text-sm text-gray-500 flex items-center gap-2 mb-1">
-                            <i class="bi bi-wallet text-gray-400"></i>Anggaran Digunakan
+                            <i class="bi bi-wallet text-gray-400"></i>Anggaran Diajukan
                         </span>
                         <p class="text-sm font-semibold text-gray-800 break-words">{{ $permohonan->anggaran_diajukan ?: '—' }}</p>
                     </div>

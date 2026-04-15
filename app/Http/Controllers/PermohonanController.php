@@ -764,19 +764,7 @@ class PermohonanController extends Controller
 
     public function keuanganMonitoring(Request $request)
     {
-        $statuses = StatusPermohonan::values(
-            StatusPermohonan::MENUNGGU_FINALISASI,
-            StatusPermohonan::DISETUJUI,
-            StatusPermohonan::MENUNGGU_MULAI_PERJALANAN,
-            StatusPermohonan::PERJALANAN_BERLANGSUNG,
-            StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI,
-            StatusPermohonan::MENUNGGU_PENYELESAIAN,
-            StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA,
-            StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI,
-            StatusPermohonan::SELESAI,
-        );
-
-        $query = Permohonan::whereIn('status_permohonan', $statuses);
+        $query = Permohonan::where('status_permohonan', StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value);
 
         // Pencarian server-side
         if ($search = $request->query('search')) {

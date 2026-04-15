@@ -2,7 +2,7 @@
     $userRole = Auth::user()->role;
     $isSuperAdmin = $userRole === 'super_admin';
     $isSpsi = $userRole === 'spsi';
-    $isReadOnly = false; // SPSI bisa edit/create, jadi tidak read-only
+    $isReadOnly = false;
     $actionRoute = $kendaraan 
         ? ($isSuperAdmin ? route('superadmin.kendaraan.update', $kendaraan->id) : route('spsi.kendaraan.update', $kendaraan->id))
         : ($isSuperAdmin ? route('superadmin.kendaraan.store') : route('spsi.kendaraan.store'));
@@ -12,9 +12,6 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800">
             {{ $kendaraan ? 'Edit Kendaraan: ' . $kendaraan->nama_kendaraan : 'Tambah Kendaraan Baru' }}
-            @if($isSpsi)
-                <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
-            @endif
         </h2>
     </x-slot>
 
@@ -65,7 +62,7 @@
 
                     <div class="flex items-center gap-3 pt-6 border-t border-gray-100">
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition flex items-center gap-2">
-                            <i class="bi bi-save"></i> {{ $kendaraan ? 'Simpan Perubahan' : 'Tambah Kendaraan' }}
+                            <i class="bi bi-save"></i> {{ $kendaraan ? 'Simpan Perubahan' : 'Tambah' }}
                         </button>
                         <a href="{{ $isSuperAdmin ? route('superadmin.kendaraan.index') : route('spsi.kendaraan.index') }}" 
                            class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-6 rounded-lg transition">Batal</a>

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 flex items-center gap-2">
-            <i class="bi bi-info-circle text-blue-600"></i> Pusat Bantuan & Panduan Penggunaan
+            <i class="bi bi-info-circle text-blue-600"></i> Pusat Bantuan & FAQ
         </h2>
     </x-slot>
 

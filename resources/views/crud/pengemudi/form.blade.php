@@ -62,7 +62,7 @@
 
                     <div class="flex items-center gap-3 pt-6 border-t border-gray-100">
                         <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-6 rounded-lg shadow-sm transition flex items-center gap-2">
-                            <i class="bi bi-save"></i> {{ $pengemudi ? 'Simpan Perubahan' : 'Tambah Pengemudi' }}
+                            <i class="bi bi-save"></i> {{ $pengemudi ? 'Simpan Perubahan' : 'Tambah' }}
                         </button>
                         <a href="{{ $indexRoute }}" class="bg-white border border-gray-300 text-gray-700 hover:bg-gray-50 font-bold py-2.5 px-6 rounded-lg transition">Batal</a>
                     </div>

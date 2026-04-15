@@ -12,9 +12,6 @@
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800">
             {{ $vendor ? 'Edit Mobil Vendor: ' . $vendor->nama_vendor : 'Tambah Mobil Vendor Baru' }}
-            @if($isSpsi)
-                <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
-            @endif
         </h2>
     </x-slot>
 

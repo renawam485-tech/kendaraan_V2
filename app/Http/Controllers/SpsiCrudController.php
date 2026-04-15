@@ -37,7 +37,7 @@ class SpsiCrudController extends Controller
     public function usersShow($id)
     {
         $user = User::findOrFail($id);
-        return view('crud.users.show', compact('user'));
+        return view('spsi.users.show', compact('user'));
     }
     
     // =========================================================

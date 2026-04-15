@@ -1,7 +1,18 @@
 <x-app-layout>
+    <style>
+    @media (max-width: 640px) {
+        .tab-container {
+            gap: 0.25rem;
+        }
+        .tab-container a {
+            flex: 1 0 auto;
+            justify-content: center;
+            min-width: fit-content;
+        }
+    }
+</style>
     <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight flex items-center gap-2">
-            <i class="bi bi-key-fill text-blue-600"></i> Manajemen Serah Terima Kendaraan
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight flex items-center gap-2">Manajemen Serah Terima Kendaraan
         </h2>
     </x-slot>
 
@@ -44,28 +55,28 @@
                         'text-amber-500',
                         'bi-info-circle-fill',
                         'text-amber-700',
-                        'Permohonan sudah <strong>disetujui Admin</strong>. Serahkan kunci fisik kepada pemohon dan klik tombol konfirmasi.',
+                        'Serahkan kunci fisik kepada pemohon dan klik tombol konfirmasi.',
                     ],
                     'menunggu' => [
                         'bg-yellow-50 border-yellow-100',
                         'text-yellow-500',
                         'bi-info-circle-fill',
                         'text-yellow-700',
-                        'Kunci sudah diserahkan. Menunggu pemohon klik <strong>"Mulai Perjalanan"</strong>.',
+                        'Menunggu pemohon <strong>"Memulai Perjalanan"</strong>.',
                     ],
                     'berlangsung' => [
                         'bg-teal-50 border-teal-100',
                         'text-teal-500',
                         'bi-geo-alt-fill',
                         'text-teal-700',
-                        'Kendaraan sedang dalam perjalanan aktif.',
+                        'Kendaraan sedang dalam perjalanan.',
                     ],
                     'konfirmasi' => [
                         'bg-indigo-50 border-indigo-100',
                         'text-indigo-500',
                         'bi-arrow-return-left',
                         'text-indigo-700',
-                        'Pemohon melaporkan sudah kembali. Periksa kondisi kendaraan lalu konfirmasi.',
+                        'Periksa kondisi kendaraan lalu konfirmasi.',
                     ],
                     'riwayat' => [
                         'bg-slate-50 border-slate-200',
@@ -102,21 +113,22 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
 
                 {{-- Tab Headers --}}
-                <div class="border-b border-gray-200 flex overflow-x-auto bg-gray-50">
-                    @foreach ($tabConfig as $key => [$label, $count, $badgeBg])
-                        <a href="{{ route('spsi.serah_terima', ['tab' => $key]) }}"
-                            class="flex-shrink-0 flex items-center gap-2 px-5 py-3.5 text-sm transition
-                                {{ $activeTab === $key
-                                    ? 'border-b-2 border-blue-600 text-blue-700 bg-white font-bold'
-                                    : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }}">
-                            {{ $label }}
-                            @if ($count > 0)
-                                <span
-                                    class="{{ $badgeBg }} text-white text-[10px] font-black px-1.5 py-0.5 rounded-full">{{ $count }}</span>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
+<div class="border-b border-gray-200 bg-gray-50">
+    <div class="grid grid-cols-2 sm:grid-cols-5">
+        @foreach ($tabConfig as $key => [$label, $count, $badgeBg])
+            <a href="{{ route('spsi.serah_terima', ['tab' => $key]) }}"
+                class="flex items-center justify-between gap-1 px-3 py-3 text-left text-[11px] sm:text-sm transition
+                    {{ $activeTab === $key
+                        ? 'border-b-2 border-blue-600 text-blue-700 bg-white font-bold'
+                        : 'text-gray-500 hover:text-gray-700 hover:bg-gray-100' }}">
+                <span class="truncate">{{ $label }}</span>
+                @if ($count > 0)
+                    <span class="{{ $badgeBg }} text-white text-[10px] font-black px-1.5 py-0.5 rounded-full flex-shrink-0 ml-1">{{ $count }}</span>
+                @endif
+            </a>
+        @endforeach
+    </div>
+</div>
 
                 {{-- Tab Alert Banner --}}
                 @php [$alertBg, $alertIconColor, $alertIcon, $alertTextColor, $alertText] = $tabAlerts[$activeTab]; @endphp
@@ -162,19 +174,19 @@
                         'actionColor' => $tabTableConfig[$activeTab]['actionColor'] ?? '',
                     ]))
 
-            </div>{{-- end card --}}
+            </div>
         </div>
     </div>
     <script>
         function handleSerahTerima(id, namaPic) {
             customConfirm({
                 title: 'Konfirmasi Serah Terima',
-                message: `Apakah Anda sudah menyerahkan kunci kendaraan kepada <strong>${escapeHtml(namaPic)}</strong>?`,
+                message: `Apakah Anda sudah menyerahkan kunci kendaraannya?`,
                 confirmText: 'Ya, Sudah Diserahkan',
                 isDanger: false
             }, () => {
                 fetch(`/permohonan/${id}/serah-terima-kunci`, {
-                        method: 'PUT', // ← PUT sesuai route
+                        method: 'PUT',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Content-Type': 'application/json',
@@ -200,12 +212,12 @@
         function handleKonfirmasiKembali(id, namaPic) {
             customConfirm({
                 title: 'Konfirmasi Penerimaan Kendaraan',
-                message: `Apakah kendaraan sudah kembali dalam kondisi baik dari <strong>${escapeHtml(namaPic)}</strong>?`,
+                message: `Apakah kendaraan sudah kembali?`,
                 confirmText: 'Ya, Sudah Kembali',
                 isDanger: false
             }, () => {
                 fetch(`/permohonan/${id}/konfirmasi-kembali`, {
-                        method: 'PUT', // ← PUT sesuai route
+                        method: 'PUT',
                         headers: {
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'Content-Type': 'application/json',
@@ -228,7 +240,6 @@
             });
         }
 
-        // Helper function untuk mencegah XSS
         function escapeHtml(str) {
             if (!str) return '';
             return str

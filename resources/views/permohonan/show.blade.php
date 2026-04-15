@@ -232,12 +232,11 @@
                                     <i class="bi bi-whatsapp"></i>{{ $permohonan->pengemudi->kontak }}
                                 </a>
                             @else
-                                <p class="text-sm text-gray-500">Tanpa pengemudi (lepas kunci)</p>
+                                <p class="text-sm text-gray-500">Tanpa pengemudi</p>
                             @endif
                         </div>
                     </div>
                 @else
-                    {{-- Jika belum ada alokasi, tampilkan card placeholder kosong agar grid tetap 4 --}}
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-5">
                         <p
                             class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
@@ -337,7 +336,7 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                             <div>
                                 <p class="text-xs text-gray-400 font-semibold uppercase tracking-wider mb-1">RAB
-                                    Disetujui</p>
+                                    Diberikan</p>
                                 <p class="font-black text-gray-800 text-base sm:text-lg">
                                     Rp {{ number_format($permohonan->rab_disetujui ?? 0, 0, ',', '.') }}
                                 </p>
@@ -366,7 +365,7 @@
                                     </p>
                                     <p
                                         class="text-[10px] {{ $selisih > 0 ? 'text-orange-500' : ($selisih < 0 ? 'text-red-500' : 'text-emerald-500') }} font-semibold">
-                                        {{ $selisih > 0 ? 'Harus dikembalikan' : ($selisih < 0 ? 'Kelebihan pakai' : 'Pas / Sesuai') }}
+                                        {{ $selisih > 0 ? ' ' : ($selisih < 0 ? 'Kelebihan pakai' : 'Pas / Sesuai') }}
                                     </p>
                                 </div>
                             @endif
@@ -401,7 +400,7 @@
                             @foreach ([$permohonan->waktu_serah_terima, $permohonan->waktu_mulai_perjalanan, $permohonan->waktu_kembali_aktual] as $index => $waktu)
                                 @php
                                     $labels = [
-                                        'Serah Terima Kunci oleh SPSI',
+                                        'Serah Terima Kunci',
                                         'Perjalanan Dimulai',
                                         'Dilaporkan Sudah Kembali',
                                     ];
@@ -506,7 +505,7 @@
 
                         {{-- MULAI PERJALANAN --}}
                         @if ($actionType === 'mulai')
-                            @ @if ($permohonan->waktu_serah_terima)
+                            @if ($permohonan->waktu_serah_terima)
                                 <p class="text-xs text-gray-500 mb-4 flex items-center gap-1.5">
                                     <i class="bi bi-clock text-gray-400"></i>
                                     Kunci diserahkan:

@@ -8,16 +8,12 @@
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                <i class="bi bi-buildings text-blue-600 mr-2"></i> Manajemen Kendaraan Vendor
-                @if($isSpsi)
-                    <span class="text-sm text-gray-500 font-normal ml-2">(SPSI - Full Akses)</span>
-                @endif
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manajemen Kendaraan Vendor
             </h2>
             @if($canModify)
                 <a href="{{ $isSuperAdmin ? route('superadmin.kendaraan_vendor.create') : route('spsi.kendaraan_vendor.create') }}" 
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
-                    <i class="bi bi-plus-circle"></i> Tambah Vendor
+                    <i class="bi bi-plus-circle"></i> Tambah
                 </a>
             @endif
         </div>
@@ -25,13 +21,6 @@
 
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
-                    <i class="bi bi-check-circle-fill text-xl"></i>
-                    <p class="text-sm font-bold">{{ session('success') }}</p>
-                </div>
-            @endif
             @if(session('error'))
                 <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
                     <i class="bi bi-exclamation-triangle-fill text-xl"></i>
@@ -42,7 +31,6 @@
             <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                 <div class="px-5 py-4 border-b border-gray-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <h3 class="font-bold text-gray-800 flex items-center gap-2 text-sm">
-                        <i class="bi bi-buildings-fill text-blue-600"></i>
                         Daftar Armada Vendor
                         <span class="ml-1 text-xs font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
                             {{ $vendors->total() }} data
@@ -78,8 +66,7 @@
                         <div class="p-4 hover:bg-slate-50 transition">
                             <div class="flex items-start justify-between gap-2">
                                 <div>
-                                    <p class="font-semibold text-sm text-gray-800">
-                                        <i class="bi bi-buildings text-gray-400 mr-1"></i> {{ $v->nama_vendor }}
+                                    <p class="font-semibold text-sm text-gray-800">{{ $v->nama_vendor }}
                                     </p>
                                     <p class="text-xs font-medium text-gray-700 mt-0.5">{{ $v->nama_kendaraan }}</p>
                                     <p class="text-xs font-mono text-gray-500">{{ $v->plat_nomor }}</p>
@@ -193,6 +180,10 @@
                         <p class="text-xs text-gray-400" id="realtimeClock"></p>
                     </div>
                 @endif
+            </div>
+            <div class="mt-4 bg-blue-50 border border-blue-100 rounded-lg p-4 text-sm text-blue-700 flex gap-3">
+                <i class="bi bi-info-circle-fill text-lg"></i>
+                <p><strong>Catatan:</strong> Anda tidak dapat mengubah status kendaraan yang sedang ditugaskan.</p>
             </div>
         </div>
     </div>

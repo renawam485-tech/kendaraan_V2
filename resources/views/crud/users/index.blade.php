@@ -2,23 +2,19 @@
     $userRole = Auth::user()->role;
     $isSuperAdmin = $userRole === 'super_admin';
     $isSpsi = $userRole === 'spsi';
-    $canModify = $isSuperAdmin; // HANYA Super Admin yang bisa modify users
-    $isReadOnly = $isSpsi; // SPSI hanya bisa melihat
+    $canModify = $isSuperAdmin; 
+    $isReadOnly = $isSpsi;
 @endphp
 
 <x-app-layout>
     <x-slot name="header">
         <div class="flex justify-between items-center">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                <i class="bi bi-people text-blue-600 mr-2"></i> Manajemen Pengguna & Hak Akses
-                @if($isSpsi)
-                    <span class="text-sm text-gray-500 font-normal ml-2">(View Only - Tidak Dapat Edit/Hapus)</span>
-                @endif
+            <h2 class="font-semibold text-xl text-gray-800 leading-tight">Manajemen Pengguna
             </h2>
             @if($canModify)
                 <a href="{{ route('superadmin.users.create') }}" 
                    class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-5 rounded-lg shadow-sm text-sm transition flex items-center gap-2">
-                    <i class="bi bi-plus-circle"></i> Tambah Pengguna
+                    <i class="bi bi-plus-circle"></i> Tambah 
                 </a>
             @endif
         </div>
@@ -26,13 +22,6 @@
 
     <div class="py-6 bg-slate-50 min-h-screen">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-            @if(session('success'))
-                <div class="bg-green-50 border-l-4 border-green-500 text-green-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
-                    <i class="bi bi-check-circle-fill text-xl"></i>
-                    <p class="text-sm font-bold">{{ session('success') }}</p>
-                </div>
-            @endif
             @if(session('error'))
                 <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-6 rounded-lg shadow-sm flex items-center gap-3">
                     <i class="bi bi-exclamation-triangle-fill text-xl"></i>
@@ -80,10 +69,10 @@
                             <option value="keuangan" {{ request('role') == 'keuangan' ? 'selected' : '' }}>Keuangan</option>
                             <option value="super_admin" {{ request('role') == 'super_admin' ? 'selected' : '' }}>Super Admin</option>
                         </select>
-                        <button type="submit" class="bg-gray-800 hover:bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Filter</button>
+                        <button type="submit" class="bg-blue-800 hover:bg-blue-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition">Cari</button>
                         @if(request('role'))
                             <a href="{{ $isSuperAdmin ? route('superadmin.users.index') : route('spsi.users.index') }}{{ request('search') ? '?search='.request('search') : '' }}" 
-                               class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Reset Role</a>
+                               class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold transition">Reset </a>
                         @endif
                     </form>
                 </div>
