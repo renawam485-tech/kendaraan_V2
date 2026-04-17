@@ -399,11 +399,7 @@
                         <ol class="relative border-l-2 border-gray-200 ml-3 space-y-4 sm:space-y-0">
                             @foreach ([$permohonan->waktu_serah_terima, $permohonan->waktu_mulai_perjalanan, $permohonan->waktu_kembali_aktual] as $index => $waktu)
                                 @php
-                                    $labels = [
-                                        'Serah Terima Kunci',
-                                        'Perjalanan Dimulai',
-                                        'Dilaporkan Sudah Kembali',
-                                    ];
+                                    $labels = ['Serah Terima Kunci', 'Perjalanan Dimulai', 'Dilaporkan Sudah Kembali'];
                                     $icons = ['bi-key-fill', 'bi-play-fill', 'bi-arrow-return-left'];
                                     $styles = [
                                         'bg-yellow-100 text-yellow-600',
@@ -679,27 +675,66 @@
                 </div>
             @endif
 
-            {{-- Info status akhir (no action needed) --}}
-            @if (!$actionType && in_array($status, [StatusPermohonan::SELESAI, StatusPermohonan::DITOLAK]))
+            {{-- ── STATUS SELESAI ── --}}
+            @if ($status === StatusPermohonan::SELESAI)
                 <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-5 text-center">
-                    @if ($status === StatusPermohonan::SELESAI)
-                        <i class="bi bi-patch-check-fill text-3xl text-emerald-500 block mb-2"></i>
-                        <p class="font-bold text-gray-700">Perjalanan Selesai</p>
-                        <p class="text-sm text-gray-400 mt-1">Semua proses administrasi telah tuntas. Tiket ditutup.
-                        </p>
-                    @else
-                        <i class="bi bi-x-circle-fill text-3xl text-red-400 block mb-2"></i>
-                        <p class="font-bold text-gray-700">Permohonan Ditolak</p>
-                        <p class="text-sm text-gray-400 mt-1">Anda dapat membuat pengajuan baru jika diperlukan.</p>
-                        @if ($isOwner)
-                            <a href="{{ route('permohonan.create') }}"
-                                class="inline-flex items-center gap-2 mt-3 text-sm font-bold text-blue-600 hover:text-blue-800 transition">
-                                <i class="bi bi-plus-circle"></i> Buat Pengajuan Baru
-                            </a>
-                        @endif
-                    @endif
+                    <i class="bi bi-patch-check-fill text-3xl text-emerald-500 block mb-2"></i>
+                    <p class="font-bold text-gray-700">Perjalanan Selesai</p>
+                    <p class="text-sm text-gray-400 mt-1">Semua proses administrasi telah tuntas. Tiket ditutup.</p>
                 </div>
             @endif
+
+            {{-- ── STATUS DITOLAK DENGAN ALASAN ── --}}
+            @if ($permohonan->status_permohonan === StatusPermohonan::DITOLAK)
+                <div class="bg-white rounded-xl border border-red-200 shadow-sm overflow-hidden">
+                    <div class="px-4 sm:px-5 py-4 border-b border-red-100 bg-red-50">
+                        <div class="flex items-center gap-3">
+                            <i class="bi bi-x-circle-fill text-red-500 text-xl"></i>
+                            <div>
+                                <p class="font-bold text-red-700">Permohonan Ditolak</p>
+                                <p class="text-xs text-red-500 mt-0.5">Anda dapat membuat pengajuan baru jika diperlukan</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="p-4 sm:p-5">
+                        {{-- ALASAN PENOLAKAN LANGSUNG DI SINI --}}
+                        @if ($permohonan->alasan_penolakan)
+                            <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                                <div class="flex items-start gap-2">
+                                    <i class="bi bi-chat-square-text-fill text-red-500 flex-shrink-0 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <p class="text-xs font-bold text-red-700 uppercase tracking-wider mb-2">Alasan Penolakan</p>
+                                        <p class="text-sm text-red-800 leading-relaxed whitespace-pre-line break-words">
+                                            {{ $permohonan->alasan_penolakan }}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                                <div class="flex items-start gap-2">
+                                    <i class="bi bi-exclamation-triangle-fill text-yellow-600 flex-shrink-0 mt-0.5"></i>
+                                    <div class="flex-1">
+                                        <p class="text-sm text-yellow-800">Tidak ada alasan penolakan yang tercantum. Silakan hubungi admin untuk informasi lebih lanjut.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                        {{-- Tombol Buat Pengajuan Baru --}}
+                        @if ($isOwner)
+                            <div class="flex justify-center sm:justify-start">
+                                <a href="{{ route('permohonan.create') }}"
+                                    class="inline-flex items-center gap-2 text-sm font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-4 py-2 rounded-lg transition">
+                                    <i class="bi bi-plus-circle"></i> Buat Pengajuan Baru
+                                </a>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
         </div>
     </div>
 

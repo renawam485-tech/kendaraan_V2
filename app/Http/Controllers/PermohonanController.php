@@ -24,16 +24,15 @@ class PermohonanController extends Controller
         }
 
         if ($user->role === 'pengguna') {
-            $search = $request->query('search');
-
-            // Stats dihitung dari SEMUA data user (bukan hanya current page)
-            $baseQuery = Permohonan::where('user_id', $user->id);
+            $search      = $request->query('search');
+            $activeView  = $request->query('view', 'aktif');
 
             $nonAktifStatuses = [
                 StatusPermohonan::SELESAI->value,
                 StatusPermohonan::DITOLAK->value,
             ];
 
+            $baseQuery = Permohonan::where('user_id', $user->id);
             $stats = [
                 'total'   => (clone $baseQuery)->count(),
                 'proses'  => (clone $baseQuery)->whereNotIn('status_permohonan', $nonAktifStatuses)->count(),
@@ -41,22 +40,26 @@ class PermohonanController extends Controller
                 'ditolak' => (clone $baseQuery)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
             ];
 
-            // Tabel hanya tampilkan status aktif (exclude selesai & ditolak) — server-side
-            $aktifQuery = Permohonan::where('user_id', $user->id)
-                ->whereNotIn('status_permohonan', $nonAktifStatuses);
+            if ($activeView === 'riwayat') {
+                $query = Permohonan::where('user_id', $user->id)
+                    ->whereIn('status_permohonan', $nonAktifStatuses);
+            } else {
+                $query = Permohonan::where('user_id', $user->id)
+                    ->whereNotIn('status_permohonan', $nonAktifStatuses);
+            }
 
             if ($search) {
-                $aktifQuery->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('tujuan', 'like', "%{$search}%")
                         ->orWhere('kode_permohonan', 'like', "%{$search}%")
                         ->orWhere('titik_jemput', 'like', "%{$search}%");
                 });
             }
 
-            $permohonans = $aktifQuery
+            $permohonans = $query
                 ->orderBy('created_at', 'desc')
                 ->paginate(5)
-                ->appends(['search' => $search]);
+                ->appends(['search' => $search, 'view' => $activeView]);
 
             return view('dashboard.pengguna', compact('permohonans', 'stats'));
         }
@@ -197,30 +200,37 @@ class PermohonanController extends Controller
     {
         $permohonan = Permohonan::findOrFail($id);
 
-        $request->validate([
-            'status_permohonan' => 'required|in:' . implode(',', StatusPermohonan::values(
-                StatusPermohonan::MENUNGGU_PROSES_SPSI,
-                StatusPermohonan::DITOLAK,
-            )),
-            'kategori_kegiatan' => 'required_if:status_permohonan,' . StatusPermohonan::MENUNGGU_PROSES_SPSI->value,
+        $validated = $request->validate([
+            'status_permohonan' => 'required|in:Menunggu Proses SPSI,DITOLAK',
+            'kategori_kegiatan' => 'required_if:status_permohonan,Menunggu Proses SPSI',
             'rekomendasi_admin' => 'nullable|string',
+            'alasan_penolakan'  => 'required_if:status_permohonan,DITOLAK|nullable|string|max:1000',
+        ], [
+            'alasan_penolakan.required_if' => 'Alasan penolakan wajib diisi jika permohonan ditolak.',
         ]);
 
-        $statusBaru = StatusPermohonan::from($request->status_permohonan);
+        if ($validated['status_permohonan'] === 'DITOLAK') {
+            $statusBaru = StatusPermohonan::DITOLAK;
+        } else {
+            $statusBaru = StatusPermohonan::MENUNGGU_PROSES_SPSI;
+        }
+
         $anggaranAktual = $permohonan->anggaran_diajukan;
 
         if (
-            $statusBaru === StatusPermohonan::MENUNGGU_PROSES_SPSI
-            && $request->kategori_kegiatan === 'Non SITH'
+            $statusBaru === StatusPermohonan::MENUNGGU_PROSES_SPSI &&
+            isset($validated['kategori_kegiatan']) &&
+            $validated['kategori_kegiatan'] === 'Non SITH'
         ) {
             $anggaranAktual = 0;
         }
 
         $permohonan->update([
             'status_permohonan' => $statusBaru,
-            'kategori_kegiatan' => $request->kategori_kegiatan,
-            'rekomendasi_admin' => $request->rekomendasi_admin,
-            'anggaran_diajukan' => $anggaranAktual,
+            'kategori_kegiatan' => $validated['kategori_kegiatan'] ?? null,
+            'rekomendasi_admin' => $validated['rekomendasi_admin'] ?? null,
+            'anggaran_diajukan'  => $anggaranAktual,
+            'alasan_penolakan'   => $statusBaru === StatusPermohonan::DITOLAK ? $validated['alasan_penolakan'] : null,
         ]);
 
         if ($statusBaru === StatusPermohonan::MENUNGGU_PROSES_SPSI) {
@@ -229,7 +239,8 @@ class PermohonanController extends Controller
             }
             $permohonan->user?->notify(new StatusPermohonanNotification($permohonan, 'Disetujui Admin, sedang diproses SPSI.'));
         } elseif ($statusBaru === StatusPermohonan::DITOLAK) {
-            $permohonan->user?->notify(new StatusPermohonanNotification($permohonan, 'Mohon maaf, permohonan Anda ditolak oleh Admin.'));
+            $pesan = 'Mohon maaf, permohonan Anda ditolak oleh Admin. Alasan: ' . $validated['alasan_penolakan'];
+            $permohonan->user?->notify(new StatusPermohonanNotification($permohonan, $pesan));
         }
 
         return redirect()->route('admin.validasi')->with('success', 'Permohonan divalidasi.');

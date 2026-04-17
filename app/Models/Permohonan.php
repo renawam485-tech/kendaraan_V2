@@ -24,17 +24,18 @@ class Permohonan extends Model
         'file_surat_penugasan',
         'anggaran_diajukan',
         'catatan_pemohon',
+        'alasan_penolakan',
         'kategori_kegiatan',
         'rekomendasi_admin',
         'kendaraan_id',
-        'kendaraan_vendor_id',   // ← was missing
+        'kendaraan_vendor_id',   
         'pengemudi_id',
         'estimasi_biaya_operasional',
         'rab_disetujui',
         'mekanisme_pembayaran',
-        'biaya_aktual',           // ← was missing
-        'bukti_lpj',              // ← was missing
-        'bukti_pengembalian',     // ← was missing
+        'bukti_lpj',              
+        'biaya_aktual',           
+        'bukti_pengembalian',     
         'status_permohonan',
         'waktu_serah_terima',
         'waktu_mulai_perjalanan',

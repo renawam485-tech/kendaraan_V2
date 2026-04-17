@@ -100,26 +100,29 @@ class LaporanController extends Controller
                     $query->where('status_permohonan', $request->status);
                 }
                 return $query->orderBy('updated_at', 'desc')->paginate($perPage);
+case 'pengguna':
+    $search = $request->query('search');
+    $perPageUser = 10;
 
-            case 'pengguna':
-                $search = $request->query('search');
-                $perPageUser = 10;
+    // Tampilkan SELESAI dan DITOLAK untuk riwayat
+    $query->where('user_id', Auth::id())
+        ->whereIn('status_permohonan', [
+            StatusPermohonan::SELESAI->value,
+            StatusPermohonan::DITOLAK->value,
+        ]);
 
-                $query->where('user_id', Auth::id())
-                    ->where('status_permohonan', StatusPermohonan::SELESAI->value);
+    if ($search) {
+        $query->where(function ($q) use ($search) {
+            $q->where('tujuan', 'like', "%{$search}%")
+                ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                ->orWhere('titik_jemput', 'like', "%{$search}%")
+                ->orWhere('nama_pic', 'like', "%{$search}%");
+        });
+    }
 
-                if ($search) {
-                    $query->where(function ($q) use ($search) {
-                        $q->where('tujuan', 'like', "%{$search}%")
-                            ->orWhere('kode_permohonan', 'like', "%{$search}%")
-                            ->orWhere('titik_jemput', 'like', "%{$search}%")
-                            ->orWhere('nama_pic', 'like', "%{$search}%");
-                    });
-                }
-
-                return $query->orderBy('updated_at', 'desc')
-                    ->paginate($perPageUser)
-                    ->appends(['search' => $search]);
+    return $query->orderBy('updated_at', 'desc')
+        ->paginate($perPageUser)
+        ->appends(['search' => $search]);
 
             default:
                 return collect();
@@ -177,21 +180,16 @@ class LaporanController extends Controller
                 ];
 
             case 'pengguna':
-                $mine = Permohonan::where('user_id', Auth::id());
-                return [
-                    'total'     => (clone $mine)->count(),
-                    'disetujui' => (clone $mine)->whereIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI,
-                        StatusPermohonan::SELESAI,
-                    ))->count(),
-                    'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
-                    'proses'    => (clone $mine)->whereNotIn('status_permohonan', StatusPermohonan::values(
-                        StatusPermohonan::DISETUJUI,
-                        StatusPermohonan::SELESAI,
-                        StatusPermohonan::DITOLAK,
-                    ))->count(),
-                    'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
-                ];
+    $mine = Permohonan::where('user_id', Auth::id());
+    return [
+        'total'     => (clone $mine)->count(),
+        'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
+        'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
+        'proses'    => (clone $mine)->whereNotIn('status_permohonan', [
+            StatusPermohonan::SELESAI->value,
+            StatusPermohonan::DITOLAK->value,
+        ])->count(),
+    ];
         }
 
         return [];
@@ -205,7 +203,7 @@ class LaporanController extends Controller
             'super_admin', 'kepala_admin' => array_merge($base, ['Armada', 'RAB (Rp)', 'Dibuat Oleh']),
             'spsi'     => ['No', 'Nama PIC', 'Tujuan', 'Tgl Berangkat', 'Tgl Kembali', 'Kendaraan', 'Plat', 'Pengemudi', 'Est. Biaya (Rp)', 'Status'],
             'keuangan' => ['No', 'Nama PIC', 'Tujuan', 'Kategori', 'RAB Disetujui (Rp)', 'Biaya Aktual (Rp)', 'Selisih (Rp)', 'Mekanisme', 'Status'],
-            'pengguna' => ['No', 'Tujuan', 'Tgl Berangkat', 'Tgl Kembali', 'Kendaraan', 'Status'],
+            'pengguna' => ['No', 'Kode', 'Tujuan', 'Tgl Berangkat', 'Tgl Kembali', 'Kendaraan', 'Status'],
             default    => $base,
         };
     }
@@ -265,16 +263,17 @@ class LaporanController extends Controller
                     ];
                     break;
 
-                case 'pengguna':
-                    $rows[] = [
-                        $i + 1,
-                        $p->tujuan,
-                        \Carbon\Carbon::parse($p->waktu_berangkat)->format('d/m/Y H:i'),
-                        \Carbon\Carbon::parse($p->waktu_kembali)->format('d/m/Y H:i'),
-                        $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
-                        $status,
-                    ];
-                    break;
+           case 'pengguna':
+    $rows[] = [
+        $i + 1,
+        $p->kode_permohonan ?? '-',
+        $p->tujuan,
+        \Carbon\Carbon::parse($p->waktu_berangkat)->format('d/m/Y H:i'),
+        \Carbon\Carbon::parse($p->waktu_kembali)->format('d/m/Y H:i'),
+        $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
+        $status,
+    ];
+    break;
             }
         }
 

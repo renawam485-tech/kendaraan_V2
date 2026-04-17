@@ -5,7 +5,7 @@
         </h2>
     </x-slot>
 
-    @use('App\Enums\StatusPermohonan')
+
 
     <div class="py-6 md:py-10 bg-gray-50 min-h-screen">
         <div class="w-full px-4 sm:px-6 lg:px-8 space-y-8">
