@@ -37,7 +37,7 @@
     </script>
 </head>
 
-<body class="font-sans antialiased text-gray-800 bg-gray-50" x-data="{
+<body class="font-sans antialiased text-gray-800 bg-gray-50 min-h-screen flex flex-col" x-data="{
     sidebarOpen: false,
     sidebarCollapsed: false,
     isMobile: window.innerWidth < 768,
@@ -66,7 +66,7 @@
 
     @include('layouts.navigation', ['render' => 'topbar'])
 
-    <div class="flex pt-16 min-h-screen">
+    <div class="flex pt-16 flex-1">
         @include('layouts.navigation', ['render' => 'sidebar'])
 
         <main class="flex-1 w-full pb-10 content-transition"

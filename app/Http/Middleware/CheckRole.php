@@ -11,7 +11,6 @@ class CheckRole
 {
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Jika tidak login atau role tidak ada dalam daftar yang diizinkan
         if (!Auth::check() || !in_array(Auth::user()->role, $roles)) {
             abort(403, 'Akses Ditolak: Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
