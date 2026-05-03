@@ -226,13 +226,13 @@
 
             {{-- MENU AKSES UMUM (untuk semua role) --}}
             <div x-show="!sidebarCollapsed"
-                class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Laporan & Riwayat</div>
+                class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Laporan</div>
             <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-            <a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan Filter' }}"
+            <a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan' }}"
                 class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                 <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
                 <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
-                    {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan Filter' }}
+                    {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan' }}
                 </span>
             </a>
         </nav>

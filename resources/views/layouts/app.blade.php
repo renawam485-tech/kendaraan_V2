@@ -295,6 +295,8 @@
     <div id="toast-container" class="fixed bottom-5 right-5 z-[80] flex flex-col gap-3"></div>
     <audio id="notif-sound" src="{{ asset('sounds/notif.mp3') }}" preload="auto"></audio>
 
+    @include('layouts.footer')
+
     <script type="module">
         window.showCompactToast = function(title, message, type = 'info') {
             const isError = type === 'error' || title === 'Gagal';
@@ -333,15 +335,13 @@
         };
 
         window.customConfirm = function(opts, callback) {
-            const detail = typeof opts === 'string' ?
-                {
-                    message: opts,
-                    callback
-                } :
-                {
-                    ...opts,
-                    callback
-                };
+            const detail = typeof opts === 'string' ? {
+                message: opts,
+                callback
+            } : {
+                ...opts,
+                callback
+            };
             window.dispatchEvent(new CustomEvent('open-confirm', {
                 detail
             }));
@@ -350,46 +350,69 @@
         document.addEventListener('DOMContentLoaded', function() {
             const userId = {{ auth()->check() ? auth()->id() : 'null' }};
             if (userId !== null && window.Echo) {
-                window.Echo.private('App.Models.User.' + userId).notification((notification) => {
+                // Simpan URL yang sedang diakses
+                const currentPath = window.location.pathname;
+                const currentRole = "{{ auth()->user()->role }}";
 
+                // Tentukan halaman aksi (dimana notifikasi toast & suara harus disembunyikan)
+                const isActionPage =
+                    currentPath.includes('/admin/validasi') ||
+                    currentPath.includes('/admin/finalisasi') ||
+                    currentPath.includes('/spsi/alokasi') ||
+                    currentPath.includes('/spsi/monitoring') ||
+                    currentPath.includes('/keuangan/rab') ||
+                    currentPath.includes('/keuangan/monitoring');
+
+                // Path yang perlu auto-refresh kontennya
+                const autoUpdatePaths = ['/dashboard', '/admin/validasi', '/admin/finalisasi',
+                    '/admin/riwayat', '/spsi/alokasi', '/spsi/monitoring', '/keuangan/rab',
+                    '/keuangan/monitoring'
+                ];
+
+                window.Echo.private('App.Models.User.' + userId).notification((notification) => {
                     const title = notification.status || (notification.data && notification.data.status) ||
                         'Notifikasi Baru';
                     const message = notification.pesan || (notification.data && notification.data.pesan) ||
                         'Silakan cek pembaruan terbaru.';
-                    window.showCompactToast(title, message);
 
-                    // Trigger Alpine.js untuk menambah angka merah di Lonceng
+                    // 🔥 LOGIKA: Sembunyikan toast & suara jika role BUKAN pengguna DAN sedang di halaman aksi
+                    const shouldHideToast = (currentRole !== 'pengguna' && isActionPage);
+
+                    if (!shouldHideToast) {
+                        // Tampilkan toast untuk role pengguna ATAU tidak sedang di halaman aksi
+                        window.showCompactToast(title, message);
+
+                        // Putar suara
+                        const audio = document.getElementById('notif-sound');
+                        if (audio) {
+                            audio.currentTime = 0;
+                            audio.play().catch(() => {});
+                        }
+                    }
+
+                    // Tetap update badge notifikasi (angka merah) dalam kondisi APAPUN
                     window.dispatchEvent(new CustomEvent('increase-badge'));
 
-                    const autoUpdatePaths = ['/dashboard', '/admin/validasi', '/admin/finalisasi',
-                        '/admin/riwayat', '/spsi/alokasi', '/spsi/monitoring', '/keuangan/rab',
-                        '/keuangan/monitoring'
-                    ];
-
-                    // Ambil konten HTML baru tanpa me-refresh browser
-                    if (autoUpdatePaths.includes(window.location.pathname) || document.getElementById(
+                    // Refresh konten halaman (hanya ditulis SEKALI)
+                    if (autoUpdatePaths.includes(currentPath) || document.getElementById(
                             'notif-list-container')) {
                         fetch(window.location.href).then(response => response.text()).then(html => {
                             const parser = new DOMParser();
                             const doc = parser.parseFromString(html, 'text/html');
 
-                            // Update Tabel Dashboard secara halus
                             const newMainContent = doc.querySelector('main');
                             if (newMainContent && document.querySelector('main')) {
                                 document.querySelector('main').innerHTML = newMainContent.innerHTML;
                             }
 
-                            // Update Panel Daftar Notifikasi secara halus (agar notif baru langsung terlihat)
                             const newNotifList = doc.getElementById('notif-list-container');
                             if (newNotifList && document.getElementById('notif-list-container')) {
                                 document.getElementById('notif-list-container').innerHTML =
                                     newNotifList.innerHTML;
                             }
 
-                            // Update Sidebar secara halus (memperbarui angka/badge notifikasi realtime)
                             const newSidebarNav = doc.querySelector('#sidebar-main nav');
                             const currentSidebarNav = document.querySelector('#sidebar-main nav');
-
                             if (newSidebarNav && currentSidebarNav) {
                                 currentSidebarNav.innerHTML = newSidebarNav.innerHTML;
                             }
