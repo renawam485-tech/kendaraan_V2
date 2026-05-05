@@ -24,6 +24,24 @@ class LaporanController extends Controller
         return view('laporan.index', compact('data', 'stats', 'request'));
     }
 
+    /**
+     * Halaman riwayat berdasarkan role
+     */
+    public function riwayat(Request $request)
+    {
+        $user = Auth::user();
+        $role = $user->role;
+
+        // Hanya untuk admin/keuangan/super_admin
+        if (in_array($role, ['pengguna', 'spsi'])) {
+            abort(403, 'Akses ditolak');
+        }
+
+        $data = $this->getRiwayatData($request, $role);
+
+        return view('laporan.riwayat.riwayat', compact('data', 'request', 'role'));
+    }
+
     public function exportExcel(Request $request)
     {
         $user    = Auth::user();
@@ -58,7 +76,7 @@ class LaporanController extends Controller
     private function getData(Request $request, string $role)
     {
         $query = Permohonan::with(['user', 'kendaraan', 'pengemudi']);
-        $perPage = 15; 
+        $perPage = 15;
 
         if ($request->filled('dari')) {
             $query->whereDate('created_at', '>=', $request->dari);
@@ -100,33 +118,210 @@ class LaporanController extends Controller
                     $query->where('status_permohonan', $request->status);
                 }
                 return $query->orderBy('updated_at', 'desc')->paginate($perPage);
-case 'pengguna':
-    $search = $request->query('search');
-    $perPageUser = 10;
 
-    // Tampilkan SELESAI dan DITOLAK untuk riwayat
-    $query->where('user_id', Auth::id())
-        ->whereIn('status_permohonan', [
-            StatusPermohonan::SELESAI->value,
-            StatusPermohonan::DITOLAK->value,
-        ]);
+            case 'pengguna':
+                $search = $request->query('search');
+                $perPageUser = 10;
 
-    if ($search) {
-        $query->where(function ($q) use ($search) {
-            $q->where('tujuan', 'like', "%{$search}%")
-                ->orWhere('kode_permohonan', 'like', "%{$search}%")
-                ->orWhere('titik_jemput', 'like', "%{$search}%")
-                ->orWhere('nama_pic', 'like', "%{$search}%");
-        });
-    }
+                $query->where('user_id', Auth::id())
+                    ->whereIn('status_permohonan', [
+                        StatusPermohonan::SELESAI->value,
+                        StatusPermohonan::DITOLAK->value,
+                    ]);
 
-    return $query->orderBy('updated_at', 'desc')
-        ->paginate($perPageUser)
-        ->appends(['search' => $search]);
+                if ($search) {
+                    $query->where(function ($q) use ($search) {
+                        $q->where('tujuan', 'like', "%{$search}%")
+                            ->orWhere('kode_permohonan', 'like', "%{$search}%")
+                            ->orWhere('titik_jemput', 'like', "%{$search}%")
+                            ->orWhere('nama_pic', 'like', "%{$search}%");
+                    });
+                }
+
+                return $query->orderBy('updated_at', 'desc')
+                    ->paginate($perPageUser)
+                    ->appends(['search' => $search]);
 
             default:
                 return collect();
         }
+    }
+
+    /**
+     * Get riwayat data berdasarkan role
+     */
+    private function getRiwayatData(Request $request, string $role)
+    {
+        $query = Permohonan::with(['user', 'kendaraan', 'pengemudi', 'kendaraanVendor']);
+        $perPage = 15;
+
+        // Filter tanggal
+        if ($request->filled('dari')) {
+            $query->whereDate('updated_at', '>=', $request->dari);
+        }
+        if ($request->filled('sampai')) {
+            $query->whereDate('updated_at', '<=', $request->sampai);
+        }
+
+        // Filter status
+        if ($request->filled('status')) {
+            $query->where('status_permohonan', $request->status);
+        }
+
+        switch ($role) {
+            case 'super_admin':
+                // Tampilkan SEMUA data yang sudah selesai proses (riwayat)
+                $query->whereIn('status_permohonan', [
+                    StatusPermohonan::DISETUJUI->value,
+                    StatusPermohonan::DITOLAK->value,
+                    StatusPermohonan::SELESAI->value,
+                ]);
+
+                if ($request->filled('kategori')) {
+                    $query->where('kategori_kegiatan', $request->kategori);
+                }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nama_pic', 'like', "%{$search}%")
+                            ->orWhere('tujuan', 'like', "%{$search}%")
+                            ->orWhere('kode_permohonan', 'like', "%{$search}%");
+                    });
+                }
+                break;
+
+            case 'kepala_admin':
+                // Riwayat yang sudah divalidasi/ditolak/finalisasi
+                $query->whereIn('status_permohonan', [
+                    StatusPermohonan::DISETUJUI->value,
+                    StatusPermohonan::DITOLAK->value,
+                    StatusPermohonan::SELESAI->value,
+                    StatusPermohonan::MENUNGGU_PROSES_SPSI->value,
+                ]);
+
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nama_pic', 'like', "%{$search}%")
+                            ->orWhere('tujuan', 'like', "%{$search}%");
+                    });
+                }
+                break;
+
+            case 'spsi':
+                // Riwayat penggunaan kendaraan
+                $query->where(function ($q) {
+                    $q->whereNotNull('kendaraan_id')
+                        ->orWhereNotNull('kendaraan_vendor_id');
+                })->whereIn('status_permohonan', [
+                    StatusPermohonan::PERJALANAN_BERLANGSUNG->value,
+                    StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI->value,
+                    StatusPermohonan::MENUNGGU_PENYELESAIAN->value,
+                    StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA->value,
+                    StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
+                    StatusPermohonan::SELESAI->value,
+                ]);
+
+                if ($request->filled('kendaraan')) {
+                    $query->where('kendaraan_id', $request->kendaraan);
+                }
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nama_pic', 'like', "%{$search}%")
+                            ->orWhere('tujuan', 'like', "%{$search}%");
+                    });
+                }
+                break;
+
+            case 'keuangan':
+                // Riwayat transaksi keuangan
+                $query->whereNotNull('rab_disetujui')
+                    ->whereIn('status_permohonan', [
+                        StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA->value,
+                        StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
+                        StatusPermohonan::SELESAI->value,
+                    ]);
+
+                if ($request->filled('search')) {
+                    $search = $request->search;
+                    $query->where(function ($q) use ($search) {
+                        $q->where('nama_pic', 'like', "%{$search}%")
+                            ->orWhere('tujuan', 'like', "%{$search}%");
+                    });
+                }
+                break;
+        }
+
+        return $query->orderBy('updated_at', 'desc')->paginate($perPage);
+    }
+
+    /**
+     * Get statistik untuk halaman riwayat
+     */
+    private function getRiwayatStats(string $role): array
+    {
+        switch ($role) {
+            case 'super_admin':
+                return [
+                    'total_riwayat' => Permohonan::whereIn('status_permohonan', [
+                        StatusPermohonan::DISETUJUI->value,
+                        StatusPermohonan::DITOLAK->value,
+                        StatusPermohonan::SELESAI->value,
+                    ])->count(),
+                    'disetujui' => Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count(),
+                    'ditolak' => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
+                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
+                ];
+
+            case 'kepala_admin':
+                return [
+                    'total_validasi' => Permohonan::whereIn('status_permohonan', [
+                        StatusPermohonan::DISETUJUI->value,
+                        StatusPermohonan::DITOLAK->value,
+                        StatusPermohonan::SELESAI->value,
+                    ])->count(),
+                    'disetujui' => Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count(),
+                    'ditolak' => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
+                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
+                ];
+
+            case 'spsi':
+                return [
+                    'total_perjalanan' => Permohonan::where(function ($q) {
+                        $q->whereNotNull('kendaraan_id')
+                            ->orWhereNotNull('kendaraan_vendor_id');
+                    })->whereIn('status_permohonan', [
+                        StatusPermohonan::PERJALANAN_BERLANGSUNG->value,
+                        StatusPermohonan::MENUNGGU_KONFIRMASI_KEMBALI->value,
+                        StatusPermohonan::MENUNGGU_PENYELESAIAN->value,
+                        StatusPermohonan::SELESAI->value,
+                    ])->count(),
+                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)
+                        ->where(function ($q) {
+                            $q->whereNotNull('kendaraan_id')
+                                ->orWhereNotNull('kendaraan_vendor_id');
+                        })->count(),
+                    'kendaraan_digunakan' => Kendaraan::where('status_kendaraan', 'Dipinjam')->count(),
+                ];
+
+            case 'keuangan':
+                return [
+                    'total_transaksi' => Permohonan::whereNotNull('rab_disetujui')
+                        ->whereIn('status_permohonan', [
+                            StatusPermohonan::SELESAI->value,
+                            StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA->value,
+                            StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
+                        ])->count(),
+                    'total_rab' => Permohonan::whereNotNull('rab_disetujui')->sum('rab_disetujui'),
+                    'total_realisasi' => Permohonan::whereNotNull('biaya_aktual')->sum('biaya_aktual'),
+                    'total_selisih' => Permohonan::whereNotNull('biaya_aktual')
+                        ->selectRaw('SUM(rab_disetujui - biaya_aktual) as selisih')
+                        ->value('selisih') ?? 0,
+                ];
+        }
+
+        return [];
     }
 
     private function getStats(string $role): array
@@ -180,16 +375,16 @@ case 'pengguna':
                 ];
 
             case 'pengguna':
-    $mine = Permohonan::where('user_id', Auth::id());
-    return [
-        'total'     => (clone $mine)->count(),
-        'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
-        'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
-        'proses'    => (clone $mine)->whereNotIn('status_permohonan', [
-            StatusPermohonan::SELESAI->value,
-            StatusPermohonan::DITOLAK->value,
-        ])->count(),
-    ];
+                $mine = Permohonan::where('user_id', Auth::id());
+                return [
+                    'total'     => (clone $mine)->count(),
+                    'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
+                    'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
+                    'proses'    => (clone $mine)->whereNotIn('status_permohonan', [
+                        StatusPermohonan::SELESAI->value,
+                        StatusPermohonan::DITOLAK->value,
+                    ])->count(),
+                ];
         }
 
         return [];
@@ -263,17 +458,17 @@ case 'pengguna':
                     ];
                     break;
 
-           case 'pengguna':
-    $rows[] = [
-        $i + 1,
-        $p->kode_permohonan ?? '-',
-        $p->tujuan,
-        \Carbon\Carbon::parse($p->waktu_berangkat)->format('d/m/Y H:i'),
-        \Carbon\Carbon::parse($p->waktu_kembali)->format('d/m/Y H:i'),
-        $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
-        $status,
-    ];
-    break;
+                case 'pengguna':
+                    $rows[] = [
+                        $i + 1,
+                        $p->kode_permohonan ?? '-',
+                        $p->tujuan,
+                        \Carbon\Carbon::parse($p->waktu_berangkat)->format('d/m/Y H:i'),
+                        \Carbon\Carbon::parse($p->waktu_kembali)->format('d/m/Y H:i'),
+                        $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
+                        $status,
+                    ];
+                    break;
             }
         }
 

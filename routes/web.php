@@ -137,6 +137,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
     Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf');
+    
+    // ROUTE BARU: Riwayat per role
+    Route::get('/laporan/riwayat', [LaporanController::class, 'riwayat'])->name('laporan.riwayat');
 
     // =========================================================
     // 7. PUSAT BANTUAN (Semua Role)

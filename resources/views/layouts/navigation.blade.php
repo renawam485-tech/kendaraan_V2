@@ -225,16 +225,27 @@
             @endif
 
             {{-- MENU AKSES UMUM (untuk semua role) --}}
-            <div x-show="!sidebarCollapsed"
-                class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Laporan</div>
-            <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-            <a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan' }}"
-                class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.*') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-                <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
-                <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
-                    {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan' }}
-                </span>
-            </a>
+           {{-- MENU AKSES UMUM (untuk semua role) --}}
+<div x-show="!sidebarCollapsed" class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+    Laporan</div>
+<hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+<a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan' }}"
+    class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.index') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+    <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
+    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
+        {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan' }}
+    </span>
+</a>
+
+{{-- TAMBAHKAN MENU RIWAYAT DI SINI --}}
+@if (!in_array($role, ['pengguna', 'spsi']))
+    <a href="{{ route('laporan.riwayat') }}" title="Riwayat Permohonan"
+        class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.riwayat') ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-indigo-600 text-gray-600' }}">
+        <i class="bi bi-clock-history text-lg w-8 text-center"></i>
+        <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Riwayat</span>
+    </a>
+@endif
+
         </nav>
 
         <div class="border-t border-gray-100 py-3 mt-auto">
