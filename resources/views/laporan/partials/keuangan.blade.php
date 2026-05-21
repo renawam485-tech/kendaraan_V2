@@ -29,7 +29,7 @@
                 <select name="status"
                     class="w-full border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 bg-gray-50">
                     <option value="">Semua Status</option>
-                    @foreach (['Menunggu Validasi Admin', 'Menunggu Proses SPSI', 'Menunggu Proses Keuangan', 'Menunggu Finalisasi', 'Disetujui', 'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian', 'Selesai', 'Ditolak', 'Dibatalkan'] as $s)
+                    @foreach (['Menunggu Proses Keuangan', 'Menunggu Pengembalian Dana', 'Menunggu Verifikasi Pengembalian'] as $s)
                         <option value="{{ $s }}" {{ ($request->status ?? '') === $s ? 'selected' : '' }}>
                             {{ $s }}
                         </option>

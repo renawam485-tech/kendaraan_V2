@@ -24,15 +24,11 @@ class LaporanController extends Controller
         return view('laporan.index', compact('data', 'stats', 'request'));
     }
 
-    /**
-     * Halaman riwayat berdasarkan role
-     */
     public function riwayat(Request $request)
     {
         $user = Auth::user();
         $role = $user->role;
 
-        // Hanya untuk admin/keuangan/super_admin
         if (in_array($role, ['pengguna', 'spsi'])) {
             abort(403, 'Akses ditolak');
         }
@@ -50,9 +46,31 @@ class LaporanController extends Controller
         $rows    = $this->getRows($data, $user->role);
         $judul   = $this->getJudul($user->role);
 
+        $moneyColumns = match ($user->role) {
+            'super_admin', 'kepala_admin' => ['I'],
+            'spsi'                        => ['I'],
+            'keuangan'                    => ['E', 'F', 'G'],
+            default                       => [],
+        };
+
+        $dari   = $request->filled('dari')   ? $request->dari   : null;
+        $sampai = $request->filled('sampai') ? $request->sampai : null;
+
+        $namaFile = 'laporan';
+        if ($dari && $sampai) {
+            $namaFile .= '-' . $dari . '-sd-' . $sampai;
+        } elseif ($dari) {
+            $namaFile .= '-dari-' . $dari;
+        } elseif ($sampai) {
+            $namaFile .= '-sampai-' . $sampai;
+        } else {
+            $namaFile .= '-semua-' . now()->format('Y-m-d');
+        }
+        $namaFile .= '.xlsx';
+
         return Excel::download(
-            new LaporanExport($rows, $headers, $judul),
-            'laporan-' . now()->format('Y-m-d') . '.xlsx'
+            new LaporanExport($rows, $headers, $judul, $moneyColumns),
+            $namaFile
         );
     }
 
@@ -75,7 +93,7 @@ class LaporanController extends Controller
 
     private function getData(Request $request, string $role)
     {
-        $query = Permohonan::with(['user', 'kendaraan', 'pengemudi']);
+        $query   = Permohonan::with(['user', 'kendaraan', 'pengemudi']);
         $perPage = 15;
 
         if ($request->filled('dari')) {
@@ -120,7 +138,7 @@ class LaporanController extends Controller
                 return $query->orderBy('updated_at', 'desc')->paginate($perPage);
 
             case 'pengguna':
-                $search = $request->query('search');
+                $search      = $request->query('search');
                 $perPageUser = 10;
 
                 $query->where('user_id', Auth::id())
@@ -147,15 +165,11 @@ class LaporanController extends Controller
         }
     }
 
-    /**
-     * Get riwayat data berdasarkan role
-     */
     private function getRiwayatData(Request $request, string $role)
     {
-        $query = Permohonan::with(['user', 'kendaraan', 'pengemudi', 'kendaraanVendor']);
+        $query   = Permohonan::with(['user', 'kendaraan', 'pengemudi', 'kendaraanVendor']);
         $perPage = 15;
 
-        // Filter tanggal
         if ($request->filled('dari')) {
             $query->whereDate('updated_at', '>=', $request->dari);
         }
@@ -163,20 +177,17 @@ class LaporanController extends Controller
             $query->whereDate('updated_at', '<=', $request->sampai);
         }
 
-        // Filter status
         if ($request->filled('status')) {
             $query->where('status_permohonan', $request->status);
         }
 
         switch ($role) {
             case 'super_admin':
-                // Tampilkan SEMUA data yang sudah selesai proses (riwayat)
                 $query->whereIn('status_permohonan', [
                     StatusPermohonan::DISETUJUI->value,
                     StatusPermohonan::DITOLAK->value,
                     StatusPermohonan::SELESAI->value,
                 ]);
-
                 if ($request->filled('kategori')) {
                     $query->where('kategori_kegiatan', $request->kategori);
                 }
@@ -191,14 +202,12 @@ class LaporanController extends Controller
                 break;
 
             case 'kepala_admin':
-                // Riwayat yang sudah divalidasi/ditolak/finalisasi
                 $query->whereIn('status_permohonan', [
                     StatusPermohonan::DISETUJUI->value,
                     StatusPermohonan::DITOLAK->value,
                     StatusPermohonan::SELESAI->value,
                     StatusPermohonan::MENUNGGU_PROSES_SPSI->value,
                 ]);
-
                 if ($request->filled('search')) {
                     $search = $request->search;
                     $query->where(function ($q) use ($search) {
@@ -209,7 +218,6 @@ class LaporanController extends Controller
                 break;
 
             case 'spsi':
-                // Riwayat penggunaan kendaraan
                 $query->where(function ($q) {
                     $q->whereNotNull('kendaraan_id')
                         ->orWhereNotNull('kendaraan_vendor_id');
@@ -221,7 +229,6 @@ class LaporanController extends Controller
                     StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
                     StatusPermohonan::SELESAI->value,
                 ]);
-
                 if ($request->filled('kendaraan')) {
                     $query->where('kendaraan_id', $request->kendaraan);
                 }
@@ -235,14 +242,12 @@ class LaporanController extends Controller
                 break;
 
             case 'keuangan':
-                // Riwayat transaksi keuangan
                 $query->whereNotNull('rab_disetujui')
                     ->whereIn('status_permohonan', [
                         StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA->value,
                         StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
                         StatusPermohonan::SELESAI->value,
                     ]);
-
                 if ($request->filled('search')) {
                     $search = $request->search;
                     $query->where(function ($q) use ($search) {
@@ -256,9 +261,6 @@ class LaporanController extends Controller
         return $query->orderBy('updated_at', 'desc')->paginate($perPage);
     }
 
-    /**
-     * Get statistik untuk halaman riwayat
-     */
     private function getRiwayatStats(string $role): array
     {
         switch ($role) {
@@ -270,8 +272,8 @@ class LaporanController extends Controller
                         StatusPermohonan::SELESAI->value,
                     ])->count(),
                     'disetujui' => Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count(),
-                    'ditolak' => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
-                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
+                    'ditolak'   => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
+                    'selesai'   => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
                 ];
 
             case 'kepala_admin':
@@ -282,8 +284,8 @@ class LaporanController extends Controller
                         StatusPermohonan::SELESAI->value,
                     ])->count(),
                     'disetujui' => Permohonan::where('status_permohonan', StatusPermohonan::DISETUJUI)->count(),
-                    'ditolak' => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
-                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
+                    'ditolak'   => Permohonan::where('status_permohonan', StatusPermohonan::DITOLAK)->count(),
+                    'selesai'   => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)->count(),
                 ];
 
             case 'spsi':
@@ -297,7 +299,7 @@ class LaporanController extends Controller
                         StatusPermohonan::MENUNGGU_PENYELESAIAN->value,
                         StatusPermohonan::SELESAI->value,
                     ])->count(),
-                    'selesai' => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)
+                    'selesai'           => Permohonan::where('status_permohonan', StatusPermohonan::SELESAI)
                         ->where(function ($q) {
                             $q->whereNotNull('kendaraan_id')
                                 ->orWhereNotNull('kendaraan_vendor_id');
@@ -307,15 +309,15 @@ class LaporanController extends Controller
 
             case 'keuangan':
                 return [
-                    'total_transaksi' => Permohonan::whereNotNull('rab_disetujui')
+                    'total_transaksi'  => Permohonan::whereNotNull('rab_disetujui')
                         ->whereIn('status_permohonan', [
                             StatusPermohonan::SELESAI->value,
                             StatusPermohonan::MENUNGGU_PENGEMBALIAN_DANA->value,
                             StatusPermohonan::MENUNGGU_VERIFIKASI_KEMBALI->value,
                         ])->count(),
-                    'total_rab' => Permohonan::whereNotNull('rab_disetujui')->sum('rab_disetujui'),
-                    'total_realisasi' => Permohonan::whereNotNull('biaya_aktual')->sum('biaya_aktual'),
-                    'total_selisih' => Permohonan::whereNotNull('biaya_aktual')
+                    'total_rab'        => Permohonan::whereNotNull('rab_disetujui')->sum('rab_disetujui'),
+                    'total_realisasi'  => Permohonan::whereNotNull('biaya_aktual')->sum('biaya_aktual'),
+                    'total_selisih'    => Permohonan::whereNotNull('biaya_aktual')
                         ->selectRaw('SUM(rab_disetujui - biaya_aktual) as selisih')
                         ->value('selisih') ?? 0,
                 ];
@@ -377,10 +379,10 @@ class LaporanController extends Controller
             case 'pengguna':
                 $mine = Permohonan::where('user_id', Auth::id());
                 return [
-                    'total'     => (clone $mine)->count(),
-                    'selesai'   => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
-                    'ditolak'   => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
-                    'proses'    => (clone $mine)->whereNotIn('status_permohonan', [
+                    'total'   => (clone $mine)->count(),
+                    'selesai' => (clone $mine)->where('status_permohonan', StatusPermohonan::SELESAI->value)->count(),
+                    'ditolak' => (clone $mine)->where('status_permohonan', StatusPermohonan::DITOLAK->value)->count(),
+                    'proses'  => (clone $mine)->whereNotIn('status_permohonan', [
                         StatusPermohonan::SELESAI->value,
                         StatusPermohonan::DITOLAK->value,
                     ])->count(),
@@ -423,7 +425,7 @@ class LaporanController extends Controller
                         $p->kategori_kegiatan ?? '-',
                         $status,
                         $p->kendaraan_id ? ($p->kendaraan->nama_kendaraan ?? '-') : ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
-                        number_format($p->rab_disetujui ?? 0, 0, ',', '.'),
+                        (int)($p->rab_disetujui ?? 0),
                         $p->user->name ?? '-',
                     ];
                     break;
@@ -438,7 +440,7 @@ class LaporanController extends Controller
                         $p->kendaraan?->nama_kendaraan ?? ($p->kendaraanVendor?->nama_kendaraan ?? '-'),
                         $p->kendaraan?->plat_nomor ?? '-',
                         $p->pengemudi?->nama_pengemudi ?? 'Tanpa Supir',
-                        number_format($p->estimasi_biaya_operasional ?? 0, 0, ',', '.'),
+                        (int)($p->estimasi_biaya_operasional ?? 0),
                         $status,
                     ];
                     break;
@@ -450,9 +452,9 @@ class LaporanController extends Controller
                         $p->nama_pic,
                         $p->tujuan,
                         $p->kategori_kegiatan ?? '-',
-                        number_format($p->rab_disetujui ?? 0, 0, ',', '.'),
-                        number_format($p->biaya_aktual ?? 0, 0, ',', '.'),
-                        number_format($selisih, 0, ',', '.'),
+                        (int)($p->rab_disetujui ?? 0),
+                        (int)($p->biaya_aktual ?? 0),
+                        (int)$selisih,
                         $p->mekanisme_pembayaran ?? '-',
                         $status,
                     ];

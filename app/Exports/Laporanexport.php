@@ -7,21 +7,25 @@ use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithColumnFormatting;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
-class LaporanExport implements FromArray, WithHeadings, WithTitle, WithStyles, ShouldAutoSize
+class LaporanExport implements FromArray, WithHeadings, WithTitle, WithStyles, ShouldAutoSize, WithColumnFormatting
 {
     protected array $rows;
     protected array $headers;
     protected string $judul;
+    protected array $moneyColumns;
 
-    public function __construct(array $rows, array $headers, string $judul)
+    public function __construct(array $rows, array $headers, string $judul, array $moneyColumns = [])
     {
-        $this->rows    = $rows;
-        $this->headers = $headers;
-        $this->judul   = $judul;
+        $this->rows         = $rows;
+        $this->headers      = $headers;
+        $this->judul        = $judul;
+        $this->moneyColumns = $moneyColumns;
     }
 
     public function array(): array
@@ -39,18 +43,23 @@ class LaporanExport implements FromArray, WithHeadings, WithTitle, WithStyles, S
         return 'Laporan';
     }
 
+    public function columnFormats(): array
+    {
+        $formats = [];
+        foreach ($this->moneyColumns as $col) {
+            $formats[$col] = '#,##0';
+        }
+        return $formats;
+    }
+
     public function styles(Worksheet $sheet): array
     {
-        $lastCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex(count($this->headers));
-
-        // Baris judul (baris 1 - kita insert di registerEvents atau pakai prepend)
         return [
-            // Style untuk baris header tabel
             1 => [
                 'font' => ['bold' => true, 'color' => ['argb' => 'FFFFFFFF']],
                 'fill' => [
                     'fillType'   => Fill::FILL_SOLID,
-                    'startColor' => ['argb' => 'FF6D28D9'], // Warna purple
+                    'startColor' => ['argb' => 'FF6D28D9'],
                 ],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
             ],
