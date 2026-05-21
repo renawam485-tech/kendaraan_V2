@@ -187,6 +187,34 @@ class PermohonanController extends Controller
         return redirect()->route('dashboard')->with('success', 'Berhasil diajukan.');
     }
 
+    public function batalkan($id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        $permohonan = Permohonan::where('id', $id)
+            ->where('user_id', $user->id)
+            ->firstOrFail();
+
+        if ($permohonan->status_permohonan !== StatusPermohonan::MENUNGGU_VALIDASI_ADMIN) {
+            return redirect()->back()->with('error', 'Permohonan tidak dapat dibatalkan karena sudah diproses.');
+        }
+
+        $permohonan->update([
+            'status_permohonan' => StatusPermohonan::DITOLAK,
+            'alasan_penolakan'  => 'Dibatalkan oleh pemohon.',
+        ]);
+
+        foreach (User::where('role', 'kepala_admin')->get() as $admin) {
+            $admin->notify(new StatusPermohonanNotification(
+                $permohonan,
+                'Permohonan ' . $permohonan->kode_permohonan . ' dibatalkan oleh pemohon.'
+            ));
+        }
+
+        return redirect()->route('dashboard')->with('success', 'Permohonan berhasil dibatalkan.');
+    }
+
     // ─────────────────────────────────────────────────────────────
     // KEPALA ADMIN
     // ─────────────────────────────────────────────────────────────

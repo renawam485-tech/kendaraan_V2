@@ -29,6 +29,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::put('/permohonan/{id}/mulai-perjalanan', [PermohonanController::class, 'mulaiPerjalanan'])->name('permohonan.mulai_perjalanan');
     Route::put('/permohonan/{id}/lapor-kembali', [PermohonanController::class, 'laporKembali'])->name('permohonan.lapor_kembali');
     Route::put('/permohonan/{id}/submit-pengembalian', [PermohonanController::class, 'submitPengembalian'])->name('permohonan.submit_pengembalian');
+    Route::delete('/permohonan/{id}/batalkan', [PermohonanController::class, 'batalkan'])->name('permohonan.batalkan');
 
     // =========================================================
     // 2. KEPALA ADMINISTRASI

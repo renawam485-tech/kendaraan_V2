@@ -93,6 +93,16 @@
                                         <i class="bi bi-printer mr-1"></i>Cetak SPJ
                                     </a>
                                 @endif
+                                @if ($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
+                                    <form action="{{ route('permohonan.batalkan', $p->id) }}" method="POST">
+                                        @csrf @method('DELETE')
+                                        <button type="button"
+                                            onclick="customConfirm({ title: 'Batalkan Pengajuan', message: 'Yakin ingin membatalkan pengajuan ini? Tindakan tidak dapat diurungkan.', confirmText: 'Ya, Batalkan' }, () => this.closest('form').submit())"
+                                            class="py-1.5 px-3 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition whitespace-nowrap">
+                                            <i class="bi bi-x-circle mr-1"></i>Batalkan
+                                        </button>
+                                    </form>
+                                @endif
                             </div>
                         </div>
                     @empty
@@ -190,6 +200,16 @@
                                                     class="flex-1 text-center py-1.5 text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg transition">
                                                     <i class="bi bi-printer mr-1"></i>Cetak SPJ
                                                 </a>
+                                            @endif
+                                            @if ($p->status_permohonan === \App\Enums\StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
+                                                <form action="{{ route('permohonan.batalkan', $p->id) }}" method="POST">
+                                                    @csrf @method('DELETE')
+                                                    <button type="button"
+                                                        onclick="customConfirm({ title: 'Batalkan Pengajuan', message: 'Yakin ingin membatalkan pengajuan ini? Tindakan tidak dapat diurungkan.', confirmText: 'Ya, Batalkan' }, () => this.closest('form').submit())"
+                                                        class="inline-flex items-center gap-1 text-xs font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-2.5 py-1.5 rounded-lg transition">
+                                                        <i class="bi bi-x-circle"></i> Batalkan
+                                                    </button>
+                                                </form>
                                             @endif
                                         </div>
                                     </td>

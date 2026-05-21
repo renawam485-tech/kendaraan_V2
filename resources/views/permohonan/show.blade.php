@@ -98,6 +98,16 @@
                                 data-updated="{{ $permohonan->updated_at->toISOString() }}">{{ $permohonan->updated_at->diffForHumans() }}</span>
                         </span>
                     </div>
+                    @if ($isOwner && $status === StatusPermohonan::MENUNGGU_VALIDASI_ADMIN)
+                        <form action="{{ route('permohonan.batalkan', $permohonan->id) }}" method="POST" class="flex-shrink-0">
+                            @csrf @method('DELETE')
+                            <button type="button"
+                                onclick="customConfirm({ title: 'Batalkan Pengajuan', message: 'Yakin ingin membatalkan pengajuan ini? Tindakan tidak dapat diurungkan.', confirmText: 'Ya, Batalkan' }, () => this.closest('form').submit())"
+                                class="inline-flex items-center gap-2 text-sm font-bold text-red-700 bg-red-50 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg transition">
+                                <i class="bi bi-x-circle"></i> Batalkan Pengajuan
+                            </button>
+                        </form>
+                    @endif
                 </div>
             </div>
 
