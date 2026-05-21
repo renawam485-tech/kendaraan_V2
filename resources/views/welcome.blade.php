@@ -36,7 +36,6 @@
             <a href="{{ url('/dashboard') }}" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Dashboard</a>
         @else
             <a href="{{ route('login') }}" class="px-4 py-2">Login</a>
-            <a href="{{ route('register') }}" class="bg-blue-600 text-white px-4 py-2 rounded-xl">Daftar</a>
         @endauth
     </div>
 </header>
@@ -154,7 +153,7 @@
     <p class="mb-6 opacity-90" data-aos="fade-up" data-aos-delay="100">Gunakan sistem untuk mempermudah peminjaman kendaraan</p>
 
     @guest
-    <a href="{{ route('register') }}" class="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold shadow hover:scale-105 transition" data-aos="fade-up" data-aos-delay="200">
+    <a href="{{ route('login') }}" class="bg-white text-blue-600 px-6 py-3 rounded-xl font-semibold shadow hover:scale-105 transition" data-aos="fade-up" data-aos-delay="200">
         Daftar Sekarang
     </a>
     @endguest

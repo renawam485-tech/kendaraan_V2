@@ -139,7 +139,8 @@
                 <a href="{{ route('spsi.alokasi') }}" title="Penugasan Armada"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.alokasi') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-truck-front text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan Armada</span>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Penugasan
+                        Armada</span>
                     @if ($cAlo > 0)
                         <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cAlo }}</span>
@@ -148,7 +149,8 @@
                 <a href="{{ route('spsi.serah_terima') }}" title="Serah Terima Kunci"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('spsi.serah_terima') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-key-fill text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima Kunci</span>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Serah Terima
+                        Kunci</span>
                     @if ($cSerahTotal > 0)
                         <span class="bg-amber-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cSerahTotal }}</span>
@@ -202,12 +204,14 @@
                 </a>
             @elseif($role === 'keuangan')
                 <div x-show="!sidebarCollapsed"
-                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Keuangan</div>
+                    class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">Keuangan
+                </div>
                 <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
                 <a href="{{ route('keuangan.rab') }}" title="Persetujuan RAB"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('keuangan.rab') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-cash-coin text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Persetujuan RAB</span>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Persetujuan
+                        RAB</span>
                     @if ($cRab > 0)
                         <span class="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cRab }}</span>
@@ -216,7 +220,8 @@
                 <a href="{{ route('keuangan.monitoring') }}" title="Verifikasi Refund"
                     class="relative flex items-center px-6 py-3 transition {{ request()->routeIs('keuangan.monitoring') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                     <i class="bi bi-arrow-return-left text-lg w-8 text-center"></i>
-                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Verifikasi Refund</span>
+                    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap flex-1 text-sm">Verifikasi
+                        Refund</span>
                     @if ($cVer > 0)
                         <span class="bg-orange-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full"
                             :class="sidebarCollapsed ? 'absolute left-10 top-2' : ''">{{ $cVer }}</span>
@@ -225,26 +230,18 @@
             @endif
 
             {{-- MENU AKSES UMUM (untuk semua role) --}}
-           {{-- MENU AKSES UMUM (untuk semua role) --}}
-<div x-show="!sidebarCollapsed" class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-    Laporan</div>
-<hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
-<a href="{{ route('laporan.index') }}" title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan' }}"
-    class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.index') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
-    <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
-    <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
-        {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan' }}
-    </span>
-</a>
-
-{{-- TAMBAHKAN MENU RIWAYAT DI SINI --}}
-@if (!in_array($role, ['pengguna', 'spsi']))
-    <a href="{{ route('laporan.riwayat') }}" title="Riwayat Permohonan"
-        class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.riwayat') ? 'bg-indigo-50 text-indigo-700 border-l-4 border-indigo-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-indigo-600 text-gray-600' }}">
-        <i class="bi bi-clock-history text-lg w-8 text-center"></i>
-        <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">Riwayat</span>
-    </a>
-@endif
+            <div x-show="!sidebarCollapsed"
+                class="px-6 mt-6 mb-2 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                Laporan</div>
+            <hr x-show="sidebarCollapsed" class="mx-4 my-4 border-gray-200">
+            <a href="{{ route('laporan.index') }}"
+                title="{{ $role === 'pengguna' ? 'Riwayat Pengajuan' : 'Laporan' }}"
+                class="flex items-center px-6 py-3 transition {{ request()->routeIs('laporan.index') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
+                <i class="bi bi-file-earmark-bar-graph text-lg w-8 text-center"></i>
+                <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap text-sm">
+                    {{ $role === 'pengguna' ? 'Riwayat' : 'Laporan' }}
+                </span>
+            </a>
 
         </nav>
 

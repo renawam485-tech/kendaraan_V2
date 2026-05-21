@@ -74,36 +74,11 @@
                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                     </div>
 
-                    <!-- Remember + Forgot -->
-                    <div class="flex justify-between text-sm">
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" name="remember"
-                                class="rounded border-gray-300 text-blue-600">
-                            <span>Remember me</span>
-                        </label>
-
-                        @if (Route::has('password.request'))
-                            <a href="{{ route('password.request') }}"
-                                class="text-blue-600 hover:underline">
-                                Lupa password?
-                            </a>
-                        @endif
-                    </div>
-
                     <!-- Button -->
                     <button type="submit"
                         class="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 rounded-xl font-semibold shadow-lg hover:shadow-xl transition transform hover:-translate-y-1">
                         Login
                     </button>
-
-                    <!-- Register -->
-                    <p class="text-sm text-gray-500">
-                        Belum punya akun?
-                        <a href="{{ route('register') }}"
-                            class="text-blue-600 font-medium hover:underline">
-                            Daftar
-                        </a>
-                    </p>
                 </form>
             </div>
         </div>
