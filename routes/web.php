@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SuperAdminController;
 use App\Http\Controllers\KendaraanVendorController;
 use App\Http\Controllers\SpsiCrudController;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -96,41 +97,41 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // =========================================================
     // 5. SUPER ADMIN — Master Data & Manajemen Sistem
     // =========================================================
-    Route::middleware(['role:super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
-        Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
+    // Route::middleware(['role:super_admin'])->prefix('superadmin')->name('superadmin.')->group(function () {
+    //     Route::get('/dashboard', [SuperAdminController::class, 'dashboard'])->name('dashboard');
 
-        // CRUD Kendaraan Internal
-        Route::get('/kendaraan', [SuperAdminController::class, 'kendaraanIndex'])->name('kendaraan.index');
-        Route::get('/kendaraan/tambah', [SuperAdminController::class, 'kendaraanCreate'])->name('kendaraan.create');
-        Route::post('/kendaraan', [SuperAdminController::class, 'kendaraanStore'])->name('kendaraan.store');
-        Route::get('/kendaraan/{id}/edit', [SuperAdminController::class, 'kendaraanEdit'])->name('kendaraan.edit');
-        Route::put('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanUpdate'])->name('kendaraan.update');
-        Route::delete('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanDestroy'])->name('kendaraan.destroy');
+    //     // CRUD Kendaraan Internal
+    //     Route::get('/kendaraan', [SuperAdminController::class, 'kendaraanIndex'])->name('kendaraan.index');
+    //     Route::get('/kendaraan/tambah', [SuperAdminController::class, 'kendaraanCreate'])->name('kendaraan.create');
+    //     Route::post('/kendaraan', [SuperAdminController::class, 'kendaraanStore'])->name('kendaraan.store');
+    //     Route::get('/kendaraan/{id}/edit', [SuperAdminController::class, 'kendaraanEdit'])->name('kendaraan.edit');
+    //     Route::put('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanUpdate'])->name('kendaraan.update');
+    //     Route::delete('/kendaraan/{id}', [SuperAdminController::class, 'kendaraanDestroy'])->name('kendaraan.destroy');
 
-        // CRUD Kendaraan Vendor (pindah ke sini)
-        Route::get('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorIndex'])->name('kendaraan_vendor.index');
-        Route::get('/kendaraan-vendor/tambah', [SuperAdminController::class, 'kendaraanVendorCreate'])->name('kendaraan_vendor.create');
-        Route::post('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorStore'])->name('kendaraan_vendor.store');
-        Route::get('/kendaraan-vendor/{id}/edit', [SuperAdminController::class, 'kendaraanVendorEdit'])->name('kendaraan_vendor.edit');
-        Route::put('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorUpdate'])->name('kendaraan_vendor.update');
-        Route::delete('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorDestroy'])->name('kendaraan_vendor.destroy');
+    //     // CRUD Kendaraan Vendor (pindah ke sini)
+    //     Route::get('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorIndex'])->name('kendaraan_vendor.index');
+    //     Route::get('/kendaraan-vendor/tambah', [SuperAdminController::class, 'kendaraanVendorCreate'])->name('kendaraan_vendor.create');
+    //     Route::post('/kendaraan-vendor', [SuperAdminController::class, 'kendaraanVendorStore'])->name('kendaraan_vendor.store');
+    //     Route::get('/kendaraan-vendor/{id}/edit', [SuperAdminController::class, 'kendaraanVendorEdit'])->name('kendaraan_vendor.edit');
+    //     Route::put('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorUpdate'])->name('kendaraan_vendor.update');
+    //     Route::delete('/kendaraan-vendor/{id}', [SuperAdminController::class, 'kendaraanVendorDestroy'])->name('kendaraan_vendor.destroy');
 
-        // CRUD Pengemudi
-        Route::get('/pengemudi', [SuperAdminController::class, 'pengemudiIndex'])->name('pengemudi.index');
-        Route::get('/pengemudi/tambah', [SuperAdminController::class, 'pengemudiCreate'])->name('pengemudi.create');
-        Route::post('/pengemudi', [SuperAdminController::class, 'pengemudiStore'])->name('pengemudi.store');
-        Route::get('/pengemudi/{id}/edit', [SuperAdminController::class, 'pengemudiEdit'])->name('pengemudi.edit');
-        Route::put('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiUpdate'])->name('pengemudi.update');
-        Route::delete('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiDestroy'])->name('pengemudi.destroy');
+    //     // CRUD Pengemudi
+    //     Route::get('/pengemudi', [SuperAdminController::class, 'pengemudiIndex'])->name('pengemudi.index');
+    //     Route::get('/pengemudi/tambah', [SuperAdminController::class, 'pengemudiCreate'])->name('pengemudi.create');
+    //     Route::post('/pengemudi', [SuperAdminController::class, 'pengemudiStore'])->name('pengemudi.store');
+    //     Route::get('/pengemudi/{id}/edit', [SuperAdminController::class, 'pengemudiEdit'])->name('pengemudi.edit');
+    //     Route::put('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiUpdate'])->name('pengemudi.update');
+    //     Route::delete('/pengemudi/{id}', [SuperAdminController::class, 'pengemudiDestroy'])->name('pengemudi.destroy');
 
-        // CRUD Pengguna
-        Route::get('/users', [SuperAdminController::class, 'usersIndex'])->name('users.index');
-        Route::get('/users/tambah', [SuperAdminController::class, 'usersCreate'])->name('users.create');
-        Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');
-        Route::get('/users/{id}/edit', [SuperAdminController::class, 'usersEdit'])->name('users.edit');
-        Route::put('/users/{id}', [SuperAdminController::class, 'usersUpdate'])->name('users.update');
-        Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->name('users.destroy');
-    });
+    //     // CRUD Pengguna
+    //     Route::get('/users', [SuperAdminController::class, 'usersIndex'])->name('users.index');
+    //     Route::get('/users/tambah', [SuperAdminController::class, 'usersCreate'])->name('users.create');
+    //     Route::post('/users', [SuperAdminController::class, 'usersStore'])->name('users.store');
+    //     Route::get('/users/{id}/edit', [SuperAdminController::class, 'usersEdit'])->name('users.edit');
+    //     Route::put('/users/{id}', [SuperAdminController::class, 'usersUpdate'])->name('users.update');
+    //     Route::delete('/users/{id}', [SuperAdminController::class, 'usersDestroy'])->name('users.destroy');
+    // });
 
     // =========================================================
     // 6. LAPORAN (Semua Role — data difilter per role di controller)
@@ -138,7 +139,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/laporan', [LaporanController::class, 'index'])->name('laporan.index');
     Route::get('/laporan/export/excel', [LaporanController::class, 'exportExcel'])->name('laporan.export.excel');
     Route::get('/laporan/export/pdf', [LaporanController::class, 'exportPdf'])->name('laporan.export.pdf');
-    
+
     // ROUTE BARU: Riwayat per role
     Route::get('/laporan/riwayat', [LaporanController::class, 'riwayat'])->name('laporan.riwayat');
 
@@ -166,6 +167,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::middleware(['auth'])->post('/session/heartbeat', function (Request $request) {
+        $request->session()->put('last_activity', time());
+        return response()->json(['status' => 'ok']);
+    });
 });
 
 require __DIR__ . '/auth.php';

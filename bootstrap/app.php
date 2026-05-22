@@ -11,13 +11,17 @@ return Application::configure(basePath: dirname(__DIR__))
         channels: __DIR__ . '/../routes/channels.php',
         health: '/up',
     )
-    ->withMiddleware(function (Middleware $middleware) {
+    ->withMiddleware(function (Middleware $middleware): void {
+        // WAJIB ADA - mengaktifkan session, cookies, CSRF
+        $middleware->web();
+        
+        // Alias middleware (untuk role dll)
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
-    })
-    ->withMiddleware(function (Middleware $middleware): void {
-        //
+        
+        // Tambahkan middleware session timeout ke web group
+        $middleware->appendToGroup('web', \App\Http\Middleware\SessionTimeout::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

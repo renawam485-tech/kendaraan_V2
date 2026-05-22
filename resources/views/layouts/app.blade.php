@@ -5,6 +5,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <meta name="user-id" content="{{ auth()->id() }}">
     <title>{{ config('app.name', 'Drivora') }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -423,6 +424,7 @@
         });
     </script>
 </body>
+<script src="{{ asset('js/session-timeout.js') }}"></script>
 @if (session('success') || session('error'))
     <script>
         document.addEventListener('DOMContentLoaded', function() {

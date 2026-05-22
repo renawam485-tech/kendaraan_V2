@@ -20,7 +20,7 @@ class PermohonanController extends Controller
         $user = Auth::user();
 
         if ($user->role === 'super_admin') {
-            return redirect()->route('superadmin.dashboard');
+            abort(404, 'Halaman tidak ditemukan');
         }
 
         if ($user->role === 'pengguna') {

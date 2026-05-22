@@ -65,12 +65,12 @@
                 }
             @endphp
 
-            <a href="{{ Auth::user()->role === 'super_admin' ? route('superadmin.dashboard') : route('dashboard') }}"
+            {{-- <a href="{{ Auth::user()->role === 'super_admin' ? route('superadmin.dashboard') : route('dashboard') }}"
                 title="Dashboard"
                 class="group flex items-center px-6 py-3 transition {{ request()->routeIs('dashboard') || request()->routeIs('superadmin.dashboard') ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-600 font-bold' : 'border-l-4 border-transparent hover:bg-gray-50 hover:text-blue-600 text-gray-600' }}">
                 <i class="bi bi-grid-1x2-fill text-lg w-8 text-center"></i>
                 <span x-show="!sidebarCollapsed" class="ml-3 whitespace-nowrap">Dashboard</span>
-            </a>
+            </a> --}}
 
             @if ($role === 'pengguna')
                 <div x-show="!sidebarCollapsed"
